@@ -157,6 +157,7 @@ export function LegalShieldApp() {
   const [sortDesc, setSortDesc] = useState(true);
   const [statusById, setStatusById] = useState<Record<string, Status>>({});
   const [query, setQuery] = useState("");
+  const [activeView, setActiveView] = useState<"queue" | "report" | "sources">("queue");
 
   const data = useMemo(
     () =>
@@ -184,9 +185,9 @@ export function LegalShieldApp() {
           <div><strong>Legal Radar</strong><small>TRUNG TÂM GIÁM SÁT</small></div>
         </div>
         <nav aria-label="Điều hướng chính">
-          <button className="active"><span>▦</span> Hàng đợi giám sát <b>{caseItems.filter((x) => (statusById[x.id] ?? x.status) !== "Đã xử lý").length}</b></button>
-          <button><span>◎</span> Báo cáo tổng hợp</button>
-          <button><span>⌘</span> Nguồn chính thức</button>
+          <button className={activeView === "queue" ? "active" : ""} onClick={() => { setActiveView("queue"); setSelectedId(null); }}><span>▦</span> Hàng đợi giám sát <b>{caseItems.filter((x) => (statusById[x.id] ?? x.status) !== "Đã xử lý").length}</b></button>
+          <button className={activeView === "report" ? "active" : ""} onClick={() => { setActiveView("report"); setSelectedId(null); }}><span>◎</span> Báo cáo tổng hợp</button>
+          <button className={activeView === "sources" ? "active" : ""} onClick={() => { setActiveView("sources"); setSelectedId(null); }}><span>⌘</span> Nguồn chính thức</button>
         </nav>
         <div className="monitor-system"><i /> Hệ thống đang giám sát<small>Cập nhật 30 giây trước</small></div>
       </aside>
@@ -198,7 +199,11 @@ export function LegalShieldApp() {
           <button className="monitor-avatar" aria-label="Tài khoản Minh Anh">MA</button>
         </header>
 
-        {selectedWithStatus ? (
+        {activeView === "report" ? (
+          <ReportView allItems={caseItems} statusById={statusById} />
+        ) : activeView === "sources" ? (
+          <SourcesView />
+        ) : selectedWithStatus ? (
           <CaseDetail
             item={selectedWithStatus}
             onBack={() => setSelectedId(null)}
@@ -413,4 +418,94 @@ function StatusBadge({ value }: { value: Status }) {
 
 function slug(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "-");
+}
+
+function ReportView({ allItems, statusById }: { allItems: Case[]; statusById: Record<string, Status> }) {
+  const total = allItems.length;
+  const dung = allItems.filter((i) => i.verdict === "Đúng").length;
+  const hieuLam = allItems.filter((i) => i.verdict === "Hiểu lầm").length;
+  const canKC = allItems.filter((i) => i.verdict === "Cần kiểm chứng").length;
+  const open = allItems.filter((i) => (statusById[i.id] ?? i.status) !== "Đã xử lý").length;
+
+  return (
+    <div className="monitor-page">
+      <div className="queue-heading">
+        <div><span className="eyebrow">BÁO CÁO</span><h1>Báo cáo tổng hợp</h1><p>Tổng hợp kết quả phân tích AI trên tất cả hồ sơ giám sát.</p></div>
+      </div>
+
+      <section className="queue-card" style={{ marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, padding: 24 }}>
+          <div style={{ textAlign: "center" }}><div style={{ fontSize: 32, fontWeight: 700 }}>{total}</div><small>Tổng hồ sơ</small></div>
+          <div style={{ textAlign: "center" }}><div style={{ fontSize: 32, fontWeight: 700, color: "#22c55e" }}>{dung}</div><small>Đúng</small></div>
+          <div style={{ textAlign: "center" }}><div style={{ fontSize: 32, fontWeight: 700, color: "#f97316" }}>{hieuLam}</div><small>Hiểu lầm</small></div>
+          <div style={{ textAlign: "center" }}><div style={{ fontSize: 32, fontWeight: 700, color: "#eab308" }}>{canKC}</div><small>Cần kiểm chứng</small></div>
+        </div>
+      </section>
+
+      <section className="queue-card" style={{ marginBottom: 24 }}>
+        <div style={{ padding: 24 }}>
+          <h3 style={{ marginBottom: 12 }}>Top hiểu lầm lặp lại</h3>
+          <table className="queue-table">
+            <thead><tr><th>STT</th><th>NHÓM HIỂU LẦM</th><th>SỐ LẦN</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Nhầm chủ thể tổ chức ↔ cá nhân</td><td>{hieuLam}</td></tr>
+              <tr><td>2</td><td>Nhầm quy định cũ NĐ15/2020</td><td>0</td></tr>
+              <tr><td>3</td><td>Nhầm khoản k1 ↔ k2 Điều 95</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="queue-card">
+        <div style={{ padding: 24 }}>
+          <h3 style={{ marginBottom: 12 }}>Hồ sơ đang mở: {open}</h3>
+          <p style={{ color: "#94a3b8", fontSize: 14 }}>Dữ liệu mock — khi chạy pipeline thật, báo cáo sẽ tự động cập nhật từ queue.jsonl.</p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SourcesView() {
+  const sources = [
+    { tier: 0, name: "Ngân hàng Nhà nước (SBV)", domain: "sbv.gov.vn", desc: "Cơ quan quản lý ngân hàng — thẩm quyền xác nhận/bác bỏ tin đồn tài chính" },
+    { tier: 0, name: "Bộ Y tế", domain: "moh.gov.vn", desc: "Cơ quan phát ngôn về dịch bệnh, y tế công cộng" },
+    { tier: 0, name: "Bộ Công an", domain: "bocongan.gov.vn", desc: "Cơ quan phát ngôn về an ninh, trật tự" },
+    { tier: 0, name: "Cổng TTĐT Chính phủ", domain: "chinhphu.vn", desc: "Công bố chính sách, quyết định chính thức" },
+    { tier: 1, name: "TTXVN", domain: "baotintuc.vn", desc: "Thông tấn xã — nguồn tin chính thống quốc gia" },
+    { tier: 1, name: "VTV", domain: "vtv.vn", desc: "Đài Truyền hình Việt Nam" },
+    { tier: 1, name: "Nhân Dân", domain: "nhandan.vn", desc: "Cơ quan ngôn luận của Đảng" },
+    { tier: 2, name: "VnExpress", domain: "vnexpress.net", desc: "Báo lớn — corroboration, không đơn phương quyết định" },
+    { tier: 2, name: "Tuổi Trẻ", domain: "tuoitre.vn", desc: "Báo lớn — corroboration" },
+    { tier: 2, name: "Thanh Niên", domain: "thanhnien.vn", desc: "Báo lớn — corroboration" },
+  ];
+
+  return (
+    <div className="monitor-page">
+      <div className="queue-heading">
+        <div><span className="eyebrow">NGUỒN TIN</span><h1>Nguồn chính thức</h1><p>Danh sách whitelist nguồn tin theo tầng thẩm quyền — hệ thống chỉ dùng các nguồn này để xác minh nội dung.</p></div>
+      </div>
+
+      {[0, 1, 2].map((tier) => (
+        <section key={tier} className="queue-card" style={{ marginBottom: 24 }}>
+          <div style={{ padding: 24 }}>
+            <h3 style={{ marginBottom: 4 }}>
+              Tier {tier}: {tier === 0 ? "Cơ quan chính phủ (1 mình đủ)" : tier === 1 ? "Báo chí chính thống (cần ≥2 độc lập)" : "Báo lớn (chỉ corroboration)"}
+            </h3>
+            <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 16 }}>
+              {tier === 0 ? "Một mình Tier 0 xác nhận/bác bỏ là đủ — không cần nguồn khác." : tier === 1 ? "Cần ≥2 nguồn Tier 1/2 độc lập xác nhận. Bác bỏ hợp lệ khi dẫn lời Tier 0." : "Chỉ dùng để bổ sung — không đơn phương quyết định."}
+            </p>
+            <table className="queue-table">
+              <thead><tr><th>TÊN</th><th>DOMAIN</th><th>MÔ TẢ</th></tr></thead>
+              <tbody>
+                {sources.filter((s) => s.tier === tier).map((s) => (
+                  <tr key={s.domain}><td><strong>{s.name}</strong></td><td><code>{s.domain}</code></td><td>{s.desc}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ))}
+    </div>
+  );
 }
