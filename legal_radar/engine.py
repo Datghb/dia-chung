@@ -32,7 +32,6 @@ _SLANG_MAP: dict[str, str] = {
     "trái": "triệu",
     "xu": "nghìn",
     "nhép": "nghìn",
-    "k": "nghìn",
     "đô": "usd",
 
     # ── Social media action slang ──
@@ -57,7 +56,6 @@ _SLANG_MAP: dict[str, str] = {
     "mute": "tắt tiếng",
     "tag": "gắn nhãn",
     "mention": "đề cập",
-    "livestream": "phát trực tiếp",
     "livestream": "phát sóng trực tiếp",
     "story": "tin ngắn",
     "reel": "video ngắn",
@@ -74,7 +72,6 @@ _SLANG_MAP: dict[str, str] = {
     "news": "tin",
     "bóc phốt": "vạch trần",
     "bóc p": "vạch trần",
-    "phốt": "sự cố",
     "troll": "trêu chọc",
     "spam": "rác",
     "scam": "lừa đảo",
@@ -111,7 +108,6 @@ _SLANG_MAP: dict[str, str] = {
     "disinformation": "thông tin giả mạo",
 
     # ── Vietnamese informal / teen code ──
-    "nx": "nguồn tin",
     "bl": "bình luận",
     "ib": "nhắn tin riêng",
     "ibox": "nhắn tin riêng",
@@ -134,7 +130,6 @@ _SLANG_MAP: dict[str, str] = {
     "periodt": "vậy thôi",
     "ngl": "thật lòng mà nói",
     "tbh": "thật lòng mà nói",
-    "imo": "theo ý kiến cá nhân",
     "btw": "nhân tiện",
     "fyi": "cho bạn biết",
     "idk": "không biết",
@@ -154,8 +149,6 @@ _SLANG_MAP: dict[str, str] = {
     "vc": "vãi cả",
     "vkl": "vãi cả",
     "vch": "vãi chưởng",
-    "vl": "vãi",
-    "vãi": "rất",
     "vl": "rất",
     "dm": "đ.m",
     "đmm": "đ.m",
@@ -175,7 +168,6 @@ _SLANG_MAP: dict[str, str] = {
     "nthe": "như vậy",
     "ntn": "như vậy",
     "nnao": "như nào",
-    "sao": "như nào",
     "tks": "cảm ơn",
     "thanks": "cảm ơn",
     "okela": "được",
@@ -318,6 +310,7 @@ def _detect_subject_type(text: str) -> str | None:
         r'\buser\b', r'\bkol\b', r'\btiktoker\b', r'\bhot\s*girl\b',
         r'\bhot\s*boy\b', r'\bstreamer\b', r'\byoutuber\b',
         r'\binfluencer\b', r'\bcreator\b', r'\bnick\b',
+        r'\btai\s+khoan\b', r'\bnguoi\s+dung\b', r'\bca\s*nhan\b',
     ]
     to_chuc_patterns = [
         r'\btổ\s*chức\b', r'\bdoanh\s*nghiệp\b', r'\bcông\s*ty\b',
@@ -325,6 +318,7 @@ def _detect_subject_type(text: str) -> str | None:
         r'\btrang\b.*\bcộng\s*đồng\b',
         r'\bnhóm\b.*\bcộng\s*đồng\b', r'\bhội\s*nhóm\b',
         r'\bwebsite\b', r'\btrang\s*tin\b',
+        r'\bto\s*chuc\b', r'\bcong\s*ty\b', r'\bdoanh\s*nghiep\b',
     ]
     for p in ca_nhan_patterns:
         if re.search(p, normalized):
