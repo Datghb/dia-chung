@@ -1,0 +1,9 @@
+[project]
+name = "legal-radar"
+version = "0.1.0"
+description = "Legal KG — Dashboard giám sát vi phạm MXH theo NĐ 174/2026"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

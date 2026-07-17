@@ -1,0 +1,47 @@
+[
+  {"source": "hv-tin-gia", "target": "nd174-d95-k1-a", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-te-nan", "target": "nd174-d95-k1-b", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-kinh-di", "target": "nd174-d95-k1-c", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-tac-pham", "target": "nd174-d95-k1-d", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-quang-cao-cam", "target": "nd174-d95-k1-dd", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-ban-do", "target": "nd174-d95-k1-e", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-link-cam", "target": "nd174-d95-k1-g", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-bao-chi-tu", "target": "nd174-d95-k1-h", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-thong-bao-bc", "target": "nd174-d95-k1-i", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-khong-go-bo", "target": "nd174-d95-k1-k", "loai": "QUY_DINH_TAI"},
+
+  {"source": "hv-xuyet-lsu", "target": "nd174-d95-k2-a", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-lo-bi-mat", "target": "nd174-d95-k2-b", "loai": "QUY_DINH_TAI"},
+  {"source": "hv-gay-hoang-mang", "target": "nd174-d95-k2-c", "loai": "QUY_DINH_TAI"},
+
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-a", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-b", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-c", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-d", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-dd", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-e", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-g", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-h", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-i", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k1", "target": "nd174-d95-k1-k", "loai": "MUC_PHAT_AP_DUNG"},
+
+  {"source": "mp-d95-k2", "target": "nd174-d95-k2-a", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k2", "target": "nd174-d95-k2-b", "loai": "MUC_PHAT_AP_DUNG"},
+  {"source": "mp-d95-k2", "target": "nd174-d95-k2-c", "loai": "MUC_PHAT_AP_DUNG"},
+
+  {"source": "mp-d101-k1", "target": "nd15-d101-k1-a", "loai": "MUC_PHAT_AP_DUNG"},
+
+  {"source": "mp-d95-k1", "target": "ct-to-chuc", "loai": "AP_DUNG_CHO", "thuoc_tinh": {"he_so": 1.0}},
+  {"source": "mp-d95-k2", "target": "ct-to-chuc", "loai": "AP_DUNG_CHO", "thuoc_tinh": {"he_so": 1.0}},
+  {"source": "mp-d101-k1", "target": "ct-to-chuc", "loai": "AP_DUNG_CHO", "thuoc_tinh": {"he_so": 1.0}},
+
+  {"source": "mp-d95-k1", "target": "ct-ca-nhan", "loai": "AP_DUNG_CHO", "thuoc_tinh": {"he_so": 0.5}},
+  {"source": "mp-d95-k2", "target": "ct-ca-nhan", "loai": "AP_DUNG_CHO", "thuoc_tinh": {"he_so": 0.5}},
+  {"source": "mp-d101-k1", "target": "ct-ca-nhan", "loai": "AP_DUNG_CHO", "thuoc_tinh": {"he_so": 0.5}},
+
+  {"source": "nd15-d101-k1-a", "target": "nd174-d95-k1-a", "loai": "THAY_THE", "thuoc_tinh": {"diff": "Tổ chức: 10-20tr → 20-30tr; Cá nhân: 5-10tr → 10-15tr", "moc_thoi_gian": "2026-07-01"}},
+
+  {"source": "bp-go-bo", "target": "nd174-d95-k1-a", "loai": "BIEN_PHAP"},
+  {"source": "bp-go-bo", "target": "nd174-d95-k2-c", "loai": "BIEN_PHAP"},
+  {"source": "bp-khoa-tk", "target": "nd174-d95-k2-c", "loai": "BIEN_PHAP"}
+]
