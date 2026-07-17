@@ -13,7 +13,7 @@ Build sản phẩm AI pháp lý (RAG + KG) trong 48h: dashboard giám sát vi ph
 | ID | Vai trò | Sở hữu | Tại sao quan trọng |
 |---|---|---|---|
 | **A1** | Engine Architect | P1 data model (shared interface), P2 core engine (7 hàm pure), KG data (kg_nodes/kg_edges JSON), test suite P2 | Đây là **invariant core** — nếu engine sai, mọi thứ downstream sai theo |
-| **A2** | Verification Specialist | Dual-RAG xac_thuc_nguon (static corpus + dynamic search), source_search.py, P9 guardrails (5 domain rails), eval gate (14 cases), study case verification | Trả lời câu hỏi "đúng hay sai" cho BẤT KỲ chủ đề nào — không chỉ vụ SCB |
+| **A2** | Verification Specialist | Dynamic source search (Gemini + Google Search grounding), source_search.py, P9 guardrails (5 domain rails), eval gate (14 cases), study case verification | Trả lời câu hỏi "đúng hay sai" cho BẤT KỲ chủ đề nào — không hardcode corpus |
 
 ### Team B — Infrastructure (3 người): "Build, chạy, trình bày"
 
@@ -29,10 +29,10 @@ Build sản phẩm AI pháp lý (RAG + KG) trong 48h: dashboard giám sát vi ph
 
 ```
 P1 data model (A1 owns → mọi người consume)
-├── legal_radar/model.py: frozen dataclasses (VanBan, DieuKhoan, HanhVi, ChuThe, MucPhat, BienPhapKhacPhuc, NguonTin)
+├── legal_radar/model.py: frozen dataclasses (VanBan, DieuKhoan, HanhVi, ChuThe, MucPhat, BienPhapKhacPhuc)
 ├── data/kg_nodes.json + kg_edges.json (frozen after verify)
-├── data/facts_corpus.json (A2 owns, static fallback corpus, format theo NguonTin schema)
-├── legal_radar/source_search.py (A2 owns, dynamic search layer — Gemini + Google Search grounding)
+├── legal_radar/source_search.py (A2 owns, Gemini + Google Search grounding — search BẤT KỲ chủ đề)
+├── legal_radar/source_classifier.py (A2 owns, classify tier theo URL + fusion rules)
 └── data/comments_batch*.json (B2 owns, format theo fixture spec §5)
 ```
 
@@ -63,19 +63,16 @@ Comment MXH (untrusted text)
             │
             ├─ RAG 1 (KG luật): đã match ở trên → trích dẫn điều/khoản/điểm
             │
-            └─ RAG 2 (Nguồn tin — DUAL LAYER):
+            └─ RAG 2 (Nguồn tin — DYNAMIC SEARCH):
                 │
-                ├─ [STATIC] BM25 trên facts_corpus.json (10-15 docs, freeze)
-                │   → Nhanh, free, deterministic, fallback khi dynamic fail
+                │  Gemini + Google Search grounding
+                │  → Tìm kiếm BẤT KỲ chủ đề nào trên web (không hardcode corpus)
+                │  → Kết quả phân tầng theo URL: .gov.vn=Tier0, TTXVN/VTV=Tier1, báo lớn=Tier2
                 │
-                ├─ [DYNAMIC] Gemini + Google Search grounding
-                │   → Tìm kiếm BẤT KỲ chủ đề nào trên web
-                │   → Kết quả phân tầng theo whitelist Tier 0/1/2 (theo URL)
-                │
-                └─ MERGE + FUSION RULES:
+                └─ FUSION RULES:
                     ├─ ≥1 Tier0 hoặc ≥2 Tier1/2 xác nhận → co_nguon_xac_nhan
                     ├─ Tier0/1 bác bỏ SAU thời gian claim → co_bac_bo_chinh_thuc
-                    ├─ Dynamic fail → fallback static only (graceful degradation)
+                    ├─ Search fail (quota/API) → chua_tim_thay_nguon + log error
                     └─ không match → chua_tim_thay_nguon (TRUNG TÍNH, không phải "sai")
     │
     ▼
@@ -114,8 +111,8 @@ Queue (runs/queue.jsonl) → Dashboard (P6/B2)
 | P4 prep: soạn comments_batch_1.json (15 câu nhóm đúng) | **B2** | — | JSON theo fixture spec §5 |
 | P4 prep: soạn comments_batch_2.json (15 câu nhóm hiểu lầm) | **B2** | — | JSON, focus nhầm chủ thể + nhầm NĐ15 |
 | P4 prep: soạn comments_batch_3.json (15 câu nhóm cần kiểm chứng) | **B2** | — | JSON, câu hỏi có điều kiện |
-| Facts corpus: sưu tầm 10-20 docs thật → facts_corpus.json | **A2** | — | JSON theo NguonTin schema, tier gắn tay |
-| Facts corpus: verify Tier0 entries (SBV bác bỏ, Bộ Y tế, etc.) | **A2** | facts_corpus done | verify log |
+| source_search.py: draft dynamic search (Gemini + Google Search grounding) | **A2** | P3 providers | test 1 query mẫu bất kỳ chủ đề |
+| source_classifier.py: classify_tier() theo URL + fusion rules | **A2** | — | test 5 URL mẫu (.gov.vn, ttxvn, vnexpress, random) |
 | Study cases: sưu tầm 1-2 quyết định xử phạt thật | **A2** | — | study_cases.json |
 
 **Gate G1 (H4 = 15%):** P1 model tests green × 2 runs. KG JSON valid. Providers live-smoked.
@@ -129,42 +126,28 @@ Queue (runs/queue.jsonl) → Dashboard (P6/B2)
 | **P2.3:** phan_loai_claim() — rule-based classification | **A1** | P2.2 | 8+ test cases (2 per rule a/b/c/d, edge: "20-30tr" không chủ thể → can_kiem_chung) |
 | **P2.4:** diff_thay_the() — render edge THAY_THE | **A1** | kg_edges | 2 test cases (Đ101 NĐ15 ↔ Đ95 NĐ174) |
 | **P2.5:** xep_uu_tien() — sort queue | **A1** | — | deterministic test với fixture |
-| **P2.6:** xac_thuc_nguon() — **ĐÂY LÀ CORE CÂU HỎI "ĐÚNG HAY SAI"** | **A2** | facts_corpus, P3 providers | 8 test cases bắt buộc (xem dưới) |
-| **P2.6a:** source_search.py — dynamic search (Gemini + Google Search grounding) | **A2** | P3 providers (Gemini key) | search bất kỳ chủ đề → results + tier classify |
-| **P2.6b:** classify_tier() — phân tầng theo URL (.gov.vn=Tier0, TTXVN/VTV=Tier1, VnExpress=Tier2) | **A2** | — | test với URL mẫu, mở rộng không hardcode |
-| **P2.6c:** merge_static_dynamic() — dedup + fusion rules | **A2** | P2.6 + P2.6a | test: static match + dynamic match → dedup; dynamic fail → fallback static |
+| **P2.6:** xac_thuc_nguon() — **ĐÂY LÀ CORE CÂU HỎI "ĐÚNG HAY SAI"** | **A2** | P3 providers (Gemini key) | 8 test cases bắt buộc (xem dưới) |
+| **P2.6a:** source_search.py — Gemini + Google Search grounding, search BẤT KỲ chủ đề | **A2** | P3 providers | 1 hàm: search(query) → list[{tieu_de, nguon, url, ngay_dang, noi_dung_tom_tat}] |
+| **P2.6b:** source_classifier.py — classify_tier() theo URL (.gov.vn=Tier0, TTXVN/VTV=Tier1, báo lớn=Tier2) | **A2** | — | test với URL mẫu, mở rộng không hardcode |
+| **P2.6c:** apply_fusion_rules() — phân tầng + hợp nhất kết quả search | **A2** | P2.6a + P2.6b | test: Tier0 confirm → co_nguon_xac_nhan; Tier0 deny sau thoi_gian → co_bac_bo |
 | **P2.7:** integration — nhan_nguon feed vào phan_loai_claim ly_do | **A1 + A2** | P2.3 + P2.6 | test: kêu gọi hành động + không nguồn → đẩy top |
 | Vietnamese text normalization: bỏ dấu, slang→standard ("củ"→"triệu", "share"→"chia sẻ") | **A1** | — | normalize_text() + test cases |
 | P4: implement ingest_vanban (parse nd174_trich.md → kg JSON) | **B1** | P1 model, nd174_trich.md | 1 lần, human verify, FREEZE |
 | P4: implement ingest_comments (LLM extract → engine → queue) | **B1** | P3, P2.3 (interface) | pipeline test với 1 comment |
 | P6 prep: wireframe 3 màn (paper sketch) | **B2** | — | sketch approved by team |
 
-**Test cases BẮT BUỘC cho P2.6 (xac_thuc_nguon) — BOTH layers:**
-
-*Static layer:*
+**Test cases BẮT BUỘC cho P2.6 (xac_thuc_nguon) — Dynamic search:**
 
 | # | Scenario | Input | Expected | Chống cái gì |
 |---|---|---|---|---|
-| 1 | Claim khớp công bố Tier0 trong corpus | "NHNN đặt ngân hàng X vào kiểm soát đặc biệt" + corpus có SBV | `co_nguon_xac_nhan` | Chống phạt oan |
-| 2 | Claim có bài bác bỏ Tier0 đăng SAU | claim + SBV bác bỏ đăng sau | `co_bac_bo_chinh_thuc`; nhãn tổng vẫn là gợi ý | Chống khẳng định sai |
-| 3 | Bác bỏ đăng TRƯỚC thời gian claim | claim + bác bỏ trước | KHÔNG tính là bác bỏ | Chống lỗi timeline |
-| 4 | Không match gì trong static | claim + corpus không liên quan | `chua_tim_thay_nguon` từ static → sẽ fallback sang dynamic | Chống phạt oan |
-| 5 | Corpus rỗng | claim + [] | `chua_tim_thay_nguon`, không crash, fallback dynamic | Robustness |
-
-*Dynamic layer (Gemini + Google Search grounding):*
-
-| # | Scenario | Input | Expected | Chống cái gì |
-|---|---|---|---|---|
-| 6 | Dynamic match bất kỳ chủ đề | keywords=["bệnh viện", "ca bệnh lạ"] + static KHÔNG match | dynamic tìm Tier0 (moh.gov.vn) → `co_nguon_xac_nhan` | **Mở rộng cho mọi chủ đề** |
-| 7 | Dynamic match chủ đề an ninh | keywords=["công an", "bắt", "lừa đảo"] + static KHÔNG match | dynamic tìm Tier0 (bocongan.gov.vn) → `co_nguon_xac_nhan` | **Mở rộng cho mọi chủ đề** |
-| 8 | Dynamic chỉ có Tier 2 | keywords + chỉ tìm thấy báo lớn | `chua_tim_thay_nguon` (cần ≥2 Tier1/2) | Không đủ thẩm quyền |
-
-*Integration (merge static + dynamic):*
-
-| # | Scenario | Input | Expected | Chống cái gì |
-|---|---|---|---|---|
-| 9 | Cả 2 match, dedup | keywords trùng static + dynamic | 1 kết quả (dedup by URL) | Không duplicate |
-| 10 | Dynamic fail (quota/API error) | keywords + API error | Fallback → static only, graceful degradation | Robustness |
+| 1 | Search tìm thấy Tier0 xác nhận | keywords=["SCB", "bác bỏ", "tin đồn"] | Tìm thấy sbv.gov.vn (Tier0) → `co_nguon_xac_nhan` | Xác nhận chính thức |
+| 2 | Search tìm thấy Tier0 bác bỏ SAU thoi_gian | keywords + SBV bác bỏ sau ngày claim | `co_bac_bo_chinh_thuc`; nhãn tổng vẫn là gợi ý | Chống khẳng định sai |
+| 3 | Bác bỏ TRƯỚC thoi_gian claim | keywords + bác bỏ trước ngày claim | KHÔNG tính là bác bỏ | Chống lỗi timeline |
+| 4 | Search cho chủ đề bất kỳ (y tế) | keywords=["bệnh viện", "ca bệnh lạ"] | Tìm thấy moh.gov.vn (Tier0) → `co_nguon_xac_nhan` | **Mọi chủ đề** |
+| 5 | Search cho chủ đề bất kỳ (an ninh) | keywords=["công an", "lừa đảo", "mạng"] | Tìm thấy bocongan.gov.vn (Tier0) → `co_nguon_xac_nhan` | **Mọi chủ đề** |
+| 6 | Search chỉ tìm thấy Tier2 | keywords + chỉ báo lớn (VnExpress, Tuổi Trẻ) | `chua_tim_thay_nguon` (cần ≥2 Tier1/2) | Không đủ thẩm quyền |
+| 7 | Search không tìm thấy gì | keywords không liên quan | `chua_tim_thay_nguon` (trung tính) | Chống phạt oan |
+| 8 | Search API fail (quota/error) | keywords + API error | `chua_tim_thay_nguon` + log error, không crash | Graceful degradation |
 
 **Gate G2 (H8.5 = 35%) — SCOPE FREEZE:**
 - All P2 tests green × 2 runs (deterministic)
@@ -266,7 +249,7 @@ P9 guardrails  P6 dashboard
 | 3 | Biểu đồ xu hướng → chart tĩnh render 1 lần | H16 nếu chart ăn time | Bỏ chart, chỉ bảng |
 | 2 | Second run bigger N → dùng run đầu tiên | H20 nếu quota/time | Show CI-vs-N story |
 | 1 | Deploy Railway → ngrok from laptop | H18 nếu deploy fail | ngrok + fallback HTML |
-| **KHÔNG BAO GIỜ CẮT:** | KG core + rule 1/2 + Dual-RAG xac_thuc_nguon + citation bắt buộc + eval gate + collab log + video |
+| **KHÔNG BAO GIỜ CẮT:** | KG core + rule 1/2 + Dynamic source search (xac_thuc_nguon) + citation bắt buộc + eval gate + collab log + video |
 
 ---
 
@@ -275,9 +258,10 @@ P9 guardrails  P6 dashboard
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | **A1 bottleneck** — P1 model là dependency cho TẤT CẢ | High | Critical | A1 deliver P1 trong 2h đầu; B1 song song P3 không cần P1 |
-| **Dynamic search quota** — Gemini Google Search grounding hết quota | Medium | Medium | Static corpus là fallback; ~50 dynamic calls/ngày dư free tier (500 RPD/key ×2) |
-| **Dynamic search hallucination** — Gemini tạo URL/tin giả | Medium | High | classify_tier() chỉ accept URL thật (.gov.vn, domain whitelist); test assert URL hợp lệ |
-| **Dynamic search latency** — mỗi call 2-3s, 50 comments × 3s = 2.5 phút | Low | Low | Chấp nhận được cho batch pipeline; parallel nếu cần |
+| **Dynamic search quota** — Gemini Google Search grounding hết quota (~50 calls/ngày) | Low | High | Gemini free 500 RPD/key ×2 = 1000 RPD; batch 50 comments chỉ dùng ~50 calls. Nếu hết → chua_tim_thay_nguon (trung tính, không crash) |
+| **Dynamic search hallucination** — Gemini tạo URL/tin giả | Medium | High | classify_tier() chỉ accept URL có domain thật (.gov.vn, vnexpress.net...); test assert URL hợp lệ; reject URL lạ |
+| **Dynamic search latency** — mỗi call 2-3s, 50 comments × 3s = 2.5 phút | Low | Low | Chấp nhận được cho batch pipeline; song song nếu cần (asyncio) |
+| **Dynamic search trả lời sai** — Gemini trả kết quả không liên quan claim | Medium | Medium | Fusion rules kiểm tra relevance: keywords phải match ≥1 trong title/summary; không match → chua_tim_thay_nguon |
 | **P2.3 ↔ P4 interface mismatch** — engine expect input format khác LLM output | Medium | Medium | A1 + B1 sync interface tại H6 (5 min); test adapter ở P4 |
 | **BM25 miss tiếng Việt MXH** — "củ", "share", "fake" | High | Medium | A1 build normalize_text() trong P2; test với slang fixtures |
 | **B2 overload** — 3 màn dashboard trong 6h | Medium | High | Cut list item 4 (3→2 màn); B2 chỉ build 2 màn core, verify = static |
@@ -289,10 +273,10 @@ P9 guardrails  P6 dashboard
 ## PRE-EVENT CHECKLIST CÒN THIẾU
 
 **A2 (Verification Specialist):**
-- [ ] Sưu tầm 10-15 docs cho static facts corpus → `data/facts_corpus.json` (ưu tiên vụ SCB + đa dạng chủ đề: y tế, an ninh, kinh tế)
 - [ ] Sưu tầm 1-2 quyết định xử phạt thật → `data/study_cases.json`
-- [ ] Test Gemini Google Search grounding — verify dynamic search hoạt động với 1 query mẫu
-- [ ] Viết draft classify_tier() — test với 5 URL mẫu (.gov.vn, ttxvn.vn, vnexpress.net, random blog)
+- [ ] Test Gemini Google Search grounding — verify dynamic search hoạt động với 3 query mẫu khác nhau chủ đề
+- [ ] Viết draft classify_tier() — test với 10 URL mẫu (.gov.vn, ttxvn.vn, vnexpress.net, random blog, .com)
+- [ ] Viết draft apply_fusion_rules() — test logic Tier0 confirm/deny với mock data
 
 **A1 (Engine Architect):**
 - [ ] Tải + trích Điều 101 NĐ 15/2020 → `data/nd15_trich.md`
@@ -309,7 +293,7 @@ P9 guardrails  P6 dashboard
 
 | Gate | Criteria | Who checks |
 |---|---|---|
-| G1 (H4) | P1 tests green ×2, providers live-smoked, Gemini Google Search grounding tested | A1 + B1 + A2 |
+| G1 (H4) | P1 tests green ×2, providers live-smoked, Gemini Google Search grounding test query thành công | A1 + B1 + A2 |
 | G2 (H8.5) | P2 ALL tests green ×2 (including 10 source verification tests), E2E happy path, scope freeze | A1 + A2 |
 | G3 (H17) | Deployed URL 200 from phone, real data on screen | B3 |
 | G4 (H31) | Video exported, plays clean | B3 |
@@ -321,6 +305,6 @@ P9 guardrails  P6 dashboard
 ## OPEN QUESTIONS
 
 1. **Dynamic search API choice:** Gemini + Google Search grounding (miễn phí, đã có key) vs SerpAPI (100 free queries/day) vs NewsAPI (100 free/day)? Recommend Gemini vì không cần thêm key.
-2. **Static corpus size:** 10-15 docs đủ đa dạng chủ đề (SCB + y tế + an ninh + kinh tế) hay cần 20+? Corpus tĩnh chỉ là fallback — dynamic search là primary.
+2. **Gemini Google Search grounding có sẵn trên free tier không?** Cần verify trước event — nếu không có, fallback sang SerpAPI hoặc Tavily.
 3. **Bộ 45 comments mô phỏng** đã soạn chưa? Nếu chưa, B2 soạn tại event nhưng mất ~2h.
 4. **LLM choice cho P4 extract:** Gemini flash-lite (free) hay Groq llama-4-scout (30K TPM)? Recommend Gemini vì free quota lớn hơn.
