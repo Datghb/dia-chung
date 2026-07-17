@@ -8,14 +8,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 
-
-def _block_playwright_import(name, *args, **kwargs):
-    """Import hook that blocks playwright imports to test fallback behavior."""
-    if name.startswith("playwright"):
-        raise ImportError(f"Blocked: {name}")
-    return __import__(name, *args, **kwargs)
-
-
 # ── Facebook crawler tests ──
 
 class TestFacebookCrawler:
@@ -45,69 +37,57 @@ class TestFacebookCrawler:
         from legal_radar.crawlers.facebook import _parse_count
         assert _parse_count("abc") == 0
 
-    def test_crawl_facebook_no_playwright(self):
-        """Should return empty list if playwright not importable."""
+    def test_crawl_facebook_no_credentials(self):
+        """Should return empty list if no FB credentials."""
         from legal_radar.crawlers.facebook import crawl_facebook
-        with patch("builtins.__import__", side_effect=_block_playwright_import):
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("FB_USERNAME", None)
+            os.environ.pop("FB_PASSWORD", None)
             result = crawl_facebook(keywords=["test"], max_posts=1)
-            assert isinstance(result, list)
             assert result == []
 
-    def test_crawl_facebook_returns_list_on_failure(self):
-        """crawl_facebook returns empty list on any error."""
+    def test_crawl_facebook_no_playwright(self):
+        """Should return empty list if playwright not installed."""
         from legal_radar.crawlers.facebook import crawl_facebook
-        with patch("builtins.__import__", side_effect=_block_playwright_import):
-            result = crawl_facebook(keywords=["test"], max_posts=1)
-            assert isinstance(result, list)
+        with patch.dict(os.environ, {"FB_USERNAME": "test", "FB_PASSWORD": "test"}):
+            with patch.dict("sys.modules", {"playwright": None, "playwright.sync_api": None}):
+                result = crawl_facebook(keywords=["test"], max_posts=1)
+                assert result == []
 
     def test_default_keywords_not_empty(self):
         from legal_radar.crawlers.facebook import DEFAULT_KEYWORDS
         assert len(DEFAULT_KEYWORDS) > 0
         assert "tin giả" in DEFAULT_KEYWORDS
 
-    def test_extract_post_data_returns_none_for_empty(self):
-        """_extract_post_data should return None when card has no useful data."""
-        from legal_radar.crawlers.facebook import _extract_post_data
-        mock_card = MagicMock()
-        mock_card.query_selector.return_value = None
-        mock_card.query_selector_all.return_value = []
-        result = _extract_post_data(mock_card)
-        assert result is None
+    def test_safe_click_text_returns_false_when_missing(self):
+        from legal_radar.crawlers.facebook import _safe_click_text
+        mock_page = MagicMock()
+        mock_result = MagicMock()
+        mock_result.count.return_value = 0
+        mock_page.get_by_text.return_value = mock_result
+        mock_page.wait_for_selector.return_value = None
+        result = _safe_click_text(mock_page, "nonexistent", timeout=100)
+        assert result is False
 
-    def test_extract_post_data_with_mock_card(self):
-        """_extract_post_data should extract data from a mock card."""
-        from legal_radar.crawlers.facebook import _extract_post_data
+    def test_expand_all_comments_returns_int(self):
+        """_expand_all_comments returns 0 when no buttons found."""
+        from legal_radar.crawlers.facebook import _expand_all_comments
+        mock_page = MagicMock()
+        mock_result = MagicMock()
+        mock_result.count.return_value = 0
+        mock_page.get_by_text.return_value = mock_result
+        mock_page.wait_for_selector.return_value = None
+        result = _expand_all_comments(mock_page, max_clicks=3)
+        assert isinstance(result, int)
+        assert result == 0
 
-        mock_text_el = MagicMock()
-        mock_text_el.inner_text.return_value = "Test post content"
-
-        mock_author_el = MagicMock()
-        mock_author_el.inner_text.return_value = "Test Author"
-
-        mock_link_el = MagicMock()
-        mock_link_el.get_attribute.return_value = "/posts/12345"
-
-        def query_side_effect(selector):
-            mapping = {
-                '[data-ad-rendering-role="story_message"]': mock_text_el,
-                '[data-testid="post_message"]': None,
-                'strong > a, h2 a, h3 a, [role="link"]': mock_author_el,
-                'a[href*="/posts/"], a[href*="/photo"], a[href*="/story"]': mock_link_el,
-                'abbr[data-utime], span[id*="jsc"]': None,
-            }
-            return mapping.get(selector)
-
-        mock_card = MagicMock()
-        mock_card.query_selector.side_effect = query_side_effect
-        mock_card.query_selector_all.return_value = []
-
-        result = _extract_post_data(mock_card)
-        assert result is not None
-        assert result["platform"] == "facebook"
-        assert result["content_type"] == "post"
-        assert result["text"] == "Test post content"
-        assert result["author"] == "Test Author"
-        assert result["url"] == "https://www.facebook.com/posts/12345"
+    def test_extract_comments_returns_list(self):
+        from legal_radar.crawlers.facebook import _extract_comments
+        mock_page = MagicMock()
+        mock_page.query_selector_all.return_value = []
+        result = _extract_comments(mock_page, max_comments=10)
+        assert isinstance(result, list)
+        assert result == []
 
 
 # ── YouTube crawler tests ──

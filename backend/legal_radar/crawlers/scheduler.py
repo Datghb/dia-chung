@@ -1,4 +1,4 @@
-"""Crawler scheduler — on-demand + periodic background crawling.
+﻿"""Crawler scheduler — on-demand + periodic background crawling.
 
 Appends results to runs/crawled_raw.jsonl with URL-based dedup.
 Thread-safe for background execution.
@@ -12,13 +12,13 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from .facebook import crawl_facebook, DEFAULT_KEYWORDS as FB_KEYWORDS
+from .facebook import crawl_facebook, SEARCH_PHRASE
 from .youtube import crawl_youtube, DEFAULT_KEYWORDS as YT_KEYWORDS
 
 logger = logging.getLogger(__name__)
 
 CRAWL_INTERVAL_MINUTES = 15
-CRAWL_KEYWORDS: list[str] = list(set(FB_KEYWORDS + YT_KEYWORDS))
+CRAWL_KEYWORDS: list[str] = [SEARCH_PHRASE]
 YOUTUBE_MAX_RESULTS = 10
 
 _DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent.parent.parent.parent / "runs"
@@ -180,3 +180,4 @@ class CrawlScheduler:
             max_posts_per_platform=self.max_posts,
             output_path=self.output_path,
         )
+
