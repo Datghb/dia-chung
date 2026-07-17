@@ -7,20 +7,20 @@ const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin", "latin-ext
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://legalshield174.openai.site"),
-  title: "LegalShield 174 — Legal Intelligence",
-  description: "Nền tảng kiểm chứng claim, ánh xạ điều khoản và ưu tiên rủi ro cần chuyên gia xử lý.",
+  title: "Legal Radar — Giám sát nội dung mạng xã hội",
+  description: "Hàng đợi giám sát, kiểm chứng claim và hồ sơ căn cứ pháp luật.",
   icons: { icon: "/favicon.svg" },
   openGraph: {
-    title: "LegalShield 174 — Legal Intelligence",
-    description: "Kiểm chứng claim · Ánh xạ điều khoản · Ưu tiên human review",
+    title: "Legal Radar — Giám sát nội dung mạng xã hội",
+    description: "Kiểm chứng claim, điều phối xử lý và truy xuất căn cứ pháp luật.",
     images: [{ url: "/og.png", width: 1200, height: 630 }],
     locale: "vi_VN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LegalShield 174 — Legal Intelligence",
-    description: "Kiểm chứng claim · Ánh xạ điều khoản · Ưu tiên human review",
+    title: "Legal Radar — Giám sát nội dung mạng xã hội",
+    description: "Kiểm chứng claim, điều phối xử lý và truy xuất căn cứ pháp luật.",
     images: ["/og.png"],
   },
 };
