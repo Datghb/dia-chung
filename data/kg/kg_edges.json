@@ -1,0 +1,144 @@
+[
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k1-a",
+    "to_id": "nd174-d95-k1-a",
+    "dien_giai": "NĐ15 Điều 101 k1a → NĐ174 Điều 95 k1a: tổ chức 10-20tr → 20-30tr; cá nhân 5-10tr → 10-15tr; hiệu lực từ 01/7/2026"
+  },
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k1-b",
+    "to_id": "nd174-d95-k1-b",
+    "dien_giai": "NĐ15 Điều 101 k1b (cổ súy hủ tục/mê tín) → NĐ174 Điều 95 k1b (cổ súy tệ nạn/đồi trụy): phạm vi mở rộng"
+  },
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k1-c",
+    "to_id": "nd174-d95-k1-c",
+    "dien_giai": "NĐ15 Điều 101 k1c → NĐ174 Điều 95 k1c: nội dung tương tự"
+  },
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k1-d",
+    "to_id": "nd174-d95-k2-c",
+    "dien_giai": "NĐ15 Điều 101 k1d (gây hoang mang/kích động) → NĐ174 Điều 95 k2c (gây hoang mang): mức tăng 10-20 → 30-50tr tổ chức"
+  },
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k1-dd",
+    "to_id": "nd174-d95-k1-d",
+    "dien_giai": "NĐ15 Điều 101 k1đ → NĐ174 Điều 95 k1d: tác phẩm không phép"
+  },
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k1-e",
+    "to_id": "nd174-d95-k1-dd",
+    "dien_giai": "NĐ15 Điều 101 k1e → NĐ174 Điều 95 k1đ: hàng hóa/dịch vụ bị cấm"
+  },
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k1-g",
+    "to_id": "nd174-d95-k1-e",
+    "dien_giai": "NĐ15 Điều 101 k1g → NĐ174 Điều 95 k1e: bản đồ chủ quyền"
+  },
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k1-h",
+    "to_id": "nd174-d95-k1-g",
+    "dien_giai": "NĐ15 Điều 101 k1h → NĐ174 Điều 95 k1g: đường dẫn nội dung cấm"
+  },
+  {
+    "type": "THAY_THE",
+    "from_id": "nd15-d101-k2",
+    "to_id": "nd174-d95-k2-b",
+    "dien_giai": "NĐ15 Điều 101 k2 (bí mật) → NĐ174 Điều 95 k2b (bí mật): tổ chức 20-30tr → 30-50tr"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-tin-gia",
+    "to_id": "nd174-d95-k1-a"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-te-nan",
+    "to_id": "nd174-d95-k1-b"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-bao-luc",
+    "to_id": "nd174-d95-k1-c"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-hoang-mang",
+    "to_id": "nd174-d95-k2-c"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-bi-mat",
+    "to_id": "nd174-d95-k2-b"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-xuyen-tac-lich-su",
+    "to_id": "nd174-d95-k2-a"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-tin-gia-nd15",
+    "to_id": "nd15-d101-k1-a"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-hoang-mang-nd15",
+    "to_id": "nd15-d101-k1-d"
+  },
+  {
+    "type": "AP_DUNG_CHO",
+    "from_id": "mp-d95-k1",
+    "to_id": "ct-to-chuc",
+    "he_so": 1.0
+  },
+  {
+    "type": "AP_DUNG_CHO",
+    "from_id": "mp-d95-k1",
+    "to_id": "ct-ca-nhan",
+    "he_so": 0.5
+  },
+  {
+    "type": "AP_DUNG_CHO",
+    "from_id": "mp-d95-k2",
+    "to_id": "ct-to-chuc",
+    "he_so": 1.0
+  },
+  {
+    "type": "AP_DUNG_CHO",
+    "from_id": "mp-d95-k2",
+    "to_id": "ct-ca-nhan",
+    "he_so": 0.5
+  },
+  {
+    "type": "AP_DUNG_CHO",
+    "from_id": "mp-d101-k1",
+    "to_id": "ct-to-chuc",
+    "he_so": 1.0
+  },
+  {
+    "type": "AP_DUNG_CHO",
+    "from_id": "mp-d101-k1",
+    "to_id": "ct-ca-nhan",
+    "he_so": 0.5
+  },
+  {
+    "type": "AP_DUNG_CHO",
+    "from_id": "mp-d101-k2",
+    "to_id": "ct-to-chuc",
+    "he_so": 1.0
+  },
+  {
+    "type": "AP_DUNG_CHO",
+    "from_id": "mp-d101-k2",
+    "to_id": "ct-ca-nhan",
+    "he_so": 0.5
+  }
+]

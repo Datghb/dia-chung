@@ -1,0 +1,353 @@
+[
+  {
+    "type": "VanBan",
+    "id": "nd174",
+    "so_hieu": "174/2026/NĐ-CP",
+    "ngay_hieu_luc": "2026-07-01",
+    "trang_thai": "hieu_luc"
+  },
+  {
+    "type": "VanBan",
+    "id": "nd15",
+    "so_hieu": "15/2020/NĐ-CP",
+    "ngay_hieu_luc": "2020-05-15",
+    "trang_thai": "het_hieu_luc"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-a",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "a",
+    "noi_dung": "Cung cấp, chia sẻ thông tin giả mạo, thông tin sai sự thật, xuyên tạc, vu khống, xúc phạm uy tín của cơ quan, tổ chức, danh dự, nhân phẩm của cá nhân"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-b",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "b",
+    "noi_dung": "Cung cấp, chia sẻ thông tin cổ súy cho tệ nạn xã hội, mại dâm, mua bán người; đăng tải thông tin dâm ô, đồi trụy; phá hoại thuần phong, mỹ tục của dân tộc, đạo đức xã hội, sức khỏe của cộng đồng mà chưa đến mức truy cứu trách nhiệm hình sự"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-c",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "c",
+    "noi_dung": "Cung cấp, chia sẻ thông tin miêu tả tỉ mỉ hành động chém, giết, tai nạn, kinh dị, rùng rợn"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-d",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "d",
+    "noi_dung": "Cung cấp, chia sẻ các tác phẩm báo chí, văn học, nghệ thuật, xuất bản phẩm mà không được sự đồng ý của chủ thể quyền sở hữu trí tuệ hoặc chưa được phép lưu hành hoặc đã có quyết định cấm lưu hành hoặc tịch thu"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-dd",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "đ",
+    "noi_dung": "Quảng cáo, tuyên truyền, chia sẻ thông tin về hàng hóa, dịch vụ bị cấm"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-e",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "e",
+    "noi_dung": "Cung cấp, chia sẻ hình ảnh bản đồ Việt Nam nhưng không thể hiện hoặc thể hiện không đúng chủ quyền quốc gia"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-g",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "g",
+    "noi_dung": "Cung cấp, chia sẻ đường dẫn đến thông tin trên mạng có nội dung bị cấm"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-h",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "h",
+    "noi_dung": "Lợi dụng mạng xã hội để sản xuất nội dung dưới hình thức phóng sự, điều tra, phỏng vấn báo chí"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-i",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "i",
+    "noi_dung": "Các cơ quan báo chí không thực hiện thông báo khi thiết lập tài khoản, trang cộng đồng, kênh nội dung, nhóm cộng đồng trên mạng xã hội trong và ngoài nước theo quy định"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k1-k",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 1,
+    "diem": "k",
+    "noi_dung": "Chủ tài khoản, chủ kênh nội dung, chủ trang cộng đồng, người quản trị nhóm cộng đồng trên mạng xã hội không thực hiện ngăn chặn, gỡ bỏ thông tin vi phạm pháp luật khi có yêu cầu của cơ quan có thẩm quyền"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k2-a",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 2,
+    "diem": "a",
+    "noi_dung": "Cung cấp, chia sẻ thông tin xuyên tạc lịch sử, phủ nhận thành tựu cách mạng, phá hoại khối đại đoàn kết toàn dân tộc, xúc phạm tôn giáo, phân biệt đối xử về giới, phân biệt chủng tộc mà chưa đến mức truy cứu trách nhiệm hình sự"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k2-b",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 2,
+    "diem": "b",
+    "noi_dung": "Tiết lộ thông tin thuộc danh mục bí mật nhà nước, bí mật đời tư của cá nhân và bí mật khác mà chưa đến mức truy cứu trách nhiệm hình sự"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k2-c",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 2,
+    "diem": "c",
+    "noi_dung": "Cung cấp, chia sẻ thông tin sai sự thật gây hoang mang trong Nhân dân, gây thiệt hại cho hoạt động kinh tế - xã hội, gây khó khăn cho hoạt động của cơ quan nhà nước hoặc người thi hành công vụ, xâm phạm quyền và lợi ích hợp pháp của cơ quan, tổ chức, cá nhân khác mà chưa đến mức truy cứu trách nhiệm hình sự"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k3-a",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 3,
+    "diem": "a",
+    "noi_dung": "Buộc gỡ bỏ thông tin sai sự thật hoặc gây nhầm lẫn hoặc thông tin vi phạm pháp luật do thực hiện hành vi vi phạm quy định tại các khoản 1 và 2 Điều này"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd174-d95-k3-b",
+    "van_ban_id": "nd174",
+    "dieu": 95,
+    "khoan": 3,
+    "diem": "b",
+    "noi_dung": "Buộc khóa tài khoản, trang cộng đồng, nhóm cộng đồng hoặc kênh nội dung do thực hiện hành vi vi phạm quy định tại khoản 2 Điều này"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k1-a",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 1,
+    "diem": "a",
+    "noi_dung": "Cung cấp, chia sẻ thông tin giả mạo, thông tin sai sự thật, xuyên tạc, vu khống, xúc phạm uy tín của cơ quan, tổ chức, danh dự, nhân phẩm của cá nhân"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k1-b",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 1,
+    "diem": "b",
+    "noi_dung": "Cung cấp, chia sẻ thông tin cổ súy các hủ tục, mê tín, dị đoan, dâm ô, đồi trụy, không phù hợp với thuần phong, mỹ tục của dân tộc"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k1-c",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 1,
+    "diem": "c",
+    "noi_dung": "Cung cấp, chia sẻ thông tin miêu tả tỉ mỉ hành động chém, giết, tai nạn, kinh dị, rùng rợn"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k1-d",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 1,
+    "diem": "d",
+    "noi_dung": "Cung cấp, chia sẻ thông tin bịa đặt, gây hoang mang trong Nhân dân, kích động bạo lực, tội ác, tệ nạn xã hội, đánh bạc hoặc phục vụ đánh bạc"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k1-dd",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 1,
+    "diem": "đ",
+    "noi_dung": "Cung cấp, chia sẻ các tác phẩm báo chí, văn học, nghệ thuật, xuất bản phẩm mà không được sự đồng ý của chủ thể quyền sở hữu trí tuệ hoặc chưa được phép lưu hành hoặc đã có quyết định cấm lưu hành hoặc tịch thu"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k1-e",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 1,
+    "diem": "e",
+    "noi_dung": "Quảng cáo, tuyên truyền, chia sẻ thông tin về hàng hóa, dịch vụ bị cấm"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k1-g",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 1,
+    "diem": "g",
+    "noi_dung": "Cung cấp, chia sẻ hình ảnh bản đồ Việt Nam nhưng không thể hiện hoặc thể hiện không đúng chủ quyền quốc gia"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k1-h",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 1,
+    "diem": "h",
+    "noi_dung": "Cung cấp, chia sẻ đường dẫn đến thông tin trên mạng có nội dung bị cấm"
+  },
+  {
+    "type": "DieuKhoan",
+    "id": "nd15-d101-k2",
+    "van_ban_id": "nd15",
+    "dieu": 101,
+    "khoan": 2,
+    "diem": null,
+    "noi_dung": "Phạt tiền từ 20.000.000 đồng đến 30.000.000 đồng đối với hành vi tiết lộ thông tin thuộc danh mục bí mật nhà nước, bí mật đời tư của cá nhân và bí mật khác mà chưa đến mức truy cứu trách nhiệm hình sự"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-tin-gia",
+    "dieu_khoan_id": "nd174-d95-k1-a",
+    "mo_ta": "Cung cấp, chia sẻ thông tin giả mạo, thông tin sai sự thật, xuyên tạc, vu khống, xúc phạm uy tín của cơ quan, tổ chức, danh dự, nhân phẩm của cá nhân",
+    "nhom": "tin_gia"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-te-nan",
+    "dieu_khoan_id": "nd174-d95-k1-b",
+    "mo_ta": "Cung cấp, chia sẻ thông tin cổ súy cho tệ nạn xã hội, mại dâm, mua bán người; đăng tải thông tin dâm ô, đồi trụy",
+    "nhom": "khac"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-bao-luc",
+    "dieu_khoan_id": "nd174-d95-k1-c",
+    "mo_ta": "Cung cấp, chia sẻ thông tin miêu tả tỉ mỉ hành động chém, giết, tai nạn, kinh dị, rùng rợn",
+    "nhom": "khac"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-hoang-mang",
+    "dieu_khoan_id": "nd174-d95-k2-c",
+    "mo_ta": "Cung cấp, chia sẻ thông tin sai sự thật gây hoang mang trong Nhân dân, gây thiệt hại cho hoạt động kinh tế - xã hội",
+    "nhom": "tin_gia"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-bi-mat",
+    "dieu_khoan_id": "nd174-d95-k2-b",
+    "mo_ta": "Tiết lộ thông tin thuộc danh mục bí mật nhà nước, bí mật đời tư của cá nhân",
+    "nhom": "khac"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-xuyen-tac-lich-su",
+    "dieu_khoan_id": "nd174-d95-k2-a",
+    "mo_ta": "Cung cấp, chia sẻ thông tin xuyên tạc lịch sử, phủ nhận thành tựu cách mạng, phá hoại khối đại đoàn kết toàn dân tộc, xúc phạm tôn giáo, phân biệt đối xử về giới, phân biệt chủng tộc",
+    "nhom": "khac"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-tin-gia-nd15",
+    "dieu_khoan_id": "nd15-d101-k1-a",
+    "mo_ta": "Cung cấp, chia sẻ thông tin giả mạo, thông tin sai sự thật, xuyên tạc, vu khống, xúc phạm uy tín của cơ quan, tổ chức, danh dự, nhân phẩm của cá nhân",
+    "nhom": "tin_gia"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-hoang-mang-nd15",
+    "dieu_khoan_id": "nd15-d101-k1-d",
+    "mo_ta": "Cung cấp, chia sẻ thông tin bịa đặt, gây hoang mang trong Nhân dân, kích động bạo lực, tội ác, tệ nạn xã hội, đánh bạc hoặc phục vụ đánh bạc",
+    "nhom": "tin_gia"
+  },
+  {
+    "type": "ChuThe",
+    "id": "ct-ca-nhan",
+    "loai": "ca_nhan",
+    "mo_ta_nhan_dien": "Cá nhân: user MXH, KOL, tiktoker"
+  },
+  {
+    "type": "ChuThe",
+    "id": "ct-to-chuc",
+    "loai": "to_chuc",
+    "mo_ta_nhan_dien": "Tổ chức: doanh nghiệp sở hữu fanpage, hội nhóm (Điều 2 k2)"
+  },
+  {
+    "type": "MucPhat",
+    "id": "mp-d95-k1",
+    "dieu_khoan_id": "nd174-d95-k1-a",
+    "min_vnd": 20000000,
+    "max_vnd": 30000000,
+    "ap_dung_cho": "to_chuc"
+  },
+  {
+    "type": "MucPhat",
+    "id": "mp-d95-k2",
+    "dieu_khoan_id": "nd174-d95-k2-a",
+    "min_vnd": 30000000,
+    "max_vnd": 50000000,
+    "ap_dung_cho": "to_chuc"
+  },
+  {
+    "type": "MucPhat",
+    "id": "mp-d101-k1",
+    "dieu_khoan_id": "nd15-d101-k1-a",
+    "min_vnd": 10000000,
+    "max_vnd": 20000000,
+    "ap_dung_cho": "to_chuc"
+  },
+  {
+    "type": "MucPhat",
+    "id": "mp-d101-k2",
+    "dieu_khoan_id": "nd15-d101-k2",
+    "min_vnd": 20000000,
+    "max_vnd": 30000000,
+    "ap_dung_cho": "to_chuc"
+  },
+  {
+    "type": "BienPhapKhacPhuc",
+    "id": "bp-d95-k1k2",
+    "dieu_khoan_id": "nd174-d95-k3-a",
+    "mo_ta": "Buộc gỡ bỏ thông tin sai sự thật hoặc gây nhầm lẫn hoặc thông tin vi phạm pháp luật",
+    "pham_vi": "k1_k2"
+  },
+  {
+    "type": "BienPhapKhacPhuc",
+    "id": "bp-d95-k2-only",
+    "dieu_khoan_id": "nd174-d95-k3-b",
+    "mo_ta": "Buộc khóa tài khoản, trang cộng đồng, nhóm cộng đồng hoặc kênh nội dung",
+    "pham_vi": "k2_only"
+  },
+  {
+    "type": "BienPhapKhacPhuc",
+    "id": "bp-d101-k1k2",
+    "dieu_khoan_id": "nd15-d101-k1-a",
+    "mo_ta": "Buộc gỡ bỏ thông tin sai sự thật hoặc gây nhầm lẫn hoặc thông tin vi phạm pháp luật",
+    "pham_vi": "k1_k2"
+  }
+]

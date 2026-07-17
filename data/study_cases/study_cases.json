@@ -1,0 +1,50 @@
+[
+  {
+    "id": "sc-001",
+    "ten_vu": "Đăng tin sai sự thật về quy hoạch Ba Đình trên Facebook",
+    "nguon_cong_bo": "Công an thành phố Hà Nội (theo Báo Hà Nội Mới)",
+    "ngay_quyet_dinh": "2026-06-30",
+    "so_quyet_dinh": "không công bố số cụ thể",
+    "hanh_vi": "Đăng tải nội dung sai sự thật về công tác quy hoạch khu vực Trung tâm chính trị Ba Đình theo quy hoạch mới của Thủ đô trên Facebook cá nhân. Bài viết thu hút nhiều người quan tâm, gây hoang mang dư luận.",
+    "dieu_khoan_vien_dan": "Điểm a khoản 1 Điều 101 NĐ 15/2020/NĐ-CP (sửa đổi bởi NĐ 14/2022, NĐ 211/2025)",
+    "muc_phat": 7500000,
+    "chu_the": "ca_nhan",
+    "bien_phap_khac_phuc": "Buộc gỡ bỏ thông tin sai sự thật",
+    "nguon_url": "https://baotuyenquang.com.vn/phap-luat/202607/xu-phat-mot-truong-hop-dang-tin-sai-su-that-tren-mang-xa-hoi-d417584/",
+    "an_danh": "Cá nhân T.Q.T — Công an TP Hà Nội xử phạt ngày 30/6/2026",
+    "expected_he_thong": {
+      "dieu_khoan_cu": "điểm a, khoản 1, Điều 101 — NĐ 15/2020/NĐ-CP",
+      "dieu_khoan_moi": "điểm a, khoản 1, Điều 95 — NĐ 174/2026/NĐ-CP",
+      "muc_phat_to_chuc_cu": [10000000, 20000000],
+      "muc_phat_ca_nhan_cu": [5000000, 10000000],
+      "muc_phat_to_chuc_moi": [20000000, 30000000],
+      "muc_phat_ca_nhan_moi": [10000000, 15000000],
+      "nhan": "dung",
+      "ghi_chu": "7.5tr nằm trong khung 5-10tr cá nhân NĐ15. Nếu xảy ra sau 01/7/2026 → 10-15tr NĐ174. Vụ xử phạt ngày 30/6/2026, trước khi NĐ174 có hiệu lực 1 ngày."
+    }
+  },
+  {
+    "id": "sc-002",
+    "ten_vu": "Dùng AI ghép mặt đăng thông tin sai sự thật trên Facebook",
+    "nguon_cong_bo": "Báo Sức khỏe & Đời sống (Cơ quan ngôn luận Bộ Y tế)",
+    "ngay_quyet_dinh": "2026-07-16",
+    "so_quyet_dinh": "không công bố số cụ thể",
+    "hanh_vi": "Thu thập hình ảnh cá nhân khác, dùng điện thoại tạo video AI ghép mặt kèm nội dung sai sự thật đăng lên Facebook với mục đích trêu đùa. Vi phạm quyền riêng tư và đăng tải thông tin sai sự thật.",
+    "dieu_khoan_vien_dan": "Thu thập, xử lý và sử dụng thông tin của tổ chức, cá nhân khác mà không được sự đồng ý hoặc sai mục đích theo quy định của pháp luật",
+    "muc_phat": 7500000,
+    "chu_the": "ca_nhan",
+    "bien_phap_khac_phuc": "Không nêu cụ thể",
+    "nguon_url": "https://suckhoedoisong.vn/ghep-mat-bang-ai-dang-tai-thong-tin-sai-su-that-nguoi-dan-ong-bi-phat-75-trieu-dong-169260716130127287.htm",
+    "an_danh": "Cá nhân N.H.A (SN 1973) — Công an phường Thái Bình, Hưng Yên xử phạt",
+    "expected_he_thong": {
+      "dieu_khoan_cu": "không map trực tiếp vào Điều 101 NĐ15 (vi phạm riêng tư + thông tin sai sự thật)",
+      "dieu_khoan_moi": "có thể liên quan Điều 95 NĐ174 (điểm a k1: thông tin sai sự thật) + quy định riêng tư",
+      "muc_phat_to_chuc_cu": [10000000, 20000000],
+      "muc_phat_ca_nhan_cu": [5000000, 10000000],
+      "muc_phat_to_chuc_moi": [20000000, 30000000],
+      "muc_phat_ca_nhan_moi": [10000000, 15000000],
+      "nhan": "dung",
+      "ghi_chu": "7.5tr nằm trong khung 5-10tr cá nhân NĐ15. Vụ xử phạt ngày 16/7/2026, NĐ174 đã có hiệu lực. Tuy nhiên điều khoản viện dẫn không rõ ràng — cần cán bộ đối chiếu thêm (yếu tố AI ghép mặt + riêng tư)."
+    }
+  }
+]

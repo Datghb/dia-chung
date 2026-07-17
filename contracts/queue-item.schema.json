@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QueueItem",
+  "type": "object",
+  "required": ["id", "claim", "label", "source_label", "reason"],
+  "properties": {
+    "id": { "type": "string" },
+    "claim": { "type": "string" },
+    "label": {
+      "enum": ["dung", "hieu_lam", "can_kiem_chung"]
+    },
+    "source_label": {
+      "enum": [
+        "co_nguon_xac_nhan",
+        "co_bac_bo_chinh_thuc",
+        "chua_tim_thay_nguon"
+      ]
+    },
+    "reason": { "type": "string" }
+  },
+  "additionalProperties": false
+}
+

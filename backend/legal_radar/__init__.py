@@ -1,0 +1,2 @@
+"""Legal-KG domain package."""
+
