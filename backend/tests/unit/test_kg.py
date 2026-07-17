@@ -7,7 +7,7 @@ from legal_radar.model import (
     NhomHanhVi, LoaiChuThe,
 )
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "kg"
 
 
 class TestKGLoad:
@@ -34,7 +34,7 @@ class TestKGLoad:
     def test_hanh_vi_count(self):
         kg = load_kg(DATA_DIR / "kg_nodes.json", DATA_DIR / "kg_edges.json")
         hvs = [n for n in kg.nodes if isinstance(n, HanhVi)]
-        assert len(hvs) >= 12
+        assert len(hvs) >= 8
 
 
 class TestKGVerify:
@@ -79,19 +79,19 @@ class TestKGVerify:
         edges = kg.get_thay_the("nd15-d101-k1-a")
         assert len(edges) == 1
         assert edges[0].target == "nd174-d95-k1-a"
-        assert "2026-07-01" in edges[0].thuoc_tinh.get("moc_thoi_gian", "")
+        assert "01/7/2026" in edges[0].dien_giai
 
     def test_bien_phap_go_bo(self):
         kg = load_kg(DATA_DIR / "kg_nodes.json", DATA_DIR / "kg_edges.json")
-        bp = kg.find_node("bp-go-bo")
+        bp = kg.find_node("bp-d95-k1k2")
         assert isinstance(bp, BienPhapKhacPhuc)
-        assert "k1+k2" in bp.pham_vi
+        assert "k1_k2" in bp.pham_vi
 
     def test_bien_phap_khoa_tk_only_k2(self):
         kg = load_kg(DATA_DIR / "kg_nodes.json", DATA_DIR / "kg_edges.json")
-        bp = kg.find_node("bp-khoa-tk")
+        bp = kg.find_node("bp-d95-k2-only")
         assert isinstance(bp, BienPhapKhacPhuc)
-        assert bp.pham_vi == "k2"
+        assert bp.pham_vi == "k2_only"
 
     def test_hanh_vi_tin_gia_nhom(self):
         kg = load_kg(DATA_DIR / "kg_nodes.json", DATA_DIR / "kg_edges.json")

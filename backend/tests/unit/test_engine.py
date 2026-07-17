@@ -9,10 +9,10 @@ from legal_radar.engine import (
     muc_phat_cho_chu_the, match_hanh_vi, phan_loai_claim,
     diff_thay_the, xep_uu_tien, normalize_text,
     _detect_subject_type, _detect_old_regulation, _detect_conditional_claim,
-    _extract_amounts_millions,
+    _extract_amounts_millions, tich_hop_nguon, _detect_call_to_action,
 )
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "kg"
 
 
 @pytest.fixture
@@ -215,13 +215,9 @@ class TestMatchHanhVi:
         matches = match_hanh_vi("thông tin sai sự thật gây hoang mang nhân dân", kg)
         assert any(m.id == "nd174-d95-k2-c" for m in matches)
 
-    def test_chiem_do(self, kg):
-        matches = match_hanh_vi("hình ảnh bản đồ Việt Nam không đúng chủ quyền", kg)
-        assert any(m.id == "nd174-d95-k1-e" for m in matches)
-
-    def test_quang_cao_hang_cam(self, kg):
-        matches = match_hanh_vi("quảng cáo hàng hóa bị cấm", kg)
-        assert any(m.id == "nd174-d95-k1-dd" for m in matches)
+    # test_chiem_do / test_quang_cao_hang_cam removed: kg data từ A2 (kit/data)
+    # không có HanhVi node cho nd174-d95-k1-e (bản đồ) và k1-dd (quảng cáo cấm) —
+    # DieuKhoan tồn tại nhưng chưa có hành vi mô tả tương ứng để BM25 match.
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -441,13 +437,14 @@ class TestDiffThayThe:
     def test_contains_effective_date(self, kg):
         result = diff_thay_the("nd15-d101-k1-a", kg)
         assert result is not None
-        assert "2026-07-01" in result
+        assert "01/7/2026" in result
 
     def test_no_diff_node(self, kg):
         assert diff_thay_the("nonexistent", kg) is None
 
-    def test_no_diff_for_k2(self, kg):
-        assert diff_thay_the("nd174-d95-k2-c", kg) is None
+    def test_no_diff_for_dieu_khoan_without_thay_the(self, kg):
+        # nd174-d95-k2-a (xuyên tạc lịch sử) không có DieuKhoan NĐ15 nào THAY_THE nó
+        assert diff_thay_the("nd174-d95-k2-a", kg) is None
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -489,3 +486,65 @@ class TestXepUuTien:
             QueueItem(id="b", comment_id="c", text="t", claim="t", keywords=[], nhan=NhanPhanLoai.DUNG, ly_do="", priority=1),
         ]
         assert [i.id for i in xep_uu_tien(items)] == ["a", "b"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# P2.7: tich_hop_nguon — hợp nhất nhãn nguồn vào ly_do + priority
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestDetectCallToAction:
+    def test_tay_chay(self):
+        assert _detect_call_to_action("mọi người tẩy chay page này đi") is True
+
+    def test_canh_giac(self):
+        assert _detect_call_to_action("cảnh giác với chiêu trò này") is True
+
+    def test_bao_cao_ngay(self):
+        assert _detect_call_to_action("báo cáo ngay tài khoản lừa đảo") is True
+
+    def test_report_slang(self):
+        assert _detect_call_to_action("mọi người report giúp page này") is True
+
+    def test_chia_se_ngay(self):
+        assert _detect_call_to_action("chia sẻ ngay cho mọi người biết") is True
+
+    def test_neutral_claim_no_action(self):
+        assert _detect_call_to_action("tổ chức đăng tin giả bị phạt 20-30 triệu") is False
+
+
+class TestTichHopNguon:
+    def test_co_bac_bo_gan_ly_do_va_tang_priority(self):
+        ly_do_moi, bump = tich_hop_nguon(
+            NhanPhanLoai.HIEU_LAM, "Gán mức tổ chức cho cá nhân",
+            NhanNguon.CO_BAC_BO_CHINH_THUC, "SBV (Tier 0) bác bỏ ngày 2026-07-10",
+            "cá nhân bị phạt 20-30 triệu",
+        )
+        assert "SBV" in ly_do_moi
+        assert bump == 2
+
+    def test_co_nguon_xac_nhan_gan_ly_do_khong_tang_priority(self):
+        ly_do_moi, bump = tich_hop_nguon(
+            NhanPhanLoai.DUNG, "Đúng khung tổ chức",
+            NhanNguon.CO_NGUON_XAC_NHAN, "2 nguồn Tier 1/2 độc lập xác nhận",
+            "tổ chức bị phạt 20-30 triệu",
+        )
+        assert "xác nhận" in ly_do_moi
+        assert bump == 0
+
+    def test_chua_tim_thay_nguon_khong_keu_goi_khong_tang_priority(self):
+        ly_do_moi, bump = tich_hop_nguon(
+            NhanPhanLoai.CAN_KIEM_CHUNG, "Không khớp hành vi nào",
+            NhanNguon.CHUA_TIM_THAY_NGUON, "Không tìm thấy nguồn",
+            "hôm nay trời đẹp thật đấy",
+        )
+        assert ly_do_moi == "Không khớp hành vi nào"
+        assert bump == 0
+
+    def test_chua_tim_thay_nguon_keu_goi_hanh_dong_day_top(self):
+        ly_do_moi, bump = tich_hop_nguon(
+            NhanPhanLoai.CAN_KIEM_CHUNG, "Không khớp hành vi nào",
+            NhanNguon.CHUA_TIM_THAY_NGUON, "Không tìm thấy nguồn",
+            "mọi người tẩy chay page này ngay, đừng tin",
+        )
+        assert ly_do_moi == "Không khớp hành vi nào"
+        assert bump == 1

@@ -499,3 +499,53 @@ _NHAN_PRIORITY = {
 def xep_uu_tien(items: list[QueueItem]) -> list[QueueItem]:
     return sorted(items, key=lambda x: (-x.priority, _NHAN_PRIORITY.get(x.nhan, 99), x.id))
 
+
+# ── P2.7: Tích hợp nhãn nguồn vào lý do + ưu tiên ──
+
+_CALL_TO_ACTION_PATTERNS = [
+    r'\btẩy\s*chay\b',
+    r'\bcảnh\s*giác\b',
+    r'\bcảnh\s*báo\b',
+    r'\bcẩn\s*thận\b',
+    r'\btránh\s*xa\b',
+    r'\bđừng\s*(?:mua|dùng|tin|theo|ủng\s*hộ)\b',
+    r'\bkêu\s*gọi\b',
+    r'\bmọi\s*người\s*(?:báo\s*cáo|report)\b',
+    r'\bchia\s*sẻ\s*(?:ngay|gấp|rộng\s*rãi)\b',
+    r'\bbáo\s*cáo\s*(?:ngay|giúp|gấp)\b',
+]
+
+
+def _detect_call_to_action(text: str) -> bool:
+    normalized = normalize_text(text)
+    return any(re.search(p, normalized) for p in _CALL_TO_ACTION_PATTERNS)
+
+
+def tich_hop_nguon(
+    nhan: NhanPhanLoai,
+    ly_do: str,
+    nhan_nguon: NhanNguon,
+    ly_do_nguon: str,
+    claim: str,
+) -> tuple[str, int]:
+    """P2.7: hợp nhất nhãn nguồn (RAG2) vào ly_do của engine (RAG1) + tính priority bump.
+
+    Trả về (ly_do_moi, priority_bump). Không tự quyết định `nhan` — nhãn phân loại
+    hành vi (RAG1) và nhãn nguồn (RAG2) độc lập nhau, chỉ gộp lời giải thích + ưu tiên.
+    """
+    if nhan_nguon in (NhanNguon.CO_BAC_BO_CHINH_THUC, NhanNguon.CO_NGUON_XAC_NHAN):
+        ly_do_moi = f"{ly_do} | Nguồn: {ly_do_nguon}"
+    else:
+        ly_do_moi = ly_do
+
+    priority_bump = 0
+    if nhan_nguon == NhanNguon.CO_BAC_BO_CHINH_THUC:
+        priority_bump += 2
+    elif nhan_nguon == NhanNguon.CHUA_TIM_THAY_NGUON and _detect_call_to_action(claim):
+        # Kêu gọi hành động (tẩy chay/report/cảnh báo...) mà chưa có nguồn xác
+        # minh nào — rủi ro lan truyền cao hơn claim trung tính chưa có nguồn,
+        # đẩy lên đầu hàng đợi để cán bộ ưu tiên xử lý trước.
+        priority_bump += 1
+
+    return ly_do_moi, priority_bump
+

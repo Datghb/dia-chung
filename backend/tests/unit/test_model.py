@@ -33,16 +33,16 @@ class TestVanBan:
 
 class TestDieuKhoan:
     def test_create_full(self):
-        dk = DieuKhoan(id="nd174-d95-k1-a", van_ban="nd174", dieu=95, khoan=1, diem="a", noi_dung="Cung cấp, chia sẻ thông tin giả mạo...")
+        dk = DieuKhoan(id="nd174-d95-k1-a", van_ban_id="nd174", dieu=95, khoan=1, diem="a", noi_dung="Cung cấp, chia sẻ thông tin giả mạo...")
         assert dk.id == "nd174-d95-k1-a"
         assert dk.dieu == 95
 
     def test_diem_requires_khoan(self):
         with pytest.raises(ValueError, match="diem.*khoan"):
-            DieuKhoan(id="nd174-d95-a", van_ban="nd174", dieu=95, khoan=None, diem="a", noi_dung="test")
+            DieuKhoan(id="nd174-d95-a", van_ban_id="nd174", dieu=95, khoan=None, diem="a", noi_dung="test")
 
     def test_frozen(self):
-        dk = DieuKhoan(id="nd174-d95-k1-a", van_ban="nd174", dieu=95, khoan=1, diem="a", noi_dung="test")
+        dk = DieuKhoan(id="nd174-d95-k1-a", van_ban_id="nd174", dieu=95, khoan=1, diem="a", noi_dung="test")
         with pytest.raises(AttributeError):
             dk.dieu = 96
 
@@ -51,23 +51,24 @@ class TestDieuKhoan:
 
 class TestHanhVi:
     def test_create(self):
-        hv = HanhVi(id="hv-tin-gia", mo_ta="Cung cấp, chia sẻ thông tin giả mạo", nhom=NhomHanhVi.TIN_GIA)
+        hv = HanhVi(id="hv-tin-gia", dieu_khoan_id="nd174-d95-k1-a", mo_ta="Cung cấp, chia sẻ thông tin giả mạo", nhom=NhomHanhVi.TIN_GIA)
         assert hv.nhom == NhomHanhVi.TIN_GIA
+        assert hv.dieu_khoan_id == "nd174-d95-k1-a"
 
     def test_invalid_nhom(self):
         with pytest.raises(ValueError):
-            HanhVi(id="hv-x", mo_ta="test", nhom="invalid_enum")
+            HanhVi(id="hv-x", dieu_khoan_id="nd174-d95-k1-a", mo_ta="test", nhom="invalid_enum")
 
 
 # ── ChuThe ──
 
 class TestChuThe:
     def test_ca_nhan(self):
-        ct = ChuThe(id="ct-ca-nhan", loai=LoaiChuThe.CA_NHAN, mo_ta="Cá nhân sử dụng MXH")
+        ct = ChuThe(id="ct-ca-nhan", loai=LoaiChuThe.CA_NHAN, mo_ta_nhan_dien="Cá nhân sử dụng MXH")
         assert ct.loai == LoaiChuThe.CA_NHAN
 
     def test_to_chuc(self):
-        ct = ChuThe(id="ct-to-chuc", loai=LoaiChuThe.TO_CHUC, mo_ta="Tổ chức")
+        ct = ChuThe(id="ct-to-chuc", loai=LoaiChuThe.TO_CHUC, mo_ta_nhan_dien="Tổ chức")
         assert ct.loai == LoaiChuThe.TO_CHUC
 
 
@@ -75,24 +76,24 @@ class TestChuThe:
 
 class TestMucPhat:
     def test_create(self):
-        mp = MucPhat(id="mp-d95-k1", min_vnd=20_000_000, max_vnd=30_000_000, ap_dung_cho=LoaiChuThe.TO_CHUC)
+        mp = MucPhat(id="mp-d95-k1", dieu_khoan_id="nd174-d95-k1-a", min_vnd=20_000_000, max_vnd=30_000_000, ap_dung_cho=LoaiChuThe.TO_CHUC)
         assert mp.min_vnd == 20_000_000
 
     def test_min_greater_than_max_raises(self):
         with pytest.raises(ValueError, match="min.*max"):
-            MucPhat(id="mp-bad", min_vnd=50, max_vnd=10, ap_dung_cho=LoaiChuThe.TO_CHUC)
+            MucPhat(id="mp-bad", dieu_khoan_id="nd174-d95-k1-a", min_vnd=50, max_vnd=10, ap_dung_cho=LoaiChuThe.TO_CHUC)
 
     def test_negative_raises(self):
         with pytest.raises(ValueError):
-            MucPhat(id="mp-neg", min_vnd=-1, max_vnd=10, ap_dung_cho=LoaiChuThe.TO_CHUC)
+            MucPhat(id="mp-neg", dieu_khoan_id="nd174-d95-k1-a", min_vnd=-1, max_vnd=10, ap_dung_cho=LoaiChuThe.TO_CHUC)
 
 
 # ── BienPhapKhacPhuc ──
 
 class TestBienPhapKhacPhuc:
     def test_create(self):
-        bp = BienPhapKhacPhuc(id="bp-go-bo", mo_ta="Gỡ bỏ thông tin", pham_vi="k1+k2")
-        assert bp.pham_vi == "k1+k2"
+        bp = BienPhapKhacPhuc(id="bp-d95-k1k2", dieu_khoan_id="nd174-d95-k3-a", mo_ta="Gỡ bỏ thông tin", pham_vi="k1_k2")
+        assert bp.pham_vi == "k1_k2"
 
 
 # ── NguonTin ──
@@ -115,13 +116,17 @@ class TestNguonTin:
 
 class TestEdge:
     def test_create(self):
-        e = Edge(source="nd15-d101-k1-a", target="nd174-d95-k1-a", loai="THAY_THE", thuoc_tinh={"diff": "test"})
+        e = Edge(source="nd15-d101-k1-a", target="nd174-d95-k1-a", loai="THAY_THE", dien_giai="test")
         assert e.loai == "THAY_THE"
 
     def test_frozen(self):
         e = Edge(source="a", target="b", loai="QUY_DINH_TAI")
         with pytest.raises(AttributeError):
             e.source = "x"
+
+    def test_he_so_optional(self):
+        e = Edge(source="mp-d95-k1", target="ct-ca-nhan", loai="AP_DUNG_CHO", he_so=0.5)
+        assert e.he_so == 0.5
 
 
 # ── QueueItem ──
@@ -147,9 +152,9 @@ class TestKnowledgeGraph:
     def _make_kg(self):
         nodes = [
             VanBan(id="nd174", so_hieu="174/2026/NĐ-CP", ngay_hieu_luc="2026-07-01", trang_thai="hieu_luc"),
-            DieuKhoan(id="nd174-d95-k1-a", van_ban="nd174", dieu=95, khoan=1, diem="a", noi_dung="Thông tin giả mạo"),
-            HanhVi(id="hv-tin-gia", mo_ta="Cung cấp thông tin giả mạo", nhom=NhomHanhVi.TIN_GIA),
-            MucPhat(id="mp-d95-k1", min_vnd=20_000_000, max_vnd=30_000_000, ap_dung_cho=LoaiChuThe.TO_CHUC),
+            DieuKhoan(id="nd174-d95-k1-a", van_ban_id="nd174", dieu=95, khoan=1, diem="a", noi_dung="Thông tin giả mạo"),
+            HanhVi(id="hv-tin-gia", dieu_khoan_id="nd174-d95-k1-a", mo_ta="Cung cấp thông tin giả mạo", nhom=NhomHanhVi.TIN_GIA),
+            MucPhat(id="mp-d95-k1", dieu_khoan_id="nd174-d95-k1-a", min_vnd=20_000_000, max_vnd=30_000_000, ap_dung_cho=LoaiChuThe.TO_CHUC),
         ]
         edges = [
             Edge(source="hv-tin-gia", target="nd174-d95-k1-a", loai="QUY_DINH_TAI"),
@@ -197,6 +202,12 @@ class TestKnowledgeGraph:
         assert len(dks) == 1
         assert dks[0].id == "nd174-d95-k1-a"
 
+    def test_get_muc_phat_for_dieu_khoan(self):
+        kg = self._make_kg()
+        mps = kg.get_muc_phat_for_dieu_khoan("nd174-d95-k1-a")
+        assert len(mps) == 1
+        assert mps[0].id == "mp-d95-k1"
+
 
 # ── Load from JSON ──
 
@@ -205,12 +216,12 @@ class TestLoadKG:
         kg_data = {
             "nodes": [
                 {"type": "VanBan", "id": "nd174", "so_hieu": "174/2026/NĐ-CP", "ngay_hieu_luc": "2026-07-01", "trang_thai": "hieu_luc"},
-                {"type": "DieuKhoan", "id": "nd174-d95-k1-a", "van_ban": "nd174", "dieu": 95, "khoan": 1, "diem": "a", "noi_dung": "Thông tin giả mạo"},
-                {"type": "HanhVi", "id": "hv-tin-gia", "mo_ta": "Cung cấp thông tin giả mạo", "nhom": "tin_gia"},
-                {"type": "MucPhat", "id": "mp-d95-k1", "min_vnd": 20000000, "max_vnd": 30000000, "ap_dung_cho": "to_chuc"},
+                {"type": "DieuKhoan", "id": "nd174-d95-k1-a", "van_ban_id": "nd174", "dieu": 95, "khoan": 1, "diem": "a", "noi_dung": "Thông tin giả mạo"},
+                {"type": "HanhVi", "id": "hv-tin-gia", "dieu_khoan_id": "nd174-d95-k1-a", "mo_ta": "Cung cấp thông tin giả mạo", "nhom": "tin_gia"},
+                {"type": "MucPhat", "id": "mp-d95-k1", "dieu_khoan_id": "nd174-d95-k1-a", "min_vnd": 20000000, "max_vnd": 30000000, "ap_dung_cho": "to_chuc"},
             ],
             "edges": [
-                {"source": "hv-tin-gia", "target": "nd174-d95-k1-a", "loai": "QUY_DINH_TAI"},
+                {"type": "QUY_DINH_TAI", "from_id": "hv-tin-gia", "to_id": "nd174-d95-k1-a"},
             ],
         }
         p = tmp_path / "kg.json"
