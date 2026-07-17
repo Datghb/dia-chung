@@ -1,2 +1,5 @@
-[]
-
+[
+  {"id": "b3-001", "text": "share lai bai fake news cua dua khac thi co bi phat khong", "nguon_mo_ta": "group cong dong", "do_lan_truyen": 55, "thoi_gian": "2026-07-02T11:00:00"},
+  {"id": "b3-002", "text": "dang trong group kin thi co bi khong hay chi cong khai moi tinh", "nguon_mo_ta": "forum cong nghe", "do_lan_truyen": 40, "thoi_gian": "2026-07-02T11:15:00"},
+  {"id": "b3-003", "text": "binh luan hua theo co tinh la chia se khong cac bac", "nguon_mo_ta": "fanpage tin tuc", "do_lan_truyen": 30, "thoi_gian": "2026-07-02T11:30:00"}
+]

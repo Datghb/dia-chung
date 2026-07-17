@@ -1,2 +1,5 @@
-[]
-
+[
+  {"from": "hanhvi-d95-k1-a", "to": "nd174-d95-k1-a", "type": "QUY_DINH_TAI"},
+  {"from": "mucphat-d95-k1", "to": "chuthe-to-chuc", "type": "AP_DUNG_CHO", "he_so": 1.0},
+  {"from": "nd15-d101-k1-a", "to": "nd174-d95-k1-a", "type": "THAY_THE", "diff": "to chuc 10-20 -> 20-30 trieu; ca nhan 5-10 -> 10-15 trieu; moc 01/7/2026"}
+]

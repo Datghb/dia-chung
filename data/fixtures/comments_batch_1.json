@@ -1,2 +1,5 @@
-[]
-
+[
+  {"id": "b1-001", "text": "nghe noi gio fanpage dang tin gia bi phat 30 cu ha", "nguon_mo_ta": "fanpage tin tuc", "do_lan_truyen": 120, "thoi_gian": "2026-07-02T08:15:00"},
+  {"id": "b1-002", "text": "tu 1/7 phat nang hon that a cac bac, to chuc toi 30 trieu lan", "nguon_mo_ta": "forum cong nghe", "do_lan_truyen": 85, "thoi_gian": "2026-07-02T09:00:00"},
+  {"id": "b1-003", "text": "dang tin sai gay hoang mang la bi 30-50 trieu do, dung dua", "nguon_mo_ta": "group cong dong", "do_lan_truyen": 210, "thoi_gian": "2026-07-02T09:30:00"}
+]

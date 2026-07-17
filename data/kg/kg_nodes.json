@@ -1,2 +1,5 @@
-[]
-
+[
+  {"id": "nd174", "type": "VanBan", "so_hieu": "174/2026/ND-CP", "ngay_hieu_luc": "2026-07-01", "trang_thai": "hieu_luc"},
+  {"id": "nd174-d95-k1-a", "type": "DieuKhoan", "van_ban": "nd174", "dieu": 95, "khoan": 1, "diem": "a", "noi_dung": "Cung cap, chia se thong tin gia mao, thong tin sai su that, xuyen tac, vu khong, xuc pham uy tin cua co quan, to chuc, danh du, nhan pham cua ca nhan"},
+  {"id": "mucphat-d95-k1", "type": "MucPhat", "min_vnd": 20000000, "max_vnd": 30000000, "ap_dung_cho": "to_chuc"}
+]
