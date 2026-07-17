@@ -1,5 +1,17 @@
 [
-  {"id": "b2-001", "text": "ca nhan share tin gia bi phat 20-30 trieu do nha", "nguon_mo_ta": "fanpage tin tuc", "do_lan_truyen": 340, "thoi_gian": "2026-07-02T10:00:00"},
-  {"id": "b2-002", "text": "phat co 10-20 trieu thoi lo gi, dang thoai mai", "nguon_mo_ta": "forum cong nghe", "do_lan_truyen": 150, "thoi_gian": "2026-07-02T10:20:00"},
-  {"id": "b2-003", "text": "dang tin gia binh thuong cung bi 30-50 cu day", "nguon_mo_ta": "group cong dong", "do_lan_truyen": 95, "thoi_gian": "2026-07-02T10:45:00"}
+  {"id": "b2-001", "text": "ca nhan share tin gia bi phat 20-30 trieu do nha", "nguon_mo_ta": "fanpage tin tuc", "do_lan_truyen": 340, "thoi_gian": "2026-07-03T08:00:00"},
+  {"id": "b2-002", "text": "phat co 10-20 trieu thoi lo gi, dang thoai mai", "nguon_mo_ta": "forum cong nghe", "do_lan_truyen": 150, "thoi_gian": "2026-07-03T08:30:00"},
+  {"id": "b2-003", "text": "dang tin gia binh thuong cung bi 30-50 cu day", "nguon_mo_ta": "group cong dong", "do_lan_truyen": 95, "thoi_gian": "2026-07-03T09:00:00"},
+  {"id": "b2-004", "text": "user thuong dang fake news la mat 30 trieu nhu choi", "nguon_mo_ta": "fanpage giai tri", "do_lan_truyen": 280, "thoi_gian": "2026-07-03T09:40:00"},
+  {"id": "b2-005", "text": "ca nhan tung tin don bi phat toi 50 trieu luon do, so chua", "nguon_mo_ta": "group me bim", "do_lan_truyen": 420, "thoi_gian": "2026-07-03T10:15:00"},
+  {"id": "b2-006", "text": "toi thay bao phat 5-10 trieu thoi ma, lam gi toi 15", "nguon_mo_ta": "forum sinh vien", "do_lan_truyen": 65, "thoi_gian": "2026-07-03T10:50:00"},
+  {"id": "b2-007", "text": "cong ty dang tin sai chi bi 10-15 trieu thoi, nhe hon ca nhan a", "nguon_mo_ta": "fanpage kinh doanh", "do_lan_truyen": 110, "thoi_gian": "2026-07-03T11:30:00"},
+  {"id": "b2-008", "text": "luat van la nd15 nhe cac bac, chua co gi thay doi dau", "nguon_mo_ta": "group phap ly", "do_lan_truyen": 90, "thoi_gian": "2026-07-03T12:00:00"},
+  {"id": "b2-009", "text": "share tin gia thi cung nhu dang tin gay hoang mang, deu 30-50 het", "nguon_mo_ta": "forum thoi su", "do_lan_truyen": 130, "thoi_gian": "2026-07-03T13:20:00"},
+  {"id": "b2-010", "text": "page cua shop minh dang nham tin thi chi phat nhu ca nhan thoi dung khong", "nguon_mo_ta": "group ban hang", "do_lan_truyen": 75, "thoi_gian": "2026-07-03T14:00:00"},
+  {"id": "b2-011", "text": "nghe bao gio het phat roi, chi nhac nho thoi ma", "nguon_mo_ta": "fanpage giai tri", "do_lan_truyen": 190, "thoi_gian": "2026-07-03T14:40:00"},
+  {"id": "b2-012", "text": "vu khong ca nhan tren mang toi da 20 trieu voi nguoi thuong thoi", "nguon_mo_ta": "forum cong nghe", "do_lan_truyen": 85, "thoi_gian": "2026-07-03T15:10:00"},
+  {"id": "b2-013", "text": "tin gay hoang mang cung chi 20-30 nhu tin gia thuong thoi ma so gi", "nguon_mo_ta": "group cong dong", "do_lan_truyen": 160, "thoi_gian": "2026-07-03T15:50:00"},
+  {"id": "b2-014", "text": "khoa tai khoan ap dung cho moi loi dang tin sai nhe, ke ca loi nhe", "nguon_mo_ta": "fanpage tin tuc", "do_lan_truyen": 105, "thoi_gian": "2026-07-03T16:30:00"},
+  {"id": "b2-015", "text": "qua 6 thang la het thoi hieu phat roi, cu de do khong sao dau", "nguon_mo_ta": "forum phap ly", "do_lan_truyen": 70, "thoi_gian": "2026-07-03T17:00:00"}
 ]

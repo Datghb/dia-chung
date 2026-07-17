@@ -1,2 +1,36 @@
-[]
-
+[
+  {
+    "id": "sc-001",
+    "ten_vu": "Tin don ngan hang SCB 10/2022",
+    "mo_ta_hanh_vi": "Ca nhan dang tai thong tin sai su that ve viec Ngan hang SCB sap pha san tren tai khoan Facebook ca nhan, keu goi nguoi than rut tien, gay hoang mang du luan",
+    "chu_the": "ca_nhan",
+    "dieu_khoan_vien_dan": "diem a khoan 1 Dieu 101 ND 15/2020/ND-CP",
+    "muc_phat_thuc_te_vnd": 7500000,
+    "bien_phap_khac_phuc": "Buoc go bo thong tin sai su that",
+    "nguon_cong_bo": "So TT&TT (an danh trong UI: ca nhan N.V.A — Quyet dinh so .../QD-XPHC)",
+    "thoi_gian_xu_phat": "2022-10",
+    "ket_luan_ky_vong_he_thong": {
+      "nhan": "can_kiem_chung",
+      "nhan_nguon": "co_bac_bo_chinh_thuc",
+      "ghi_chu": "SBV bac bo chinh thuc ngay 08/10/2022 (fact-001) dang SAU thoi diem tin don; he thong goi y nghi van sai su that + uu tien cao, can bo ket luan",
+      "khung_neu_sau_2026_07_01": "diem a khoan 1 Dieu 95 ND 174/2026 — ca nhan 10-15 trieu"
+    }
+  },
+  {
+    "id": "sc-002",
+    "ten_vu": "Tin gia dich benh gay hoang mang 2026",
+    "mo_ta_hanh_vi": "Ca nhan chia se thong tin bia dat ve o dich benh la tai Ha Noi trong nhom cong dong lon, gay hoang mang, da co bac bo chinh thuc cua Bo Y te",
+    "chu_the": "ca_nhan",
+    "dieu_khoan_vien_dan": "diem a khoan 1 Dieu 101 ND 15/2020/ND-CP (hanh vi truoc 01/7/2026)",
+    "muc_phat_thuc_te_vnd": 5000000,
+    "bien_phap_khac_phuc": "Buoc go bo thong tin sai su that",
+    "nguon_cong_bo": "Cuc PTTH&TTDT (an danh trong UI: ca nhan T.T.B — Quyet dinh so .../QD-XPHC)",
+    "thoi_gian_xu_phat": "2026-06",
+    "ket_luan_ky_vong_he_thong": {
+      "nhan": "can_kiem_chung",
+      "nhan_nguon": "co_bac_bo_chinh_thuc",
+      "ghi_chu": "Bo Y te bac bo ngay 15/06/2026 (fact-006) dang SAU thoi diem tin don; nhan tong van la goi y, khong khang dinh vi pham",
+      "khung_neu_sau_2026_07_01": "diem c khoan 2 Dieu 95 ND 174/2026 (gay hoang mang) — ca nhan 15-25 trieu"
+    }
+  }
+]

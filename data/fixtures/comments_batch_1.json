@@ -1,5 +1,17 @@
 [
   {"id": "b1-001", "text": "nghe noi gio fanpage dang tin gia bi phat 30 cu ha", "nguon_mo_ta": "fanpage tin tuc", "do_lan_truyen": 120, "thoi_gian": "2026-07-02T08:15:00"},
   {"id": "b1-002", "text": "tu 1/7 phat nang hon that a cac bac, to chuc toi 30 trieu lan", "nguon_mo_ta": "forum cong nghe", "do_lan_truyen": 85, "thoi_gian": "2026-07-02T09:00:00"},
-  {"id": "b1-003", "text": "dang tin sai gay hoang mang la bi 30-50 trieu do, dung dua", "nguon_mo_ta": "group cong dong", "do_lan_truyen": 210, "thoi_gian": "2026-07-02T09:30:00"}
+  {"id": "b1-003", "text": "dang tin sai gay hoang mang la bi 30-50 trieu do, dung dua", "nguon_mo_ta": "group cong dong", "do_lan_truyen": 210, "thoi_gian": "2026-07-02T09:30:00"},
+  {"id": "b1-004", "text": "cty nao dang tin gia tren page la an phat 20-30 trieu nhe", "nguon_mo_ta": "fanpage kinh doanh", "do_lan_truyen": 95, "thoi_gian": "2026-07-02T10:10:00"},
+  {"id": "b1-005", "text": "ca nhan share tin fake gio bi phat 10-15 trieu dung khong mn", "nguon_mo_ta": "forum sinh vien", "do_lan_truyen": 60, "thoi_gian": "2026-07-02T10:40:00"},
+  {"id": "b1-006", "text": "nghi dinh moi phat gap doi nghi dinh cu that ha, 20-30 thay vi 10-20", "nguon_mo_ta": "group phap ly", "do_lan_truyen": 45, "thoi_gian": "2026-07-02T11:20:00"},
+  {"id": "b1-007", "text": "vu khong nguoi khac tren mxh cung dinh khung 20-30 trieu voi to chuc do", "nguon_mo_ta": "fanpage tin tuc", "do_lan_truyen": 130, "thoi_gian": "2026-07-02T12:00:00"},
+  {"id": "b1-008", "text": "tin sai su that gay hoang mang dan la khung nang nhat, 30-50 cu", "nguon_mo_ta": "forum thoi su", "do_lan_truyen": 175, "thoi_gian": "2026-07-02T13:30:00"},
+  {"id": "b1-009", "text": "ngoai phat tien con bi buoc go bai nua nhe cac bac", "nguon_mo_ta": "group cong dong", "do_lan_truyen": 50, "thoi_gian": "2026-07-02T14:00:00"},
+  {"id": "b1-010", "text": "dang tin gay hoang mang con co the bi khoa luon page do", "nguon_mo_ta": "fanpage cong nghe", "do_lan_truyen": 88, "thoi_gian": "2026-07-02T14:45:00"},
+  {"id": "b1-011", "text": "thoi hieu xu phat 1 nam thoi phai khong, qua 1 nam la thoi ha", "nguon_mo_ta": "forum phap ly", "do_lan_truyen": 30, "thoi_gian": "2026-07-02T15:20:00"},
+  {"id": "b1-012", "text": "kol dang tin sai chuan bi vi, ca nhan cung 10-15 trieu chu it gi", "nguon_mo_ta": "group review", "do_lan_truyen": 220, "thoi_gian": "2026-07-02T16:00:00"},
+  {"id": "b1-013", "text": "chia se lai anh ban do thieu hoang sa truong sa cung bi phat nhe", "nguon_mo_ta": "fanpage du lich", "do_lan_truyen": 140, "thoi_gian": "2026-07-02T16:40:00"},
+  {"id": "b1-014", "text": "gan link bai co noi dung cam cung tinh la vi pham do mn", "nguon_mo_ta": "forum cong nghe", "do_lan_truyen": 55, "thoi_gian": "2026-07-02T17:10:00"},
+  {"id": "b1-015", "text": "nd174 co hieu luc tu 1/7/2026 roi, ai con tuong nd15 thi cap nhat di", "nguon_mo_ta": "group phap ly", "do_lan_truyen": 70, "thoi_gian": "2026-07-02T17:50:00"}
 ]
