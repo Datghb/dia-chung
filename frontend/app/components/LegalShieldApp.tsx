@@ -227,10 +227,10 @@ export function LegalShieldApp() {
       {showInput && (
         <ManualInput
           onClose={() => setShowInput(false)}
-          onSave={(item) => {
-            setCaseItems((current) => [item, ...current]);
+          onSave={(items) => {
+            setCaseItems((current) => [...items, ...current]);
             setShowInput(false);
-            setSelectedId(item.id);
+            setSelectedId(items.length === 1 ? items[0].id : null);
           }}
         />
       )}
@@ -292,7 +292,8 @@ function Queue({
   );
 }
 
-function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: Case) => void }) {
+function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (items: Case[]) => void }) {
+  const [inputMode, setInputMode] = useState<"manual" | "file">("manual");
   const [contentType, setContentType] = useState<"post" | "comment">("post");
   const [content, setContent] = useState("");
   const [parentContent, setParentContent] = useState("");
@@ -300,23 +301,28 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: 
   const [account, setAccount] = useState("");
   const [publishedAt, setPublishedAt] = useState("");
   const [reach, setReach] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [fileError, setFileError] = useState("");
+  const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const compact = content.trim().replace(/\s+/g, " ");
-    const claim = compact.split(/[.!?]/)[0].slice(0, 150) || compact.slice(0, 150);
-    onSave({
-      id: `HS-MVP-${Date.now().toString().slice(-6)}`,
+  function buildCase(row: Record<string, string>, index = 0): Case {
+    const rawContent = (row.content || row.comment || row.text || content).trim().replace(/\s+/g, " ");
+    const claim = rawContent.split(/[.!?]/)[0].slice(0, 150) || rawContent.slice(0, 150);
+    const rowType = (row.type === "comment" || contentType === "comment") ? "comment" : "post";
+    const allowedPlatforms: Case["platform"][] = ["Facebook", "TikTok", "YouTube", "X"];
+    const rowPlatform = allowedPlatforms.find((value) => value.toLowerCase() === (row.platform || platform).toLowerCase()) || platform;
+    return {
+      id: `HS-MVP-${Date.now().toString().slice(-6)}-${index + 1}`,
       claim,
-      original: compact,
-      platform,
-      account: account.trim() || "Chưa xác định",
-      publishedAt: publishedAt ? new Date(publishedAt).toLocaleString("vi-VN") : "Vừa nhập",
+      original: rawContent,
+      platform: rowPlatform,
+      account: (row.account || row.author || account).trim() || "Chưa xác định",
+      publishedAt: row.publishedAt || row.published_at || (publishedAt ? new Date(publishedAt).toLocaleString("vi-VN") : "Vừa nhập"),
       priority: "Cao",
       score: 75,
       verdict: "Cần kiểm chứng",
       status: "Mới",
-      reason: "Nội dung vừa được nhập thủ công và đang chờ đối chiếu với nguồn chính thức. Kết quả hiện tại là dữ liệu mô phỏng cho luồng MVP.",
+      reason: "Nội dung vừa được nhập bằng file và đang chờ đối chiếu với nguồn chính thức. Kết quả hiện tại là dữ liệu mô phỏng cho luồng MVP.",
       document: "Đang xác định",
       provision: "Chờ ánh xạ điều / khoản / điểm",
       subject: "Chủ thể đăng tải nội dung",
@@ -325,10 +331,44 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: 
       sourceAgency: "Đang chờ kiểm chứng",
       sourceUrl: "#",
       sourceResult: "Chưa đủ bằng chứng",
-      reach: reach.trim() ? `${reach.trim()} lượt tương tác` : "Chưa có số liệu tương tác",
-      contentType,
-      parentContent: contentType === "comment" ? parentContent.trim() : undefined,
-    });
+      reach: (row.reach || reach).trim() ? `${(row.reach || reach).trim()} lượt tương tác` : "Chưa có số liệu tương tác",
+      contentType: rowType,
+      parentContent: rowType === "comment" ? (row.parentContent || row.parent_content || parentContent).trim() : undefined,
+    };
+  }
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (inputMode === "file") {
+      const validRows = parsedRows.filter((row) => (row.content || row.comment || row.text || "").trim());
+      if (validRows.length) onSave(validRows.map((row, index) => buildCase(row, index)));
+      return;
+    }
+    const compact = content.trim().replace(/\s+/g, " ");
+    if (compact) onSave([buildCase({ content: compact })]);
+  }
+
+  async function readFile(file?: File) {
+    if (!file) return;
+    setFileName(file.name); setFileError(""); setParsedRows([]);
+    try {
+      const text = await file.text();
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      let rows: Record<string, string>[] = [];
+      if (extension === "json") {
+        const parsed = JSON.parse(text);
+        rows = (Array.isArray(parsed) ? parsed : [parsed]).map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key, String(value ?? "")])));
+      } else if (extension === "csv") {
+        rows = parseCsv(text);
+      } else {
+        rows = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => ({ content: line, type: contentType }));
+      }
+      const valid = rows.filter((row) => (row.content || row.comment || row.text || "").trim());
+      if (!valid.length) throw new Error("Không tìm thấy nội dung hợp lệ.");
+      setParsedRows(valid);
+    } catch {
+      setFileError("Không đọc được file. Kiểm tra lại định dạng và tên cột.");
+    }
   }
 
   return (
@@ -337,12 +377,25 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: 
       <aside className="input-drawer" aria-labelledby="manual-input-title">
         <div className="input-drawer-head"><div><span className="eyebrow">MVP · NHẬP THỦ CÔNG</span><h2 id="manual-input-title">Thêm nội dung giám sát</h2><p>Nhập nguyên văn bài đăng để tạo hồ sơ mới trong hàng đợi.</p></div><button onClick={onClose} aria-label="Đóng">×</button></div>
         <form onSubmit={submit}>
+          <div className="input-mode-switch"><button type="button" className={inputMode === "manual" ? "active" : ""} onClick={() => setInputMode("manual")}>Nhập thủ công</button><button type="button" className={inputMode === "file" ? "active" : ""} onClick={() => setInputMode("file")}>Tải file hàng loạt</button></div>
           <div className="input-type-tabs" role="tablist" aria-label="Loại nội dung">
             <button type="button" role="tab" aria-selected={contentType === "post"} className={contentType === "post" ? "active" : ""} onClick={() => setContentType("post")}><span>▤</span><div><strong>Bài viết</strong><small>Nhập nội dung bài đăng độc lập</small></div></button>
             <button type="button" role="tab" aria-selected={contentType === "comment"} className={contentType === "comment" ? "active" : ""} onClick={() => setContentType("comment")}><span>◌</span><div><strong>Bình luận</strong><small>Nhập comment và ngữ cảnh bài gốc</small></div></button>
           </div>
-          {contentType === "comment" && <label className="manual-field"><span>Ngữ cảnh bài viết gốc</span><textarea className="context-textarea" value={parentContent} onChange={(event) => setParentContent(event.target.value)} placeholder="Dán nội dung hoặc tóm tắt bài viết chứa bình luận…" /></label>}
-          <label className="manual-field"><span>{contentType === "post" ? "Nội dung bài viết" : "Nội dung bình luận"} <b>*</b></span><textarea required value={content} onChange={(event) => setContent(event.target.value)} placeholder={contentType === "post" ? "Dán nguyên văn nội dung bài viết cần kiểm tra…" : "Dán nguyên văn bình luận cần kiểm tra…"} /><small>{content.length} / 5.000 ký tự</small></label>
+          {inputMode === "file" ? (
+            <>
+              <label className={`file-drop ${parsedRows.length ? "ready" : ""}`}><input type="file" accept=".csv,.json,.txt,text/csv,application/json,text/plain" onChange={(event) => readFile(event.target.files?.[0])} /><span>{parsedRows.length ? "✓" : "⇧"}</span><strong>{fileName || `Chọn file ${contentType === "post" ? "bài viết" : "bình luận"}`}</strong><small>CSV, JSON hoặc TXT · tối đa theo khả năng trình duyệt</small></label>
+              {parsedRows.length > 0 && <div className="file-result"><strong>{parsedRows.length} bản ghi hợp lệ</strong><span>Sẵn sàng đưa vào hàng đợi giám sát</span></div>}
+              {fileError && <div className="file-error">{fileError}</div>}
+              <div className="file-format"><strong>Cấu trúc gợi ý</strong><code>{contentType === "post" ? "content, platform, account, publishedAt, reach" : "comment, parentContent, platform, account, publishedAt, reach"}</code><p>File TXT: mỗi dòng được xem là một bài viết hoặc bình luận.</p></div>
+            </>
+          ) : (
+            <>
+              {contentType === "comment" && <label className="manual-field"><span>Ngữ cảnh bài viết gốc</span><textarea className="context-textarea" value={parentContent} onChange={(event) => setParentContent(event.target.value)} placeholder="Dán nội dung hoặc tóm tắt bài viết chứa bình luận…" /></label>}
+              <label className="manual-field"><span>{contentType === "post" ? "Nội dung bài viết" : "Nội dung bình luận"} <b>*</b></span><textarea required value={content} onChange={(event) => setContent(event.target.value)} placeholder={contentType === "post" ? "Dán nguyên văn nội dung bài viết cần kiểm tra…" : "Dán nguyên văn bình luận cần kiểm tra…"} /><small>{content.length} / 5.000 ký tự</small></label>
+            </>
+          )}
+          {inputMode === "manual" && <>
           <div className="manual-grid">
             <label className="manual-field"><span>Nền tảng</span><select value={platform} onChange={(event) => setPlatform(event.target.value as Case["platform"])}><option>Facebook</option><option>TikTok</option><option>YouTube</option><option>X</option></select></label>
             <label className="manual-field"><span>{contentType === "post" ? "Tài khoản đăng" : "Người bình luận"}</span><input value={account} onChange={(event) => setAccount(event.target.value)} placeholder={contentType === "post" ? "Tên tài khoản hoặc kênh" : "Tên tài khoản bình luận"} /></label>
@@ -351,8 +404,9 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: 
             <label className="manual-field"><span>Thời gian đăng</span><input type="datetime-local" value={publishedAt} onChange={(event) => setPublishedAt(event.target.value)} /></label>
             <label className="manual-field"><span>Lượt tương tác</span><input type="number" min="0" value={reach} onChange={(event) => setReach(event.target.value)} placeholder="Ví dụ: 12500" /></label>
           </div>
+          </>}
           <div className="manual-note"><span>i</span><p><strong>Luồng MVP</strong> Sau khi lưu, hệ thống tạo hồ sơ với kết quả “Cần kiểm chứng”. Dữ liệu chỉ tồn tại trong phiên trình duyệt hiện tại.</p></div>
-          <div className="manual-actions"><button type="button" onClick={onClose}>Hủy</button><button type="submit" disabled={!content.trim()}>Tạo hồ sơ &amp; phân tích →</button></div>
+          <div className="manual-actions"><button type="button" onClick={onClose}>Hủy</button><button type="submit" disabled={inputMode === "manual" ? !content.trim() : !parsedRows.length}>{inputMode === "file" ? `Nhập ${parsedRows.length || ""} hồ sơ →` : "Tạo hồ sơ & phân tích →"}</button></div>
         </form>
       </aside>
     </>
@@ -508,4 +562,22 @@ function SourcesView() {
       ))}
     </div>
   );
+}
+
+function parseCsv(text: string) {
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
+  if (lines.length < 2) return [];
+  const split = (line: string) => {
+    const values: string[] = []; let current = ""; let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"' && line[i + 1] === '"') { current += '"'; i++; }
+      else if (char === '"') quoted = !quoted;
+      else if (char === "," && !quoted) { values.push(current.trim()); current = ""; }
+      else current += char;
+    }
+    values.push(current.trim()); return values;
+  };
+  const headers = split(lines[0]);
+  return lines.slice(1).map((line) => Object.fromEntries(headers.map((header, index) => [header.trim(), split(line)[index] || ""])));
 }
