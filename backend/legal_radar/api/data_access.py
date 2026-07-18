@@ -117,13 +117,13 @@ def list_queue_items() -> list[dict[str, Any]]:
             analysed = analyze_comment(str(fixture["text"]))
             analysed["id"] = fixture["id"]
             items.append(_normalise(analysed, fixture))
-    crawled_rows = _queue_from_jsonl(runs_dir() / "crawled_raw.jsonl")
-    if crawled_rows:
-        known_ids = {item["id"] for item in items}
-        items.extend(
-            row for row in (_normalise_crawled(raw) for raw in crawled_rows)
-            if row["id"] not in known_ids
-        )
+        crawled_rows = _queue_from_jsonl(runs_dir() / "crawled_raw.jsonl")
+        if crawled_rows:
+            known_ids = {item["id"] for item in items}
+            items.extend(
+                row for row in (_normalise_crawled(raw) for raw in crawled_rows)
+                if row["id"] not in known_ids
+            )
     return sorted(items, key=lambda row: (row["priority"], row["reach"]), reverse=True)
 
 

@@ -6,6 +6,7 @@ analyze_comment output shape, and validation chain invariants.
 
 import sys
 import os
+import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -18,7 +19,7 @@ from legal_radar.model import (
     QueueItem,
     load_kg,
 )
-from legal_radar.pipeline import CommentIngestor, analyze_comment
+from legal_radar.pipeline import CommentIngestor, analyze_comment, ingest_crawled_items
 
 
 DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
@@ -262,3 +263,50 @@ class TestValidationChain:
                 result = ingestor.process_one(_make_comment("neutral text"))
 
             assert result.priority >= 0, f"Negative priority with nhan_nguon={nhan_nguon_val}"
+
+
+class TestIngestCrawledItems:
+    def test_post_and_comments_are_appended_once(self, monkeypatch, tmp_path) -> None:
+        queue_path = tmp_path / "queue.jsonl"
+        provider = _make_provider(
+            '{"claim": "tin sáp nhập cần kiểm chứng", '
+            '"keywords": ["sáp nhập", "đơn vị hành chính"], "subject": null}'
+        )
+        monkeypatch.setattr("legal_radar.pipeline._queue_path", lambda: queue_path)
+        monkeypatch.setattr("legal_radar.pipeline._default_provider", lambda: provider)
+
+        post = {
+            "platform": "facebook",
+            "content_type": "post",
+            "text": "Thông tin sáp nhập đơn vị hành chính đang lan truyền.",
+            "author": "Nguồn thử nghiệm",
+            "url": "https://facebook.com/example/posts/123",
+            "timestamp": "2026-07-18T08:00:00+07:00",
+            "engagement": {"likes": 10},
+            "comments": [
+                {
+                    "text": "Bình luận thứ nhất về sáp nhập.",
+                    "timestamp": "2026-07-18T08:05:00+07:00",
+                },
+                {"text": "Bình luận thứ hai cần kiểm chứng."},
+            ],
+        }
+
+        with patch(
+            "legal_radar.source_search.dynamic_search_gemini",
+            return_value=[],
+        ), patch(
+            "legal_radar.pipeline.xac_thuc_nguon",
+            return_value=(NhanNguon.CHUA_TIM_THAY_NGUON, [], "Không tìm thấy nguồn"),
+        ):
+            first = ingest_crawled_items([post])
+            second = ingest_crawled_items([post])
+
+        assert len(first) == 3
+        assert second == []
+        rows = [
+            json.loads(line)
+            for line in queue_path.read_text(encoding="utf-8").splitlines()
+        ]
+        assert len(rows) == 3
+        assert [row["id"] for row in rows] == [item.id for item in first]

@@ -34,3 +34,5 @@ class CrawlResponse(BaseModel):
     added: int
     mode: str
     message: str
+    analyzed: int
+    queue_item_ids: list[str] = Field(default_factory=list)

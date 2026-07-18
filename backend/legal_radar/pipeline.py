@@ -8,13 +8,20 @@ drop or guess.
 """
 
 import json
+import logging
 import os
+from dataclasses import asdict
+from hashlib import sha1
+from pathlib import Path
 from uuid import uuid4
 
 from .model import QueueItem, NhanPhanLoai, NhanNguon, load_kg
 from .engine import phan_loai_claim, match_hanh_vi, muc_phat_cho_chu_the, normalize_text, tich_hop_nguon
+from .providers import GeminiProvider, GroqProvider, OpenRouterProvider
 from .source_classifier import xac_thuc_nguon
 from .guardrails import validate_label, sanitize_injection
+
+logger = logging.getLogger(__name__)
 
 
 def analyze_comment(comment: str) -> dict:
@@ -226,5 +233,106 @@ class CommentIngestor:
                 seen_ids.add(comment["id"])
                 appended += 1
         return appended
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parent.parent.parent
+
+
+def _queue_path() -> Path:
+    return _repo_root() / "runs" / "queue.jsonl"
+
+
+def _load_seen_queue_ids(path: Path) -> set[str]:
+    seen_ids: set[str] = set()
+    if not path.exists():
+        return seen_ids
+    try:
+        with path.open(encoding="utf-8") as queue_file:
+            for line in queue_file:
+                if not line.strip():
+                    continue
+                try:
+                    item_id = json.loads(line).get("id")
+                except json.JSONDecodeError:
+                    continue
+                if item_id:
+                    seen_ids.add(str(item_id))
+    except OSError as exc:
+        logger.warning("Không thể đọc queue để dedup: %s", exc)
+    return seen_ids
+
+
+def _default_provider():
+    if os.getenv("GEMINI_API_KEY"):
+        return GeminiProvider()
+    if os.getenv("GROQ_API_KEY"):
+        return GroqProvider()
+    if os.getenv("OPENROUTER_API_KEY"):
+        return OpenRouterProvider()
+    return GeminiProvider()
+
+
+def _build_crawled_ingestor(queue_path: Path) -> CommentIngestor:
+    data_dir = _repo_root() / "data"
+    kg = load_kg(
+        data_dir / "kg" / "kg_nodes.json",
+        data_dir / "kg" / "kg_edges.json",
+    )
+    return CommentIngestor(_default_provider(), kg, str(queue_path))
+
+
+def ingest_crawled_items(items: list[dict]) -> list[QueueItem]:
+    """Analyze cleaned crawler posts and comments, then append new queue items.
+
+    Each post and each of its comments becomes an independent QueueItem.
+    Stable SHA-1 IDs derived from the source URL provide idempotent ingestion.
+    """
+    queue_path = _queue_path()
+    seen_ids = _load_seen_queue_ids(queue_path)
+    ingestor = _build_crawled_ingestor(queue_path)
+    queue_path.parent.mkdir(parents=True, exist_ok=True)
+    appended: list[QueueItem] = []
+
+    with queue_path.open("a", encoding="utf-8") as queue_file:
+        for post in items:
+            url = str(post.get("url", ""))
+            timestamp = str(post.get("timestamp", ""))
+            candidates = [
+                {
+                    "id": sha1(url.encode("utf-8")).hexdigest(),
+                    "text": str(post.get("text", "")),
+                    "thoi_gian": timestamp,
+                }
+            ]
+            candidates.extend(
+                {
+                    "id": sha1(f"{url}#c{index}".encode("utf-8")).hexdigest(),
+                    "text": str(comment.get("text", "")),
+                    "thoi_gian": str(comment.get("timestamp", timestamp)),
+                }
+                for index, comment in enumerate(post.get("comments") or [])
+            )
+
+            for candidate in candidates:
+                if candidate["id"] in seen_ids:
+                    continue
+                try:
+                    queue_item = ingestor.process_one(candidate)
+                    queue_file.write(
+                        json.dumps(asdict(queue_item), ensure_ascii=False) + "\n"
+                    )
+                    queue_file.flush()
+                except Exception as exc:
+                    logger.exception(
+                        "Bỏ qua crawled item %s vì pipeline lỗi: %s",
+                        candidate["id"],
+                        exc,
+                    )
+                    continue
+                seen_ids.add(candidate["id"])
+                appended.append(queue_item)
+
+    return appended
 
 
