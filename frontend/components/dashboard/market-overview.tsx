@@ -14,6 +14,10 @@ import {
 import { Case } from "../../types";
 import { parseCaseDate } from "../../utils/date";
 import { legalTopicName, discussionTopicName } from "../../utils/topic";
+import {
+  TrendingUp, TrendingDown, Circle, Square, Star, MoreVertical, Target,
+  Info, Calendar, AlertTriangle
+} from "lucide-react";
 
 // Re-use same icon paths from original
 function kpiIcon(type: "shield" | "warning" | "search" | "trend") {
@@ -337,8 +341,8 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
           >
             30 ngày
           </button>
-          <span className="grid h-full w-[52px] place-items-center border-l border-[#e8e9ef] text-[16px] text-[#65738b]">
-            ▣
+          <span className="grid h-full w-[52px] place-items-center border-l border-[#e8e9ef] text-[#65738b]">
+            <Calendar size={16} />
           </span>
         </div>
       </div>
@@ -372,7 +376,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
               {urgent}
             </strong>
             <span className={trendTextClass(urgentDelta)}>
-              {urgentDelta >= 0 ? "↑" : "↓"} {signed(urgentDelta)} <em className={kpiTrendEm}>so với kỳ trước</em>
+              {urgentDelta >= 0 ? <TrendingUp size={12} className="inline align-[-1px]" /> : <TrendingDown size={12} className="inline align-[-1px]" />} {signed(urgentDelta)} <em className={kpiTrendEm}>so với kỳ trước</em>
             </span>
           </div>
         </article>
@@ -400,7 +404,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
               {current.length}
             </strong>
             <span className={trendTextClass(discussionDelta)}>
-              {discussionDelta >= 0 ? "↑" : "↓"} {discussionChange} <em className={kpiTrendEm}>so với kỳ trước</em>
+              {discussionDelta >= 0 ? <TrendingUp size={12} className="inline align-[-1px]" /> : <TrendingDown size={12} className="inline align-[-1px]" />} {discussionChange} <em className={kpiTrendEm}>so với kỳ trước</em>
             </span>
           </div>
         </article>
@@ -413,13 +417,13 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
         >
           <header className={chartHeader}>
             <h2 className={chartTitle}>
-              Xu hướng thảo luận theo thời gian <small className="text-[12px] font-normal text-[#8995a8]">ⓘ</small>
+              Xu hướng thảo luận theo thời gian <Info size={14} className="inline align-[-2px] text-[#8995a8]" />
             </h2>
             <span className={headerTrendClass(discussionDelta)}>
-              {discussionDelta >= 0 ? "↑" : "↓"} {discussionChange}{" "}
+              {discussionDelta >= 0 ? <TrendingUp size={12} className="inline align-[-1px]" /> : <TrendingDown size={12} className="inline align-[-1px]" />} {discussionChange}{" "}
               <em className="ml-2 font-normal not-italic text-[#96a0b0]">so với kỳ trước</em>
             </span>
-            <b className={chartMenu}>⋮</b>
+            <MoreVertical size={18} className={chartMenu} />
           </header>
           <div className="flex gap-7 px-[22px] pt-px pb-[5px] text-[10px] text-[#526078]">
             <span className="flex items-center gap-2">
@@ -467,7 +471,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
         <section className={`${chartPanel} h-[320px] max-[1250px]:h-auto max-[1250px]:min-h-[320px]`}>
           <header className={chartHeader}>
             <h2 className={chartTitle}>Top chủ đề được bàn luận nhiều nhất</h2>
-            <b className={chartMenu}>⋮</b>
+            <MoreVertical size={18} className={chartMenu} />
           </header>
           <div className="px-[22px] pt-[2px]">
             {topics.map(([topic, count]) => {
@@ -490,14 +494,14 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
                       change >= 0 ? "text-[#0aa65d]" : "text-[#ef3540]"
                     }`}
                   >
-                    {change >= 0 ? "↑" : "↓"} {Math.abs(change)}%
+                    {change >= 0 ? <TrendingUp size={10} className="inline align-[-1px]" /> : <TrendingDown size={10} className="inline align-[-1px]" />} {Math.abs(change)}%
                   </span>
                 </div>
               );
             })}
           </div>
           <footer className="flex justify-between px-[22px] py-1.5 text-[9px] text-[#778397]">
-            <span>● &nbsp;Số lượt đề cập theo chủ đề</span>
+            <span><Circle size={8} fill="currentColor" className="inline align-[-1px]" />&nbsp; Số lượt đề cập theo chủ đề</span>
             <span>so với kỳ trước</span>
           </footer>
         </section>
@@ -505,9 +509,9 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
         <section className={`${chartPanel} min-h-[278px] max-[720px]:overflow-x-auto`}>
           <header className={chartHeader}>
             <h2 className={chartTitle}>
-              Heatmap điểm nóng <small className="text-[12px] font-normal text-[#8995a8]">ⓘ</small>
+              Heatmap điểm nóng <Info size={14} className="inline align-[-2px] text-[#8995a8]" />
             </h2>
-            <b className={chartMenu}>⋮</b>
+            <MoreVertical size={18} className={chartMenu} />
           </header>
           <div className={`${heatGrid} px-5 pt-px pb-[7px] text-[9px] font-[650] text-[#25334b]`}>
             <span>Chủ đề</span>
@@ -538,11 +542,11 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
             ))}
           </div>
           <div className="flex justify-center gap-[17px] px-2.5 py-[15px] text-[9px] text-[#6d798d] max-[720px]:min-w-[610px]">
-            <span className="text-[#e43886]">■ Rất cao</span>
-            <span className="text-[#ee936c]">■ Cao</span>
-            <span className="text-[#dfb656]">■ Trung bình</span>
-            <span className="text-[#74c889]">■ Thấp</span>
-            <span className="text-[#9acfa5]">■ Rất thấp</span>
+            <span className="text-[#e43886] inline-flex items-center gap-1"><Square size={10} fill="currentColor" /> Rất cao</span>
+            <span className="text-[#ee936c] inline-flex items-center gap-1"><Square size={10} fill="currentColor" /> Cao</span>
+            <span className="text-[#dfb656] inline-flex items-center gap-1"><Square size={10} fill="currentColor" /> Trung bình</span>
+            <span className="text-[#74c889] inline-flex items-center gap-1"><Square size={10} fill="currentColor" /> Thấp</span>
+            <span className="text-[#9acfa5] inline-flex items-center gap-1"><Square size={10} fill="currentColor" /> Rất thấp</span>
           </div>
         </section>
 
@@ -550,16 +554,16 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
           <header className={chartHeader}>
             <h2 className={chartTitle}>
               <span className="mr-2 inline-grid h-[23px] w-[23px] place-items-center rounded-full bg-[#ffe7f3] text-[#e9177d]">
-                ✪
+                <Star size={14} fill="currentColor" />
               </span>{" "}
               Nhận định điều hành
             </h2>
-            <b className={chartMenu}>⋮</b>
+            <MoreVertical size={18} className={chartMenu} />
           </header>
           <div className="mx-3.5 mb-3.5 overflow-hidden rounded-xl border border-[#e6e8ee]">
             <p className="m-0 flex min-h-[64px] items-center gap-[17px] border-b border-[#e7e9ef] px-3 py-[9px] text-[11px] text-[#2a374d]">
-              <i className="grid h-[45px] w-[45px] flex-none place-items-center rounded-xl bg-[#fde9f5] text-[25px] not-italic text-[#e6167c]">
-                ◎
+              <i className="grid h-[45px] w-[45px] flex-none place-items-center rounded-xl bg-[#fde9f5] text-[#e6167c]">
+                <Target size={25} />
               </i>
               <span>
                 Thảo luận đang tập trung vào chủ đề <b className="font-[750]">{topics[0]?.[0] || "chưa xác định"}</b>.
@@ -574,8 +578,8 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
               </span>
             </p>
             <p className="m-0 flex min-h-[64px] items-center gap-[17px] px-3 py-[9px] text-[11px] text-[#2a374d]">
-              <i className="grid h-[45px] w-[45px] flex-none place-items-center rounded-xl bg-[#fde9f5] text-[25px] not-italic text-[#e6167c]">
-                △
+              <i className="grid h-[45px] w-[45px] flex-none place-items-center rounded-xl bg-[#fde9f5] text-[#e6167c]">
+                <AlertTriangle size={25} />
               </i>
               <span>
                 <b className="font-[750]">{urgent || 0} claim</b> ở mức khẩn cấp cần được ưu tiên xử lý.

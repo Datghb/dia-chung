@@ -1,6 +1,7 @@
 "use client";
 
 import { useVerifyQuery } from "@/hooks/use-queries";
+import { Check, ExternalLink } from "lucide-react";
 
 export default function VerifyPage() {
   const { data: cases = [], isLoading, isSuccess } = useVerifyQuery();
@@ -87,7 +88,7 @@ export default function VerifyPage() {
                 <div className="border-l border-[#eff1f5] bg-[#fcf9fd] px-[23px] py-[21px] max-[760px]:border-t max-[760px]:border-l-0">
                   <small className={colLabel}>KỲ VỌNG HỆ THỐNG</small>
                   <p className="inline-block rounded-lg bg-[#e9f8f2] px-[9px] py-1.5 text-[12px] font-extrabold text-[#287d61]">
-                    ✓ {item.expected_he_thong.nhan}
+                    <Check size={14} className="mr-1 inline align-[-1px]" /> {item.expected_he_thong.nhan}
                   </p>
                   <strong className="block text-[13px] leading-[1.45] text-[#a925a6]">
                     {item.expected_he_thong.dieu_khoan_moi}
@@ -103,7 +104,7 @@ export default function VerifyPage() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Mở nguồn công bố ↗
+                  Mở nguồn công bố <ExternalLink size={12} className="inline align-[-1px]" />
                 </a>
               </footer>
             </article>

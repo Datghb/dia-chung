@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQueueQuery } from "@/hooks/use-queries";
+import { Zap, Layers, FileBarChart, Shield, CheckCircle, GitBranch, TrendingUp, LifeBuoy } from "lucide-react";
 
 const navLinkBase =
   "flex items-center gap-3 rounded-[11px] p-3 text-[12px] no-underline transition-[transform,background,box-shadow] duration-[180ms] ease-in-out hover:translate-x-[2px] hover:bg-[#fbf0ff] hover:text-[#a219c2]";
@@ -21,7 +22,7 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
 }
 
 function NavIcon({ active, children }: { active: boolean; children: React.ReactNode }) {
-  return <span className={`w-[18px] text-[17px] ${active ? "text-[#d620a8]" : ""}`}>{children}</span>;
+  return <span className={`inline-flex items-center justify-center w-[18px] ${active ? "text-[#d620a8]" : "text-[#757d91]"}`}>{children}</span>;
 }
 
 export function Sidebar() {
@@ -31,12 +32,12 @@ export function Sidebar() {
   const activeCount = caseItems.filter((x) => x.status !== "Đã xử lý").length;
 
   const items = [
-    { href: "/", icon: "⌁", label: "Tổng quan thị trường", active: pathname === "/" },
-    { href: "/queue", icon: "▦", label: "Hàng đợi giám sát", active: pathname.startsWith("/queue"), count: activeCount },
-    { href: "/reports", icon: "◎", label: "Báo cáo tổng hợp", active: pathname.startsWith("/reports") },
-    { href: "/sources", icon: "⌘", label: "Nguồn chính thức", active: pathname.startsWith("/sources") },
-    { href: "/verify", icon: "✓", label: "Tầng kiểm chứng", active: pathname.startsWith("/verify") },
-    { href: "/graph", icon: "⌬", label: "Knowledge Graph", active: pathname.startsWith("/graph") },
+    { href: "/", icon: <Zap size={18} />, label: "Tổng quan thị trường", active: pathname === "/" },
+    { href: "/queue", icon: <Layers size={18} />, label: "Hàng đợi giám sát", active: pathname.startsWith("/queue"), count: activeCount },
+    { href: "/reports", icon: <FileBarChart size={18} />, label: "Báo cáo tổng hợp", active: pathname.startsWith("/reports") },
+    { href: "/sources", icon: <Shield size={18} />, label: "Nguồn chính thức", active: pathname.startsWith("/sources") },
+    { href: "/verify", icon: <CheckCircle size={18} />, label: "Tầng kiểm chứng", active: pathname.startsWith("/verify") },
+    { href: "/graph", icon: <GitBranch size={18} />, label: "Knowledge Graph", active: pathname.startsWith("/graph") },
   ];
 
   return (
@@ -69,7 +70,7 @@ export function Sidebar() {
           <strong className="mt-1 block text-[22px] text-[#162039]">
             {caseItems.length}{" "}
             {caseItems.length > 0 ? (
-              <em className="text-[10px] not-italic text-[#20a66e]">↗ {Math.min(99, caseItems.length * 3)}%</em>
+              <em className="text-[10px] not-italic text-[#20a66e] inline-flex items-center gap-0.5"><TrendingUp size={10} /> {Math.min(99, caseItems.length * 3)}%</em>
             ) : null}
           </strong>
           <svg viewBox="0 0 200 48" aria-hidden="true" className="mt-[5px] h-12 w-full overflow-visible">
@@ -80,7 +81,7 @@ export function Sidebar() {
           </svg>
         </div>
         <div className="flex items-center gap-2.5 rounded-xl border border-[#e8eaf1] bg-white px-[14px] py-3 shadow-[0_5px_18px_#24304c08]">
-          <span className="text-lg text-[#61718c]">◉</span>
+          <LifeBuoy size={20} className="text-[#61718c]" />
           <div>
             <strong className="block text-[10px]">Trung tâm hỗ trợ</strong>
             <small className="mt-[3px] block text-[9px] text-[#8b97aa]">Hướng dẫn & chính sách</small>

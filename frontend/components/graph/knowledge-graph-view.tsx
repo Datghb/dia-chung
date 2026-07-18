@@ -6,6 +6,7 @@ import { useQueueQuery } from "../../hooks/use-queries";
 import { Case } from "../../types";
 import { VerdictBadge } from "../common/badge";
 import "@xyflow/react/dist/style.css";
+import { ExternalLink, ArrowRight } from "lucide-react";
 
 export function KnowledgeGraphView() {
   const { data: fetchedItems = [] } = useQueueQuery();
@@ -127,7 +128,7 @@ export function KnowledgeGraphView() {
                   rel="noreferrer"
                   style={{ color: "#3b82f6", fontSize: 11, display: "inline-block", marginTop: "4px" }}
                 >
-                  Mở nguồn ↗
+                  Mở nguồn <ExternalLink size={12} className="inline align-[-1px]" />
                 </a>
               )}
             </div>
@@ -187,7 +188,7 @@ export function KnowledgeGraphView() {
         <div>
           <span className="text-[10px] font-extrabold tracking-[1.5px] text-[#c01cad]">KNOWLEDGE GRAPH</span>
           <h1 className="my-[6px] text-[38px] font-[760] tracking-[-1.6px] text-[#202944] max-[480px]:text-[31px]">Đồ thị tri thức</h1>
-          <p className="m-0 text-[12px] text-[#738195]">Quan hệ giữa Claim → Chủ thể → Điều luật → Nguồn kiểm chứng.</p>
+          <p className="m-0 text-[12px] text-[#738195]">Quan hệ giữa Claim <ArrowRight size={14} className="inline align-[-2px]" /> Chủ thể <ArrowRight size={14} className="inline align-[-2px]" /> Điều luật <ArrowRight size={14} className="inline align-[-2px]" /> Nguồn kiểm chứng.</p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <select

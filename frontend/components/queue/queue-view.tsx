@@ -10,6 +10,10 @@ import { VerdictBadge, StatusBadge, slug } from "../common/badge";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ManualInputDrawer } from "./manual-input-drawer";
 import { Case, Verdict, Status, Priority } from "../../types";
+import {
+  TrendingUp, FilePlus, AlertTriangle, Search, Clock,
+  ArrowUpDown, Plus, X, ExternalLink, ArrowRight
+} from "lucide-react";
 
 const verdicts: Array<"Tất cả" | Verdict> = ["Tất cả", "Đúng", "Hiểu lầm", "Cần kiểm chứng"];
 const statuses: Array<"Tất cả" | Status> = ["Tất cả", "Mới", "Đang xử lý", "Đã xử lý"];
@@ -186,7 +190,7 @@ export function QueueView() {
           <div className="flex justify-between">
             <small className="text-[9px] text-[#65738a]">Xu hướng rủi ro 7 ngày</small>
             <strong className="text-[13px] text-[#d40ca0]">
-              {allItems.length > 0 ? `↑ ${Math.min(99, allItems.length * 3)}%` : "Chưa có dữ liệu"}
+              {allItems.length > 0 ? <><TrendingUp size={12} className="inline align-[-1px]" /> {Math.min(99, allItems.length * 3)}%</> : "Chưa có dữ liệu"}
             </strong>
           </div>
           <svg viewBox="0 0 250 55" aria-hidden="true" className="mt-[5px] block h-12 w-full">
@@ -204,7 +208,7 @@ export function QueueView() {
             <small className={metricLabel}>Hồ sơ mới</small>
             <strong className={metricValue}>{allItems.filter((item) => item.status === "Mới").length}</strong>
           </div>
-          <i className={`${metricIcon} bg-[#f2eaff] text-[#8d22dc]`}>▣</i>
+          <i className={`${metricIcon} bg-[#f2eaff] text-[#8d22dc]`}><FilePlus size={19} /></i>
         </article>
         <article className={metricArticle}>
           <div>
@@ -218,7 +222,7 @@ export function QueueView() {
               </span>
             )}
           </div>
-          <i className={`${metricIcon} bg-[#ffedf4] text-[#e31b87]`}>ϟ</i>
+          <i className={`${metricIcon} bg-[#ffedf4] text-[#e31b87]`}><AlertTriangle size={19} /></i>
         </article>
         <article className={metricArticle}>
           <div>
@@ -232,14 +236,14 @@ export function QueueView() {
               </span>
             )}
           </div>
-          <i className={`${metricIcon} bg-[#fff4de] text-[#df971b]`}>◇</i>
+          <i className={`${metricIcon} bg-[#fff4de] text-[#df971b]`}><Search size={19} /></i>
         </article>
         <article className={metricArticle}>
           <div>
             <small className={metricLabel}>Đang xử lý</small>
             <strong className={metricValue}>{processingCount || openCount}</strong>
           </div>
-          <i className={`${metricIcon} bg-[#ffedf6] text-[#e11a8c]`}>◷</i>
+          <i className={`${metricIcon} bg-[#ffedf6] text-[#e11a8c]`}><Clock size={19} /></i>
         </article>
       </section>
 
@@ -302,16 +306,16 @@ export function QueueView() {
               className="rounded-[10px] border border-[#e7e9f0] bg-[#fafbfe] px-3 py-[9px] text-[11px] text-[#35495e] hover:border-[#dca1d4] hover:text-[#b51aa8] max-[700px]:w-full"
               onClick={() => setSortDesc((v) => !v)}
             >
-              ↕ Mức ưu tiên: {sortDesc ? "cao trước" : "thấp trước"}
+              <ArrowUpDown size={14} className="mr-1 inline align-[-2px]" /> Mức ưu tiên: {sortDesc ? "cao trước" : "thấp trước"}
             </button>
             <button
               className="rounded-[10px] border-0 bg-linear-145 from-[#ef35ad] to-[#a921cf] px-3 py-[9px] text-[11px] font-[750] text-white shadow-[0_7px_16px_#c626aa2c] hover:-translate-y-px hover:shadow-[0_9px_20px_#c626aa3d] max-[700px]:w-full"
               onClick={() => setShowInput(true)}
             >
-              ＋ Nhập nội dung mới
+               <Plus size={14} className="mr-1 inline align-[-2px]" /> Nhập nội dung mới
             </button>
             <button onClick={handleClearQueue} disabled={clearQueueMutation.isPending}>
-              ✕ Xóa hàng đợi
+              <X size={14} className="mr-1 inline align-[-2px]" /> Xóa hàng đợi
             </button>
           </div>
         </div>
@@ -368,8 +372,7 @@ export function QueueView() {
                           className="text-[#2e638f]"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {" "}
-                          ↗
+                          <ExternalLink size={10} className="ml-1 inline align-[-1px]" />
                         </a>
                       ) : null}
                     </small>
@@ -423,7 +426,7 @@ export function QueueView() {
                       className="h-8 w-8 rounded-full border-0 bg-[#f5eff9] text-[14px] text-[#b51aa8] transition-all duration-[180ms] group-hover:translate-x-[2px] group-hover:bg-[#c71bb0] group-hover:text-white"
                       aria-label={`Mở hồ sơ ${item.id}`}
                     >
-                      →
+                      <ArrowRight size={14} />
                     </button>
                   </td>
                 </tr>

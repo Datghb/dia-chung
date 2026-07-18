@@ -5,6 +5,7 @@ import { useState } from "react";
 import Papa from "papaparse";
 import { Case, ApiQueueItem } from "../../types";
 import { API_URL, mapApiCase } from "../../utils/api";
+import { X, FileText, MessageCircle, Check, Upload, ArrowRight, Info } from "lucide-react";
 
 export function ManualInputDrawer({
   onClose,
@@ -171,11 +172,11 @@ export function ManualInputDrawer({
             </p>
           </div>
           <button
-            className="h-9 w-9 flex-none rounded-full border-0 bg-[#f5f2f7] text-[22px] text-[#8e4890]"
+            className="h-9 w-9 flex-none rounded-full border-0 bg-[#f5f2f7] text-[#8e4890] grid place-items-center"
             onClick={onClose}
             aria-label="Đóng"
           >
-            ×
+            <X size={22} />
           </button>
         </div>
         <form onSubmit={submit} className="grid gap-5 pt-[23px]">
@@ -222,7 +223,7 @@ export function ManualInputDrawer({
                     : "bg-[#f0edf4]"
                 }`}
               >
-                ▤
+                <FileText size={15} />
               </span>
               <div>
                 <strong className={`block text-[13px] ${contentType === "post" ? "text-[#a721a5]" : "text-[#3f485e]"}`}>
@@ -249,7 +250,7 @@ export function ManualInputDrawer({
                     : "bg-[#f0edf4]"
                 }`}
               >
-                ◌
+                <MessageCircle size={15} />
               </span>
               <div>
                 <strong
@@ -281,7 +282,7 @@ export function ManualInputDrawer({
                       : "bg-linear-145 from-[#f6e8f7] to-[#eee7fa] text-[#b421ac]"
                   }`}
                 >
-                  {parsedRows.length ? "✓" : "⇧"}
+                  {parsedRows.length ? <Check size={20} /> : <Upload size={20} />}
                 </span>
                 <strong className="text-[14px] text-[#3c465b]">
                   {fileName || `Chọn file ${contentType === "post" ? "bài viết" : "bình luận"}`}
@@ -401,8 +402,8 @@ export function ManualInputDrawer({
             </>
           )}
           <div className="flex gap-[11px] rounded-xl bg-[#f8f2fb] p-[13px] text-[#686079]">
-            <span className="grid h-[21px] w-[21px] place-items-center rounded-full bg-[#bd25b1] font-[Georgia] text-[11px] font-bold text-white">
-              i
+            <span className="grid h-[21px] w-[21px] place-items-center rounded-full bg-[#bd25b1] text-white">
+              <Info size={14} />
             </span>
             <p className="m-0 text-[11px] leading-normal">
               <strong className="block text-[#4c3a57]">Luồng MVP</strong> Sau khi lưu, hệ thống tạo hồ sơ với kết quả
@@ -425,8 +426,8 @@ export function ManualInputDrawer({
               {submitting
                 ? "Đang phân tích…"
                 : inputMode === "file"
-                ? `Nhập ${parsedRows.length || ""} hồ sơ →`
-                : "Tạo hồ sơ & phân tích →"}
+                ? <>Nhập {parsedRows.length || ""} hồ sơ <ArrowRight size={14} className="inline align-[-2px]" /></>
+                : <>Tạo hồ sơ & phân tích <ArrowRight size={14} className="inline align-[-2px]" /></>}
             </button>
           </div>
         </form>

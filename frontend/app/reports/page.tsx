@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueueQuery } from "@/hooks/use-queries";
+import { ArrowLeftRight } from "lucide-react";
 
 export default function ReportsPage() {
   const { data: allItems = [], isLoading } = useQueueQuery();
@@ -83,7 +84,7 @@ export default function ReportsPage() {
             <tbody>
               <tr>
                 <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">1</td>
-                <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">Nhầm chủ thể tổ chức ↔ cá nhân</td>
+                <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">Nhầm chủ thể tổ chức <ArrowLeftRight size={12} className="inline align-[-1px]" /> cá nhân</td>
                 <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">{nhầmChủThể}</td>
               </tr>
               <tr>
@@ -93,7 +94,7 @@ export default function ReportsPage() {
               </tr>
               <tr>
                 <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">3</td>
-                <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">Nhầm khoản k1 ↔ k2 Điều 95</td>
+                <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">Nhầm khoản k1 <ArrowLeftRight size={12} className="inline align-[-1px]" /> k2 Điều 95</td>
                 <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">{nhầmKhoản}</td>
               </tr>
               {otherHieuLam > 0 && (

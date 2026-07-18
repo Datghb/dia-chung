@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQueueQuery } from "@/hooks/use-queries";
 import { API_URL } from "@/utils/api";
+import { Search, Zap, Bell, ChevronDown, Check, AlertTriangle, X } from "lucide-react";
 
 export function Topbar() {
   const router = useRouter();
@@ -83,7 +84,7 @@ export function Topbar() {
     <>
       <header className="flex h-[66px] items-center gap-3 border-b border-[#eceef4] bg-[#ffffffcc] px-[28px] backdrop-blur-[12px] max-[980px]:h-[69px] max-[860px]:gap-[7px] max-[700px]:h-[58px] max-[700px]:px-[15px]">
         <div className="flex max-w-[525px] flex-1 items-center gap-[9px] rounded-xl border border-[#e9ebf2] bg-white px-[15px] py-[11px] text-[#7d8da0] shadow-[0_5px_16px_#23294b08]">
-          <span>⌕</span>
+          <Search size={18} className="text-[#7d8da0]" />
           <input
             className="w-full border-0 text-[14px] outline-0"
             value={searchQuery}
@@ -103,7 +104,7 @@ export function Topbar() {
               Đang quét MXH…
             </>
           ) : (
-            "⌁ Quét MXH"
+            <><Zap size={14} className="mr-[5px] inline align-[-2px]" /> Quét MXH</>
           )}
         </button>
         <div
@@ -124,7 +125,7 @@ export function Topbar() {
           className="relative h-9 w-9 border-0 bg-transparent text-[20px] text-[#65738a] max-[700px]:hidden"
           aria-label="Thông báo"
         >
-          ♢
+          <Bell size={20} />
           <b className="absolute top-0 right-0 grid h-4 w-4 place-items-center rounded-full bg-[#df0c9e] text-[9px] text-white">
             {urgentCount || ""}
           </b>
@@ -135,7 +136,7 @@ export function Topbar() {
         >
           MA
         </button>
-        <span className="text-[13px] text-[#66748b] max-[700px]:hidden">⌄</span>
+        <ChevronDown size={16} className="text-[#66748b] max-[700px]:hidden" />
       </header>
 
       {crawlMessage && (
@@ -152,11 +153,11 @@ export function Topbar() {
               crawlState === "error" ? "bg-[#d9556e]" : "bg-[#35a87b]"
             }`}
           >
-            {crawlState === "success" ? "✓" : "!"}
+            {crawlState === "success" ? <Check size={14} /> : <AlertTriangle size={14} />}
           </span>
           <p className="mt-[2px] flex-1 text-[11px] leading-[1.45]">{crawlMessage}</p>
-          <button className="border-0 bg-transparent text-lg leading-none text-inherit" onClick={() => setCrawlMessage("")}>
-            ×
+          <button className="border-0 bg-transparent leading-none text-inherit" onClick={() => setCrawlMessage("")}>
+            <X size={18} />
           </button>
         </div>
       )}

@@ -6,6 +6,9 @@ import { useUpdateStatusMutation } from "../../hooks/use-queries";
 import { API_URL } from "../../utils/api";
 import { VerdictBadge } from "../common/badge";
 import { Case, Status } from "../../types";
+import {
+  ExternalLink, Check, HelpCircle, Scale, ArrowRight, ArrowLeft, X, AlertTriangle
+} from "lucide-react";
 
 const statuses: Status[] = ["Mới", "Đang xử lý", "Đã xử lý"];
 
@@ -137,7 +140,7 @@ export function CaseDetail({ item }: { item: Case }) {
         onClick={handleBack}
         aria-label="Đóng hồ sơ"
       >
-        ×
+        <X size={22} />
       </button>
       <div className="mb-[15px] border-b border-[#e8eaf1] pt-1 pr-[42px] pb-[18px]">
         <div>
@@ -199,7 +202,7 @@ export function CaseDetail({ item }: { item: Case }) {
                   rel="noopener noreferrer"
                   style={{ color: "#3b82f6", fontSize: 13, textDecoration: "none" }}
                 >
-                  🔗 Xem bài viết gốc trên {item.platform} ↗
+                  <ExternalLink size={14} className="mr-1 inline align-[-2px]" /> Xem bài viết gốc trên {item.platform}
                 </a>
               </div>
             )}
@@ -294,7 +297,7 @@ export function CaseDetail({ item }: { item: Case }) {
                     : "bg-[#fff4d9] text-[#90621a]"
                 }`}
               >
-                {item.verdict === "Đúng" ? "✓" : item.verdict === "Hiểu lầm" ? "↯" : "?"} {item.sourceResult}
+                {item.verdict === "Đúng" ? <Check size={14} className="inline align-[-2px]" /> : item.verdict === "Hiểu lầm" ? <AlertTriangle size={14} className="inline align-[-2px]" /> : <HelpCircle size={14} className="inline align-[-2px]" />} {item.sourceResult}
               </span>
             </div>
             <div className="flex items-center gap-3 pt-3">
@@ -313,7 +316,7 @@ export function CaseDetail({ item }: { item: Case }) {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Mở nguồn ↗
+                  Mở nguồn <ExternalLink size={14} className="inline align-[-2px]" />
                 </a>
               ) : (
                 <span
@@ -357,7 +360,7 @@ export function CaseDetail({ item }: { item: Case }) {
           </section>
           <section className={detailCard}>
             <div className="flex gap-2.5 border-b border-[#e7ebef] pb-[14px]">
-              <span className="text-[20px] text-[#c524ad]">⚖</span>
+              <Scale size={20} className="text-[#c524ad]" />
               <div>
                 <small className={cardLabel}>CĂN CỨ PHÁP LUẬT</small>
                 <h2 className={cardHeadingTitle}>{item.document}</h2>
@@ -385,11 +388,11 @@ export function CaseDetail({ item }: { item: Case }) {
             <small className="text-[9px] font-extrabold text-[#65738a]">KNOWLEDGE GRAPH</small>
             <div className="mt-[14px] flex items-center justify-between gap-1.5">
               <span className={`${flowStep} bg-[#fff0f7] text-[#c31b80]`}>Claim</span>
-              <i className="not-italic text-[#c3c9d3]">→</i>
+              <ArrowRight size={14} className="text-[#c3c9d3]" />
               <span className={`${flowStep} bg-[#fff4e4] text-[#ad7314]`}>Chủ thể</span>
-              <i className="not-italic text-[#c3c9d3]">→</i>
+              <ArrowRight size={14} className="text-[#c3c9d3]" />
               <span className={`${flowStep} bg-[#eaf8ee] text-[#24865a]`}>Điều luật</span>
-              <i className="not-italic text-[#c3c9d3]">→</i>
+              <ArrowRight size={14} className="text-[#c3c9d3]" />
               <span className={`${flowStep} bg-[#edf4fc] text-[#3970ad]`}>Nguồn</span>
             </div>
           </section>
@@ -400,7 +403,7 @@ export function CaseDetail({ item }: { item: Case }) {
           className="rounded-[9px] border border-[#dfe2e9] bg-white p-[11px] text-[11px] font-[750] text-[#5c687c]"
           onClick={handleBack}
         >
-          ← Quay lại hàng đợi
+          <ArrowLeft size={14} className="mr-1 inline align-[-2px]" /> Quay lại hàng đợi
         </button>
         <button
           className="rounded-[9px] border-0 bg-linear-90 from-[#e213aa] to-[#a20ac1] p-[11px] text-[11px] font-[750] text-white"
@@ -410,8 +413,8 @@ export function CaseDetail({ item }: { item: Case }) {
           {verifyLoading
             ? "Đang xử lý…"
             : currentStatus === "Đang xử lý"
-            ? "✓ Đang kiểm chứng"
-            : "Bắt đầu kiểm chứng →"}
+            ? <><Check size={14} className="mr-1 inline align-[-2px]" /> Đang kiểm chứng</>
+            : <>Bắt đầu kiểm chứng <ArrowRight size={14} className="ml-1 inline align-[-2px]" /></>}
         </button>
       </div>
       {verifyError && (
