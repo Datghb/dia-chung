@@ -22,13 +22,15 @@ router = APIRouter(tags=["crawl"])
 
 @router.get("/crawl/debug")
 def debug_crawl():
-    """Debug endpoint — test Bright Data Discover API and return raw result."""
+    """Debug endpoint — test Bright Data APIs and return raw results."""
     import time
     import requests as http_requests
     from backend.legal_radar.settings import get_settings
+    from backend.legal_radar.crawlers.facebook import BD_BASE_URL, BD_POSTS_DATASET, BD_COMMENTS_DATASET
 
     settings = get_settings()
     key = settings.brightdata_api_key or ""
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     result = {
         "api_key_set": bool(key),
         "api_key_prefix": key[:8] + "..." if len(key) > 8 else key,
@@ -38,9 +40,8 @@ def debug_crawl():
         result["error"] = "BRIGHTDATA_API_KEY is empty"
         return result
 
-    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    # Test 1: Discover API
     query = "sáp nhập tỉnh site:facebook.com"
-
     try:
         resp = http_requests.post(
             "https://api.brightdata.com/discover",
@@ -48,10 +49,10 @@ def debug_crawl():
             json={"query": query, "num_results": 3, "format": "json", "language": "vi", "country": "VN"},
             timeout=15,
         )
-        result["post_status"] = resp.status_code
-        result["post_response"] = resp.text[:500]
+        result["discover_post_status"] = resp.status_code
+        result["discover_post_response"] = resp.text[:500]
     except Exception as exc:
-        result["post_error"] = str(exc)
+        result["discover_post_error"] = str(exc)
         return result
 
     if resp.status_code != 200:
@@ -59,32 +60,61 @@ def debug_crawl():
 
     task_id = resp.json().get("task_id")
     if not task_id:
-        result["error"] = "No task_id in response"
+        result["error"] = "No task_id"
         return result
+    result["discover_task_id"] = task_id
 
-    result["task_id"] = task_id
-
+    discover_results = []
     for i in range(10):
         time.sleep(3)
         try:
-            r = http_requests.get(
-                f"https://api.brightdata.com/discover?task_id={task_id}",
-                headers=headers,
-                timeout=15,
-            )
+            r = http_requests.get(f"https://api.brightdata.com/discover?task_id={task_id}", headers=headers, timeout=15)
             data = r.json()
-            result[f"poll_{i}_status"] = r.status_code
-            result[f"poll_{i}_body_status"] = data.get("status")
+            result[f"discover_poll_{i}"] = data.get("status")
             if data.get("status") == "done":
-                results = data.get("results", [])
-                result["done"] = True
-                result["results_count"] = len(results)
-                result["results"] = results[:3]
-                return result
+                discover_results = data.get("results", [])
+                result["discover_results_count"] = len(discover_results)
+                result["discover_results"] = discover_results[:2]
+                break
         except Exception as exc:
-            result[f"poll_{i}_error"] = str(exc)
+            result[f"discover_poll_{i}_error"] = str(exc)
 
-    result["error"] = "Timed out after 10 polls (30s)"
+    if not discover_results:
+        result["error"] = "Discover returned no results"
+        return result
+
+    # Test 2: Scraper API on first discovered URL
+    test_url = discover_results[0].get("link", "")
+    result["scraper_test_url"] = test_url
+
+    for dataset_id, label in [(BD_POSTS_DATASET, "posts"), (BD_COMMENTS_DATASET, "comments")]:
+        try:
+            scrape_resp = http_requests.post(
+                f"{BD_BASE_URL}/scrape",
+                params={"dataset_id": dataset_id, "include_errors": "true", "format": "json"},
+                headers=headers,
+                json={"input": [{"url": test_url}]},
+                timeout=30,
+            )
+            result[f"scraper_{label}_status"] = scrape_resp.status_code
+            result[f"scraper_{label}_response"] = scrape_resp.text[:500]
+
+            if scrape_resp.status_code == 202:
+                sid = scrape_resp.json().get("snapshot_id")
+                result[f"scraper_{label}_snapshot_id"] = sid
+                if sid:
+                    for j in range(10):
+                        time.sleep(3)
+                        sr = http_requests.get(f"{BD_BASE_URL}/snapshot/{sid}", headers=headers, timeout=15)
+                        result[f"scraper_{label}_poll_{j}"] = sr.status_code
+                        if sr.status_code == 200:
+                            snap_data = sr.json()
+                            result[f"scraper_{label}_result_count"] = len(snap_data) if isinstance(snap_data, list) else "not_list"
+                            result[f"scraper_{label}_result"] = snap_data[:2] if isinstance(snap_data, list) else str(snap_data)[:500]
+                            break
+        except Exception as exc:
+            result[f"scraper_{label}_error"] = str(exc)
+
     return result
 
 
