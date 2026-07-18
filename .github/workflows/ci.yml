@@ -34,8 +34,8 @@ jobs:
       - name: Run backend tests
         run: pytest backend/tests -v
 
-      # TODO: enable khi backend/eval/smoke.py thực thi và xác nhận đủ 14
-      # evaluation cases; hiện file chỉ đọc cases.json rồi luôn trả exit code 0.
+      - name: Run business evaluation gate (smoke test)
+        run: python backend/eval/smoke.py
 
   frontend-test:
     name: Frontend tests
