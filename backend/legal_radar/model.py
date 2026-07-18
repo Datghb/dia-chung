@@ -160,6 +160,7 @@ class QueueItem:
     source_title: str = ""
     source_url: str = ""
     source_agency: str = ""
+    url: str = ""
     platform: str = "Forum"
     account: str = ""
     published_at: str = ""
@@ -293,5 +294,4 @@ def validate_kg(kg: KnowledgeGraph) -> list[str]:
             errors.append(f"Edge target '{e.target}' not found")
 
     return errors
-
 

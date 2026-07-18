@@ -26,9 +26,14 @@ def dynamic_search_gemini(
     api_key: str | None = None,
 ) -> list[dict]:
     tr_key, base_url, model = _get_tokenrouter_config()
-    key = api_key or tr_key
-    if not key:
-        logger.warning("No TOKENROUTER_API_KEY set — skipping source search")
+    tokenrouter_key = api_key or tr_key
+    gemini_key = (
+        os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY_1", "")
+    )
+    if not tokenrouter_key and not gemini_key:
+        logger.warning("No TOKENROUTER_API_KEY or GEMINI_API_KEY set — skipping source search")
         return []
 
     query = " ".join(claim_keywords)
@@ -43,31 +48,51 @@ def dynamic_search_gemini(
     )
 
     try:
-        response = http_requests.post(
-            f"{base_url}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-            timeout=60,
-        )
+        # Prefer the native Gemini API when configured because it supports
+        # Google Search grounding and returns verifiable live-web citations.
+        if gemini_key and api_key is None:
+            gemini_model = os.environ.get("GEMINI_SEARCH_MODEL", "gemini-2.5-flash")
+            response = http_requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent",
+                params={"key": gemini_key},
+                headers={"Content-Type": "application/json"},
+                json={
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "tools": [{"google_search": {}}],
+                },
+                timeout=60,
+            )
+            provider = "Gemini"
+        else:
+            response = http_requests.post(
+                f"{base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {tokenrouter_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                },
+                timeout=60,
+            )
+            provider = "TokenRouter"
     except Exception as exc:
-        logger.warning("TokenRouter source search request error: %s", exc)
+        logger.warning("Source search request error: %s", exc)
         return []
 
     if response.status_code != 200:
-        logger.warning("TokenRouter source search HTTP %s: %s", response.status_code, response.text[:200])
+        logger.warning("%s source search HTTP %s: %s", provider, response.status_code, response.text[:200])
         return []
 
     try:
         data = response.json()
-        text = data["choices"][0]["message"]["content"].strip()
+        if provider == "TokenRouter":
+            text = data["choices"][0]["message"]["content"].strip()
+        else:
+            text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
     except (KeyError, IndexError, TypeError) as exc:
-        logger.warning("TokenRouter source search parse error: %s", exc)
+        logger.warning("%s source search parse error: %s", provider, exc)
         return []
 
     if not text:
@@ -91,7 +116,7 @@ def dynamic_search_gemini(
     try:
         results = json.loads(text)
     except json.JSONDecodeError:
-        logger.warning("TokenRouter source search returned non-JSON: %s", text[:200])
+        logger.warning("%s source search returned non-JSON: %s", provider, text[:200])
         return []
 
     if not isinstance(results, list):

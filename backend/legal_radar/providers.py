@@ -60,7 +60,7 @@ class GeminiProvider:
         timeout_s (int): Timeout HTTP moi request, tinh bang giay.
     """
 
-    def __init__(self, model: str = "gemini-2.0-flash-lite", timeout_s: int = 30) -> None:
+    def __init__(self, model: str = "gemini-2.5-flash-lite", timeout_s: int = 30) -> None:
         """Khoi tao provider voi model va timeout.
 
         Args:
@@ -85,9 +85,13 @@ class GeminiProvider:
         Raises:
             RuntimeError: Khi thieu GEMINI_API_KEY hoac HTTP status != 200.
         """
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = (
+            os.getenv("GEMINI_API_KEY")
+            or os.getenv("GOOGLE_API_KEY")
+            or os.getenv("GOOGLE_API_KEY_1")
+        )
         if not api_key:
-            raise RuntimeError("Thieu bien moi truong GEMINI_API_KEY")
+            raise RuntimeError("Thieu bien moi truong GEMINI_API_KEY hoac GOOGLE_API_KEY")
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
             params={"key": api_key},

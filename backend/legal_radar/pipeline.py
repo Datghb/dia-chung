@@ -202,6 +202,7 @@ class CommentIngestor:
                 status="new",
                 score=50,
                 confidence=30,
+                url=str(comment.get("url", "")),
             )
         try:
             cls_result = classify_claim_full(
@@ -266,6 +267,7 @@ class CommentIngestor:
             source_title=source_title,
             source_url=source_url,
             source_agency=source_agency,
+            url=str(comment.get("url", "")),
             platform=str(comment.get("platform", "Forum")),
             account=str(comment.get("account", "")),
             published_at=str(comment.get("published_at", "")),
@@ -350,7 +352,7 @@ def _default_provider():
     providers = []
     if os.getenv("TOKENROUTER_API_KEY"):
         providers.append(TokenRouterProvider())
-    if os.getenv("GEMINI_API_KEY"):
+    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY_1"):
         providers.append(GeminiProvider())
     if os.getenv("GROQ_API_KEY"):
         providers.append(GroqProvider())
@@ -426,5 +428,3 @@ def ingest_crawled_items(items: list[dict]) -> list[QueueItem]:
                 appended.append(queue_item)
 
     return appended
-
-

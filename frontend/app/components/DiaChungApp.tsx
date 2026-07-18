@@ -73,25 +73,40 @@ export function DiaChungApp() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      fetch(`${API_URL}/api/queue`).then((response) => {
+    fetch(`${API_URL}/api/queue`)
+      .then((response) => {
         if (!response.ok) throw new Error("Queue API unavailable");
         return response.json() as Promise<ApiQueueItem[]>;
-      }),
-      fetch(`${API_URL}/api/verify`).then((response) => {
+      })
+      .then((queue) => {
+        if (!active) return;
+        // An empty response is valid (for example, immediately after clearing
+        // the queue). Always replace the previous snapshot to avoid stale KPIs.
+        setCaseItems(queue.map(mapApiCase));
+        setDataSource("api");
+      })
+      .catch(() => {
+        if (active) setDataSource("fallback");
+      });
+
+    fetch(`${API_URL}/api/verify`)
+      .then((response) => {
         if (!response.ok) throw new Error("Verify API unavailable");
         return response.json() as Promise<{ cases: StudyCase[] }>;
-      }),
-    ]).then(([queue, verify]) => {
-      if (!active) return;
-      if (queue.length) setCaseItems(queue.map(mapApiCase));
-      setStudyCases(verify.cases);
-      setDataSource("api");
-    }).catch(() => {
-      if (active) setDataSource("fallback");
-    });
+      })
+      .then((verify) => {
+        if (active) setStudyCases(verify.cases);
+      })
+      .catch(() => {
+        if (active) setStudyCases([]);
+      });
     return () => { active = false; };
   }, [refreshKey]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRefreshKey((value) => value + 1), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   async function clearQueue() {
     try {
@@ -260,14 +275,21 @@ export function DiaChungApp() {
 
 function MarketOverviewV2({ allItems }: { allItems: Case[] }) {
   const [period, setPeriod] = useState<1 | 7 | 30>(7);
+  const [hoveredDay, setHoveredDay] = useState<number | null>(null);
   const rows = allItems.map((item) => ({ item, date: parseCaseDate(item.publishedAt) }));
   const dated = rows.filter((row): row is { item: Case; date: Date } => Boolean(row.date));
-  const latest = dated.reduce((value, row) => row.date > value ? row.date : value, new Date());
+  const latest = dated.length
+    ? dated.reduce((value, row) => row.date > value ? row.date : value, new Date(0))
+    : new Date();
   const start = new Date(latest);
-  start.setDate(start.getDate() - period + 1);
+  if (period === 1) start.setTime(start.getTime() - 24 * 60 * 60 * 1000);
+  else start.setDate(start.getDate() - period + 1);
   const previousStart = new Date(start);
-  previousStart.setDate(previousStart.getDate() - period);
-  const current = rows.filter((row) => !row.date || row.date >= start).map((row) => row.item);
+  if (period === 1) previousStart.setTime(previousStart.getTime() - 24 * 60 * 60 * 1000);
+  else previousStart.setDate(previousStart.getDate() - period);
+  // Records without a usable publication time must not silently inflate a
+  // time-bounded dashboard. They remain available in the monitoring queue.
+  const current = rows.filter((row) => row.date && row.date >= start && row.date <= latest).map((row) => row.item);
   const previous = rows.filter((row) => row.date && row.date >= previousStart && row.date < start).map((row) => row.item);
   const average = (items: Case[]) => items.length ? Math.round(items.reduce((sum, item) => sum + item.score, 0) / items.length) : 0;
   const delta = (now: number, before: number) => before ? Math.round(((now - before) / before) * 100) : now ? 100 : 0;
@@ -295,13 +317,15 @@ function MarketOverviewV2({ allItems }: { allItems: Case[] }) {
     count: current.filter((item) => item.platform === platform).length,
   })).sort((a, b) => b.count - a.count)[0]?.platform || "Facebook";
 
-  const days = Array.from({ length: 7 }, (_, index) => {
+  const chartDays = period === 30 ? 30 : period === 1 ? 1 : 7;
+  const days = Array.from({ length: chartDays }, (_, index) => {
     const date = new Date(latest);
-    date.setDate(date.getDate() - 6 + index);
+    date.setDate(date.getDate() - chartDays + 1 + index);
     const matches = dated.filter((row) => row.date.toDateString() === date.toDateString()).map((row) => row.item);
     return { label: `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`, value: average(matches) };
   });
-  const points = days.map((day, index) => `${36 + index * 116},${168 - day.value * 1.25}`);
+  const chartX = (index: number) => days.length === 1 ? 384 : 36 + index * (696 / (days.length - 1));
+  const points = days.map((day, index) => `${chartX(index)},${168 - day.value * 1.25}`);
   const linePath = points.length ? `M${points.join(" L")}` : "";
   const peak = days.reduce<{ label: string; value: number; index: number }>((best, day, index) => day.value > best.value ? { ...day, index } : best, { value: -1, index: 0, label: "" });
   const signed = (value: number) => `${value >= 0 ? "+" : ""}${value}%`;
@@ -320,29 +344,62 @@ function MarketOverviewV2({ allItems }: { allItems: Case[] }) {
       </div>
 
       <section className="market-v2-kpis">
-        <article><i className="shield-icon">{kpiIcon("shield")}</i><div><small>Risk Index</small><strong>{riskIndex}<b>/100</b></strong><span className={trendClass(riskDelta)}>↑ {signed(riskDelta)} <em>so với kỳ trước</em></span></div></article>
-        <article><i className="warning-icon">{kpiIcon("warning")}</i><div><small>Claim rủi ro cao</small><strong>{urgent}</strong><span className={trendClass(urgentDelta)}>↑ {signed(urgentDelta)} <em>so với kỳ trước</em></span></div></article>
+        <article><i className="shield-icon">{kpiIcon("shield")}</i><div><small>Risk Index</small><strong>{riskIndex}<b>/100</b></strong><span className={trendClass(riskDelta)}>{riskDelta >= 0 ? "↑" : "↓"} {signed(riskDelta)} <em>so với kỳ trước</em></span></div></article>
+        <article><i className="warning-icon">{kpiIcon("warning")}</i><div><small>Claim rủi ro cao</small><strong>{urgent}</strong><span className={trendClass(urgentDelta)}>{urgentDelta >= 0 ? "↑" : "↓"} {signed(urgentDelta)} <em>so với kỳ trước</em></span></div></article>
         <article><i className="search-icon">{kpiIcon("search")}</i><div><small>Chủ đề nóng</small><strong>{hotTopics}</strong><span className="up">↑ {topics.length} <em>chủ đề đang theo dõi</em></span></div></article>
-        <article><i className="trend-icon">{kpiIcon("trend")}</i><div><small>Biến động {period} ngày</small><strong>{signed(riskDelta)}</strong><span className={trendClass(riskDelta)}>{riskDelta >= 0 ? "xu hướng tăng" : "xu hướng giảm"}</span></div></article>
+        <article><i className="trend-icon">{kpiIcon("trend")}</i><div><small>Biến động {period === 1 ? "24 giờ" : `${period} ngày`}</small><strong>{signed(riskDelta)}</strong><span className={trendClass(riskDelta)}>{riskDelta >= 0 ? "xu hướng tăng" : "xu hướng giảm"}</span></div></article>
       </section>
 
       <div className="market-v2-grid">
         <section className="chart-panel risk-v2">
-          <header><h2>Xung nhịp rủi ro thị trường <small>ⓘ</small></h2><span className={trendClass(riskDelta)}>↑ {signed(riskDelta)} <em>so với kỳ trước</em></span><b>⋮</b></header>
+          <header><h2>Xung nhịp rủi ro thị trường <small>ⓘ</small></h2><span className={trendClass(riskDelta)}>{riskDelta >= 0 ? "↑" : "↓"} {signed(riskDelta)} <em>so với kỳ trước</em></span><b>⋮</b></header>
           <div className="risk-v2-legend"><span><i /> Risk Index</span><span><i /> Vùng rủi ro cao</span></div>
           <div className="risk-v2-chart">
             <div className="risk-y">{[100, 75, 50, 25, 0].map((value) => <span key={value}>{value}</span>)}</div>
-            <svg viewBox="0 0 768 190" preserveAspectRatio="none" aria-label="Biểu đồ Risk Index 7 ngày">
+            <svg
+              viewBox="0 0 768 190"
+              preserveAspectRatio="none"
+              aria-label={`Biểu đồ Risk Index ${period === 1 ? "24 giờ" : `${period} ngày`}`}
+              onPointerLeave={() => setHoveredDay(null)}
+            >
               <defs><linearGradient id="riskAreaV2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ed198b" stopOpacity=".24" /><stop offset="1" stopColor="#ed198b" stopOpacity="0" /></linearGradient></defs>
               {[18, 55, 92, 129, 166].map((y) => <line key={y} x1="36" x2="752" y1={y} y2={y} className="grid-line" />)}
               <line x1="36" x2="752" y1="73" y2="73" className="threshold-line" />
               <path d={`${linePath} L732,168 L36,168 Z`} className="risk-area" />
               <path d={linePath} className="risk-line" />
-              <line x1={36 + peak.index * 116} x2={36 + peak.index * 116} y1="18" y2="168" className="peak-line" />
-              <circle cx={36 + peak.index * 116} cy={168 - Math.max(0, peak.value) * 1.25} r="6" className="peak-dot" />
+              <path
+                d={linePath}
+                className="risk-line-hover"
+                onPointerMove={(event) => {
+                  const bounds = event.currentTarget.ownerSVGElement?.getBoundingClientRect();
+                  if (!bounds || !days.length) return;
+                  const pointerX = (event.clientX - bounds.left) / bounds.width * 768;
+                  const nearest = days.reduce((best, _, index) =>
+                    Math.abs(chartX(index) - pointerX) < Math.abs(chartX(best) - pointerX) ? index : best, 0);
+                  setHoveredDay(nearest);
+                }}
+              />
+              <line x1={chartX(peak.index)} x2={chartX(peak.index)} y1="18" y2="168" className="peak-line" />
+              <circle cx={chartX(peak.index)} cy={168 - Math.max(0, peak.value) * 1.25} r="6" className="peak-dot" />
+              {hoveredDay !== null && days[hoveredDay] && (
+                <circle cx={chartX(hoveredDay)} cy={168 - days[hoveredDay].value * 1.25} r="5" className="hover-dot" />
+              )}
             </svg>
+            {hoveredDay !== null && days[hoveredDay] && (
+              <div
+                className="risk-tooltip"
+                style={{
+                  left: `${chartX(hoveredDay) / 768 * 100}%`,
+                  top: `${(168 - days[hoveredDay].value * 1.25) / 190 * 202}px`,
+                }}
+                role="tooltip"
+              >
+                <strong>{days[hoveredDay].label}</strong>
+                <span>Risk Index: <b>{Math.round(days[hoveredDay].value)}/100</b></span>
+              </div>
+            )}
             <div className="peak-note">Đột biến: {topics[0]?.[0]?.toLowerCase() || "chưa xác định"}</div>
-            <div className="risk-x">{days.map((day) => <span key={day.label}>{day.label}</span>)}</div>
+            <div className="risk-x">{days.filter((_, index) => period !== 30 || index % 5 === 0 || index === days.length - 1).map((day) => <span key={day.label}>{day.label}</span>)}</div>
           </div>
         </section>
 
@@ -790,7 +847,7 @@ function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () =
 
           <section className="detail-card source-card">
             <div className="card-heading"><div><span>03</span><div><small>KIỂM CHỨNG NGUỒN</small><h2>Đối chiếu nguồn chính thức</h2></div></div><span className={`source-result ${item.verdict === "Đúng" ? "confirmed" : item.verdict === "Hiểu lầm" ? "conflict" : "pending"}`}>{item.verdict === "Đúng" ? "✓" : item.verdict === "Hiểu lầm" ? "↯" : "?"} {item.sourceResult}</span></div>
-            <div className="official-source"><div className="agency-mark">CQ</div><div><small>NGUỒN CHÍNH THỨC</small><h3>{item.sourceTitle}</h3><p>{item.sourceAgency}</p></div><a href={item.sourceUrl} target="_blank" rel="noreferrer">Mở nguồn ↗</a></div>
+            <div className="official-source"><div className="agency-mark">CQ</div><div><small>NGUỒN CHÍNH THỨC</small><h3>{item.sourceTitle}</h3><p>{item.sourceAgency}</p></div>{item.sourceUrl && item.sourceUrl !== "#" ? <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Mở nguồn ↗</a> : <span className="source-unavailable" aria-disabled="true">Chưa có URL nguồn</span>}</div>
           </section>
         </div>
 
@@ -882,7 +939,7 @@ function mapApiCase(item: ApiQueueItem): Case {
     penalty: item.penalty || "Cần xác định chủ thể",
     sourceTitle: item.source_title || sourceResult,
     sourceAgency: item.source_agency || "",
-    sourceUrl: item.source_url || item.url || "#",
+    sourceUrl: item.source_url || "",
     sourceResult,
     reach: `${item.reach.toLocaleString("vi-VN")} lượt tương tác`,
     contentType: "comment",
