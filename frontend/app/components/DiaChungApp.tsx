@@ -915,7 +915,7 @@ function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () =
                 </a>
               </div>
             )}
-            <blockquote>"{item.original}"</blockquote>
+            <blockquote>{"\u201C"}{item.original}{"\u201D"}</blockquote>
             {item.postComments && item.postComments.length > 0 && (
               <div className="post-comments" style={{ marginTop: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
