@@ -65,12 +65,21 @@ def trigger_crawl(request: CrawlRequest):
 
     def stream():
         if not items:
-            reason = error or "Không tìm thấy nội dung liên quan trên mạng xã hội"
+            crawled = live["crawled"]
+            relevant = live["relevant"]
+            if error:
+                reason = f"Lỗi: {error}"
+            elif crawled == 0:
+                reason = "Discover API không tìm thấy URL nào. Kiểm tra BRIGHTDATA_API_KEY."
+            elif relevant == 0:
+                reason = f"Discover tìm thấy {crawled} URL nhưng không có nội dung liên quan sáp nhập ĐVHC."
+            else:
+                reason = "Không tìm thấy nội dung liên quan trên mạng xã hội"
             yield json.dumps({
                 "type": "error",
                 "message": f"Quét MXH thất bại: {reason}",
-                "crawled": live["crawled"],
-                "relevant": live["relevant"],
+                "crawled": crawled,
+                "relevant": relevant,
             }, ensure_ascii=False) + "\n"
             return
 

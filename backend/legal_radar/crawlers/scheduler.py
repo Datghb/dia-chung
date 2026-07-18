@@ -104,11 +104,13 @@ def crawl_and_process(
     from backend.legal_radar.crawlers.filter import is_relevant
 
     raw_items = crawl_now(keywords=keywords, max_posts_per_platform=max_posts, output_path=output_path)
+    logger.info("crawl_and_process: %d raw items from crawler", len(raw_items))
 
     relevant_items: list[dict[str, Any]] = []
     for raw in raw_items:
         cleaned = clean_post(raw)
         if not cleaned:
+            logger.debug("clean_post returned None for: %s", str(raw.get("url", ""))[:80])
             continue
 
         all_text = cleaned["text"]
@@ -117,7 +119,10 @@ def crawl_and_process(
 
         if is_relevant(all_text):
             relevant_items.append(cleaned)
+        else:
+            logger.debug("is_relevant=False for: %s", cleaned["text"][:80])
 
+    logger.info("crawl_and_process: %d raw → %d relevant", len(raw_items), len(relevant_items))
     return {
         "crawled": len(raw_items),
         "relevant": len(relevant_items),

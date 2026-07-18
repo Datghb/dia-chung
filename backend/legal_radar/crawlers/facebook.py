@@ -73,11 +73,14 @@ def _discover_urls(queries: list[str], needed: int) -> list[str]:
             logger.warning("Discover returned no task_id for '%s': %s", query, resp.text[:200])
             continue
         results = _poll_discover(task_id)
+        logger.info("Discover '%s' returned %d raw results", query, len(results))
         for item in results:
             link = item.get("link", "")
             if "facebook.com" not in link:
+                logger.debug("Skip non-facebook: %s", link)
                 continue
             if not _is_post_url(link):
+                logger.debug("Skip non-post URL: %s", link)
                 continue
             dedup = re.sub(r"[?&].*", "", link)
             if dedup in seen:
@@ -86,13 +89,18 @@ def _discover_urls(queries: list[str], needed: int) -> list[str]:
             urls.append(link)
             if len(urls) >= needed:
                 break
-    logger.info("Discovered %d post URLs", len(urls))
+    logger.info("Discovered %d post URLs from %d queries", len(urls), len(queries))
     return urls
 
 
 def _is_post_url(url: str) -> bool:
-    """Check if URL looks like a scrapable Facebook post."""
-    return any(pat in url for pat in ["/posts/", "/permalink/", "/story_fbid=", "set=pcb."])
+    """Check if URL looks like a scrapable Facebook content URL."""
+    if "facebook.com" not in url:
+        return False
+    skip_patterns = ["/login", "/help", "/policies", "/privacy", "/terms", "/about"]
+    if any(pat in url for pat in skip_patterns):
+        return False
+    return True
 
 
 def _poll_discover(task_id: str) -> list[dict]:
