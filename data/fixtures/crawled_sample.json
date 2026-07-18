@@ -1,0 +1,192 @@
+[
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Cảnh báo: Lan truyền tin giả về việc phạt MXH 10 triệu cho mỗi bài đăng sai sự thật. NĐ 174/2026 không quy định mức phạt cố định như vậy. Mức phạt phụ thuộc vào hành vi cụ thể và đối tượng vi phạm.",
+    "author": "Pháp Luật VN",
+    "url": "https://www.facebook.com/phapluatvn/posts/12345678901",
+    "timestamp": "2026-07-15T08:30:00+00:00",
+    "engagement": {"likes": 520, "shares": 189, "comments": 67},
+    "comments": [
+      {"text": "Cảm ơn đã làm rõ, tôi cũng thấy nhiều người chia sẻ sai", "author": "Nguyễn Minh", "timestamp": "2026-07-15T09:15:00+00:00"},
+      {"text": "NĐ 174 quy định rất rõ ràng, mọi người nên đọc kỹ", "author": "Trần Văn A", "timestamp": "2026-07-15T10:00:00+00:00"}
+    ]
+  },
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Bóc phốt: Page X đăng tin sai sự thật về vaccine gây hoang mang dư luận. Đây là hành vi vi phạm Nghị định 174/2026 về xử phạt hành chính trong lĩnh vực bưu chính, viễn thông.",
+    "author": "Thông Tin Chính Thức",
+    "url": "https://www.facebook.com/thongtinchinhthuc/posts/98765432101",
+    "timestamp": "2026-07-14T14:20:00+00:00",
+    "engagement": {"likes": 1200, "shares": 450, "comments": 123},
+    "comments": [
+      {"text": "Page này chuyên đăng tin đồn nhảm, cần xử lý nghiêm", "author": "Lê Thị B", "timestamp": "2026-07-14T15:00:00+00:00"},
+      {"text": "Đề nghị Sở TT&TT vào cuộc kiểm tra", "author": "Hoàng Văn C", "timestamp": "2026-07-14T15:30:00+00:00"}
+    ]
+  },
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Tin đồn thất thiệt: \"Sắp đóng cửa toàn bộ mạng xã hội Việt Nam\". Đây hoàn toàn là tin giả. Không có bất kỳ quy định nào về việc này.",
+    "author": "VTV News",
+    "url": "https://www.facebook.com/vtvnews/posts/55555555501",
+    "timestamp": "2026-07-13T11:00:00+00:00",
+    "engagement": {"likes": 3500, "shares": 1200, "comments": 289},
+    "comments": [
+      {"text": "Mấy page câu view đăng tin giật gân quá", "author": "Phạm Đức D", "timestamp": "2026-07-13T11:45:00+00:00"}
+    ]
+  },
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Xử phạt mạng xã hội: Bộ TT&TT vừa ban hành hướng dẫn chi tiết về việc áp dụng NĐ 174/2026. Các nền tảng MXH phải chịu trách nhiệm về nội dung do người dùng đăng tải.",
+    "author": "Bộ TT&TT",
+    "url": "https://www.facebook.com/bottt/posts/77777777701",
+    "timestamp": "2026-07-12T09:00:00+00:00",
+    "engagement": {"likes": 2800, "shares": 890, "comments": 156},
+    "comments": [
+      {"text": "Cuối cùng cũng có hướng dẫn cụ thể", "author": "Vũ Thị E", "timestamp": "2026-07-12T09:30:00+00:00"},
+      {"text": "Nền tảng nào cũng phải tuân thủ", "author": "Đặng Văn F", "timestamp": "2026-07-12T10:15:00+00:00"}
+    ]
+  },
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Fake news alert: Tin lan truyền rằng uống nước chanh chữa được COVID. Đây là thông tin sai sự thật, chưa được kiểm chứng khoa học.",
+    "author": "Sức Khỏe & Đời Sống",
+    "url": "https://www.facebook.com/suckhoedoisong/posts/33333333301",
+    "timestamp": "2026-07-11T16:45:00+00:00",
+    "engagement": {"likes": 900, "shares": 340, "comments": 78},
+    "comments": [
+      {"text": "Mẹ tôi cũng bị mấy tin này lừa", "author": "Ngô Thị G", "timestamp": "2026-07-11T17:00:00+00:00"}
+    ]
+  },
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Phạt MXH: Mức phạt từ 10-20 triệu đồng cho hành vi lợi dụng mạng xã hội để tung tin sai sự thật theo NĐ 174/2026.",
+    "author": "Tuổi Trẻ Online",
+    "url": "https://www.facebook.com/tuoitreonline/posts/22222222201",
+    "timestamp": "2026-07-10T13:30:00+00:00",
+    "engagement": {"likes": 4100, "shares": 1500, "comments": 312},
+    "comments": [
+      {"text": "Nhiều người vẫn chưa biết về nghị định này", "author": "Bùi Văn H", "timestamp": "2026-07-10T14:00:00+00:00"},
+      {"text": "Cần tuyên truyền rộng rãi hơn", "author": "Lý Thị K", "timestamp": "2026-07-10T14:30:00+00:00"}
+    ]
+  },
+  {
+    "platform": "youtube",
+    "content_type": "video",
+    "text": "Nghị định 174/2026: Hướng dẫn chi tiết về xử phạt vi phạm MXH\nVideo phân tích các điều khoản quan trọng của NĐ 174/2026 về xử phạt hành chính trong lĩnh vực bưu chính, viễn thông, tần số vô tuyến điện và giao dịch điện tử.",
+    "author": "Luật Sư Online",
+    "url": "https://www.youtube.com/watch?v=abc123def01",
+    "timestamp": "2026-07-15T10:00:00+00:00",
+    "engagement": {"views": 45000, "likes": 1800, "comments": 234},
+    "comments": [
+      {"text": "Video rất hữu ích, cảm ơn luật sư!", "author": "User A", "timestamp": "2026-07-15T11:00:00+00:00", "likes": 45},
+      {"text": "Tôi muốn hỏi về mức phạt cụ thể cho cá nhân", "author": "User B", "timestamp": "2026-07-15T11:30:00+00:00", "likes": 12}
+    ]
+  },
+  {
+    "platform": "youtube",
+    "content_type": "video",
+    "text": "Tin giả trên MXH: Nhận diện và cách phòng tránh\nHướng dẫn cách nhận biết tin giả, tin sai sự thật trên mạng xã hội. Video cũng đề cập đến các chế tài xử phạt theo NĐ 174/2026.",
+    "author": "VTV24",
+    "url": "https://www.youtube.com/watch?v=xyz789ghi02",
+    "timestamp": "2026-07-14T08:00:00+00:00",
+    "engagement": {"views": 120000, "likes": 5600, "comments": 890},
+    "comments": [
+      {"text": "Video chất lượng như mọi khi từ VTV24", "author": "Viewer 1", "timestamp": "2026-07-14T09:00:00+00:00", "likes": 120},
+      {"text": "Mong rằng mọi người sẽ tỉnh táo hơn khi đọc tin", "author": "Viewer 2", "timestamp": "2026-07-14T09:30:00+00:00", "likes": 89}
+    ]
+  },
+  {
+    "platform": "youtube",
+    "content_type": "video",
+    "text": "Phạt MXH 2026: Ai sẽ bị ảnh hưởng?\nPhân tích tác động của NĐ 174/2026 đến người dùng mạng xã hội, KOLs, và các nền tảng MXH tại Việt Nam.",
+    "author": "GenK",
+    "url": "https://www.youtube.com/watch?v=mno456pqr03",
+    "timestamp": "2026-07-13T15:00:00+00:00",
+    "engagement": {"views": 78000, "likes": 3200, "comments": 456},
+    "comments": [
+      {"text": "KOLs cần phải cẩn thận hơn với nội dung đăng tải", "author": "Fan A", "timestamp": "2026-07-13T16:00:00+00:00", "likes": 67},
+      {"text": "Nghị định này hợp lý, cần bảo vệ người dùng", "author": "Fan B", "timestamp": "2026-07-13T16:30:00+00:00", "likes": 45}
+    ]
+  },
+  {
+    "platform": "youtube",
+    "content_type": "video",
+    "text": "Fake News Vietnam: Thực trạng và giải pháp\nPhỏng vấn chuyên gia về tình hình tin giả tại Việt Nam và các biện pháp phòng chống. Đề cập đến vai trò của NĐ 174/2026.",
+    "author": "THVL News",
+    "url": "https://www.youtube.com/watch?v=stu789vwx04",
+    "timestamp": "2026-07-12T12:00:00+00:00",
+    "engagement": {"views": 32000, "likes": 1500, "comments": 178},
+    "comments": [
+      {"text": "Chuyên gia phân tích rất sâu sắc", "author": "Watcher 1", "timestamp": "2026-07-12T13:00:00+00:00", "likes": 34}
+    ]
+  },
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Cảnh báo: Đối tượng xấu lợi dụng MXH để lừa đảo, đăng tin sai sự thật về sản phẩm y tế. Người dân cần cảnh giác và báo cáo cơ quan chức năng.",
+    "author": "Công An Nhân Dân",
+    "url": "https://www.facebook.com/congnhandan/posts/11111111105",
+    "timestamp": "2026-07-09T07:30:00+00:00",
+    "engagement": {"likes": 2300, "shares": 780, "comments": 145},
+    "comments": [
+      {"text": "Cảm ơn cảnh báo, cần xử lý thật nghiêm", "author": "Công Dân A", "timestamp": "2026-07-09T08:00:00+00:00"}
+    ]
+  },
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Tin sai sự thật về giá vàng: Nhiều tài khoản MXH đăng tin thất thiệt gây hoang mang. Theo NĐ 174/2026, hành vi này có thể bị phạt đến 50 triệu đồng.",
+    "author": "Dân Trí",
+    "url": "https://www.facebook.com/dantrionline/posts/44444444406",
+    "timestamp": "2026-07-08T14:00:00+00:00",
+    "engagement": {"likes": 1800, "shares": 560, "comments": 98},
+    "comments": [
+      {"text": "Giá vàng biến động vì tin giả rất nguy hiểm", "author": "Nhà Đầu Tư", "timestamp": "2026-07-08T14:30:00+00:00", "likes": 23}
+    ]
+  },
+  {
+    "platform": "youtube",
+    "content_type": "video",
+    "text": "Xử phạt mạng xã hội: Case study thực tế tại Việt Nam\nTổng hợp các vụ xử phạt vi phạm MXH nổi tiếng và bài học kinh nghiệm. Phân tích dưới góc độ pháp lý NĐ 174/2026.",
+    "author": "Pháp Luật TV",
+    "url": "https://www.youtube.com/watch?v=qrs012tuv05",
+    "timestamp": "2026-07-07T09:00:00+00:00",
+    "engagement": {"views": 56000, "likes": 2400, "comments": 312},
+    "comments": [
+      {"text": "Case study rất thực tế và dễ hiểu", "author": "Sinh viên Luật", "timestamp": "2026-07-07T10:00:00+00:00", "likes": 56},
+      {"text": "Cần nhiều video như thế này để tuyên truyền", "author": "Giảng viên", "timestamp": "2026-07-07T10:30:00+00:00", "likes": 78}
+    ]
+  },
+  {
+    "platform": "facebook",
+    "content_type": "post",
+    "text": "Bóc phốt: Tài khoản KOL A đăng bài quảng cáo thực phẩm chức năng không rõ nguồn gốc, sai công dụng. Đây là hành vi vi phạm NĐ 174/2026.",
+    "author": "Người Tiêu Dùng",
+    "url": "https://www.facebook.com/nguoitieudung/posts/66666666607",
+    "timestamp": "2026-07-06T11:00:00+00:00",
+    "engagement": {"likes": 3400, "shares": 1100, "comments": 267},
+    "comments": [
+      {"text": "KOL nào cũng cần chịu trách nhiệm", "author": "Khách Hàng", "timestamp": "2026-07-06T11:30:00+00:00", "likes": 89},
+      {"text": "Cần kiện ra tòa để làm gương", "author": "Người Dùng", "timestamp": "2026-07-06T12:00:00+00:00", "likes": 67}
+    ]
+  },
+  {
+    "platform": "youtube",
+    "content_type": "video",
+    "text": "Tin đồn bóc phốt trên MXH: Hậu quả pháp lý\nPhân tích các vụ bóc phốt sai sự thật trên mạng xã hội và hậu quả pháp lý theo NĐ 174/2026 và Bộ luật Hình sự.",
+    "author": "VnExpress",
+    "url": "https://www.youtube.com/watch?v=wxy345abc06",
+    "timestamp": "2026-07-05T14:00:00+00:00",
+    "engagement": {"views": 89000, "likes": 4100, "comments": 567},
+    "comments": [
+      {"text": "Bóc phốt sai sự thật cũng là vi phạm pháp luật", "author": "Netizen A", "timestamp": "2026-07-05T15:00:00+00:00", "likes": 123},
+      {"text": "Nhiều người nghĩ bóc phốt là quyền tự do ngôn luận", "author": "Netizen B", "timestamp": "2026-07-05T15:30:00+00:00", "likes": 98}
+    ]
+  }
+]
