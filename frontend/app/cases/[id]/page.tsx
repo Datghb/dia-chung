@@ -1,6 +1,5 @@
-import { LegalShieldApp } from "../../components/LegalShieldApp";
+import { DiaChungApp } from "../../components/DiaChungApp";
 
 export default function CasePage() {
-  return <LegalShieldApp />;
+  return <DiaChungApp />;
 }
-

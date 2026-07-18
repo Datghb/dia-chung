@@ -166,7 +166,7 @@ const verdicts: Array<"Tất cả" | Verdict> = ["Tất cả", "Đúng", "Hiểu
 const statuses: Array<"Tất cả" | Status> = ["Tất cả", "Mới", "Đang xử lý", "Đã xử lý"];
 const priorityRank: Record<Priority, number> = { "Khẩn cấp": 4, Cao: 3, "Trung bình": 2, Thấp: 1 };
 
-export function LegalShieldApp() {
+export function DiaChungApp() {
   const [caseItems, setCaseItems] = useState<Case[]>(cases);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showInput, setShowInput] = useState(false);
@@ -247,7 +247,7 @@ export function LegalShieldApp() {
       <aside className="monitor-sidebar">
         <div className="monitor-brand">
           <span className="monitor-brand-mark">L</span>
-          <div><strong>Legal Radar</strong><small>TRUNG TÂM GIÁM SÁT</small></div>
+          <div><strong>Địa chứng</strong><small>TRUNG TÂM GIÁM SÁT</small></div>
         </div>
         <nav aria-label="Điều hướng chính">
           <button className={activeView === "market" ? "active" : ""} onClick={() => { setActiveView("market"); setSelectedId(null); }}><span>⌁</span> Tổng quan thị trường</button>
@@ -264,7 +264,7 @@ export function LegalShieldApp() {
             <svg viewBox="0 0 200 48" aria-hidden="true"><path d="M2 42 L18 26 L32 31 L48 17 L64 23 L81 12 L97 28 L113 19 L130 25 L148 9 L164 27 L181 18 L198 4" /></svg>
           </div>
           <div className="sidebar-support"><span>◉</span><div><strong>Trung tâm hỗ trợ</strong><small>Hướng dẫn & chính sách</small></div></div>
-          <div className="monitor-system"><i /> Legal Radar v2.4.1<small>Hệ thống hoạt động ổn định</small></div>
+          <div className="monitor-system"><i /> Địa chứng v2.4.1<small>Hệ thống hoạt động ổn định</small></div>
         </div>
       </aside>
 

@@ -23,13 +23,13 @@ async function render(pathname = "/") {
   );
 }
 
-test("server-renders the Legal Radar strategic market dashboard", async () => {
+test("server-renders the Địa chứng strategic market dashboard", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Legal Radar — Giám sát nội dung mạng xã hội<\/title>/i);
+  assert.match(html, /<title>Địa chứng — Giám sát nội dung mạng xã hội<\/title>/i);
   assert.match(html, /Toàn cảnh thị trường thông tin/);
   assert.match(html, /Xung nhịp rủi ro thị trường/);
   assert.match(html, /Top chủ đề pháp lý nóng/);
@@ -49,8 +49,8 @@ test("production UI no longer contains starter preview artifacts", async () => {
   ]);
   const html = await htmlResponse.text();
 
-  assert.match(page, /<LegalShieldApp \/>/);
-  assert.match(layout, /Legal Radar/);
+  assert.match(page, /<DiaChungApp \/>/);
+  assert.match(layout, /Địa chứng/);
   assert.doesNotMatch(html, /Your site is taking shape|Codex is working|codex-preview/i);
   assert.doesNotMatch(page, /_sites-preview|SkeletonPreview/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -60,6 +60,6 @@ test("catch-all routes render the same dashboard shell", async () => {
   const response = await render("/verify");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /Legal Radar/);
+  assert.match(html, /Địa chứng/);
   assert.match(html, /Hàng đợi giám sát/);
 });
