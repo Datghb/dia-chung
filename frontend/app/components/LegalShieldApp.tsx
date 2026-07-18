@@ -251,7 +251,7 @@ export function LegalShieldApp() {
         </header>
 
         {activeView === "market" ? (
-          <MarketOverview />
+          <MarketOverview allItems={caseItems.map((item) => ({ ...item, status: statusById[item.id] ?? item.status }))} />
         ) : activeView === "report" ? (
           <ReportView allItems={caseItems} statusById={statusById} />
         ) : activeView === "sources" ? (
@@ -299,27 +299,62 @@ export function LegalShieldApp() {
   );
 }
 
-function MarketOverview() {
-  const alerts = [
-    ["Tin đồn rút tiền hàng loạt tại một số ngân hàng", "Khẩn cấp", "10:15"],
-    ["Thông tin sai về thay đổi mức đóng BHYT", "Cao", "09:42"],
-    ["Hiểu lầm quy định cư trú cho người thuê nhà", "Cao", "09:10"],
-    ["Tin sai về trợ cấp thôi việc mùa lễ Tết", "Trung bình", "08:35"],
-    ["Thông tin chưa chính xác về phạt giao thông", "Trung bình", "08:12"],
-  ];
+function MarketOverview({ allItems }: { allItems: Case[] }) {
+  const [period, setPeriod] = useState<1 | 7 | 30>(7);
+  const parsedItems = allItems.map((item) => ({ item, date: parseCaseDate(item.publishedAt) }));
+  const latestDate = parsedItems.reduce((latest, row) => row.date && row.date > latest ? row.date : latest, new Date(0));
+  const rangeStart = new Date(latestDate);
+  rangeStart.setDate(rangeStart.getDate() - period + 1);
+  const filtered = parsedItems.filter((row) => !row.date || row.date >= rangeStart).map((row) => row.item);
+  const total = filtered.length;
+  const urgent = filtered.filter((item) => item.priority === "Khẩn cấp").length;
+  const verify = filtered.filter((item) => item.verdict === "Cần kiểm chứng").length;
+  const misconception = filtered.filter((item) => item.verdict === "Hiểu lầm").length;
+  const riskIndex = total ? Math.round(filtered.reduce((sum, item) => sum + item.score, 0) / total) : 0;
+  const platformCounts = (["Facebook", "TikTok", "YouTube", "X", "Forum"] as Case["platform"][]).map((platform) => ({
+    platform, count: filtered.filter((item) => item.platform === platform).length,
+  }));
+  const topicCounts = Array.from(filtered.reduce((map, item) => map.set(item.document, (map.get(item.document) || 0) + 1), new Map<string, number>()))
+    .sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const maxTopic = Math.max(1, ...topicCounts.map(([, count]) => count));
+  const alerts = [...filtered].sort((a, b) => priorityRank[b.priority] - priorityRank[a.priority] || b.score - a.score).slice(0, 5);
+  const pipeline = [
+    ["Đã phát hiện", total],
+    ["Cần kiểm chứng", verify],
+    ["Đang xử lý", filtered.filter((item) => item.status === "Đang xử lý").length],
+    ["Đã xác minh", filtered.filter((item) => item.status === "Đã xử lý").length],
+    ["Đã cảnh báo", urgent],
+  ] as const;
+  const graphItem = alerts[0] || allItems[0];
+  const days = Array.from({ length: Math.min(period, 7) }, (_, index) => {
+    const date = new Date(latestDate);
+    date.setDate(date.getDate() - (Math.min(period, 7) - index - 1));
+    const dateItems = parsedItems.filter((row) => row.date?.toDateString() === date.toDateString()).map((row) => row.item);
+    return {
+      label: `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`,
+      urgent: dateItems.filter((item) => item.priority === "Khẩn cấp").length,
+      high: dateItems.filter((item) => item.priority === "Cao").length,
+      medium: dateItems.filter((item) => item.priority === "Trung bình").length,
+      low: dateItems.filter((item) => item.priority === "Thấp").length,
+    };
+  });
+  const maxDaily = Math.max(1, ...days.flatMap((day) => [day.urgent, day.high, day.medium, day.low]));
+  const chartPath = (key: "urgent" | "high" | "medium" | "low") => days.map((day, index) =>
+    `${index ? "L" : "M"}${(index / Math.max(1, days.length - 1)) * 800} ${165 - (day[key] / maxDaily) * 145}`,
+  ).join(" ");
   return (
     <div className="monitor-page market-page">
       <div className="market-title">
         <div><span className="eyebrow">BẢNG ĐIỀU KHIỂN CHIẾN LƯỢC</span><h1>Toàn cảnh thị trường thông tin</h1><p>Giúp lãnh đạo theo dõi rủi ro pháp lý, tin sai lệch và các điểm nóng chủ đề theo thời gian thực.</p></div>
-        <div className="period-switch"><button>24 giờ</button><button className="active">7 ngày</button><button>30 ngày</button><button>▣</button></div>
+        <div className="period-switch"><button className={period === 1 ? "active" : ""} onClick={() => setPeriod(1)}>24 giờ</button><button className={period === 7 ? "active" : ""} onClick={() => setPeriod(7)}>7 ngày</button><button className={period === 30 ? "active" : ""} onClick={() => setPeriod(30)}>30 ngày</button><button>▣</button></div>
       </div>
 
       <section className="market-kpis">
-        <article><i className="purple">▣</i><div><small>Nội dung theo dõi</small><strong>12.842</strong><span className="green">↑ 18% <em>so với 7 ngày trước</em></span></div></article>
-        <article><i className="pink">◇</i><div><small>Risk Index</small><strong>78 <b>/100</b></strong><span>↑ 18% <em>so với 7 ngày trước</em></span></div></article>
-        <article><i className="rose">△</i><div><small>Khẩn cấp</small><strong>128</strong><span>↑ 26% <em>so với 7 ngày trước</em></span></div></article>
-        <article><i className="amber">⌕</i><div><small>Cần kiểm chứng</small><strong>456</strong><span className="green">↓ 12% <em>so với 7 ngày trước</em></span></div></article>
-        <article><i className="violet">◴</i><div><small>Tỷ lệ hiểu lầm</small><strong>31%</strong><span>↑ 8% <em>so với 7 ngày trước</em></span></div></article>
+        <article><i className="purple">▣</i><div><small>Nội dung theo dõi</small><strong>{total.toLocaleString("vi-VN")}</strong><span className="green">● <em>Dữ liệu từ API</em></span></div></article>
+        <article><i className="pink">◇</i><div><small>Risk Index</small><strong>{riskIndex} <b>/100</b></strong><span>● <em>Điểm AI trung bình</em></span></div></article>
+        <article><i className="rose">△</i><div><small>Khẩn cấp</small><strong>{urgent}</strong><span>● <em>{total ? Math.round(urgent / total * 100) : 0}% tổng hồ sơ</em></span></div></article>
+        <article><i className="amber">⌕</i><div><small>Cần kiểm chứng</small><strong>{verify}</strong><span className="green">● <em>{total ? Math.round(verify / total * 100) : 0}% tổng hồ sơ</em></span></div></article>
+        <article><i className="violet">◴</i><div><small>Tỷ lệ hiểu lầm</small><strong>{total ? Math.round(misconception / total * 100) : 0}%</strong><span>● <em>{misconception} hồ sơ</em></span></div></article>
       </section>
 
       <div className="market-grid">
@@ -333,62 +368,81 @@ function MarketOverview() {
                 <linearGradient id="pinkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ef2b92" stopOpacity=".24"/><stop offset="1" stopColor="#ef2b92" stopOpacity=".02"/></linearGradient>
                 <linearGradient id="orangeFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#f7a21b" stopOpacity=".2"/><stop offset="1" stopColor="#f7a21b" stopOpacity=".02"/></linearGradient>
               </defs>
-              <path className="fill pink-fill" d="M0 58 L25 45 L50 49 L75 42 L100 51 L125 38 L150 35 L175 26 L200 30 L225 38 L250 25 L275 41 L300 47 L325 45 L350 32 L375 5 L400 35 L425 29 L450 45 L475 51 L500 39 L525 50 L550 43 L575 31 L600 46 L625 52 L650 55 L675 48 L700 50 L725 39 L750 42 L775 22 L800 28 L800 180 L0 180Z"/>
-              <path className="line pink-line" d="M0 58 L25 45 L50 49 L75 42 L100 51 L125 38 L150 35 L175 26 L200 30 L225 38 L250 25 L275 41 L300 47 L325 45 L350 32 L375 5 L400 35 L425 29 L450 45 L475 51 L500 39 L525 50 L550 43 L575 31 L600 46 L625 52 L650 55 L675 48 L700 50 L725 39 L750 42 L775 22 L800 28"/>
-              <path className="fill orange-fill" d="M0 85 L25 70 L50 78 L75 71 L100 80 L125 65 L150 67 L175 58 L200 55 L225 65 L250 53 L275 71 L300 75 L325 70 L350 60 L375 42 L400 68 L425 61 L450 73 L475 81 L500 70 L525 78 L550 72 L575 61 L600 75 L625 82 L650 84 L675 75 L700 78 L725 68 L750 70 L775 55 L800 58 L800 180 L0 180Z"/>
-              <path className="line orange-line" d="M0 85 L25 70 L50 78 L75 71 L100 80 L125 65 L150 67 L175 58 L200 55 L225 65 L250 53 L275 71 L300 75 L325 70 L350 60 L375 42 L400 68 L425 61 L450 73 L475 81 L500 70 L525 78 L550 72 L575 61 L600 75 L625 82 L650 84 L675 75 L700 78 L725 68 L750 70 L775 55 L800 58"/>
-              <path className="line blue-line" d="M0 108 L25 96 L50 101 L75 97 L100 104 L125 91 L150 94 L175 86 L200 88 L225 94 L250 82 L275 99 L300 101 L325 96 L350 87 L375 72 L400 94 L425 88 L450 99 L475 104 L500 96 L525 104 L550 98 L575 87 L600 99 L625 106 L650 109 L675 102 L700 105 L725 95 L750 98 L775 85 L800 88"/>
-              <path className="line green-line" d="M0 138 L25 132 L50 136 L75 134 L100 138 L125 128 L150 131 L175 125 L200 128 L225 131 L250 124 L275 133 L300 134 L325 129 L350 123 L375 114 L400 128 L425 122 L450 130 L475 133 L500 129 L525 134 L550 130 L575 125 L600 132 L625 136 L650 137 L675 133 L700 135 L725 128 L750 131 L775 123 L800 124"/>
-              <line className="event-line" x1="375" y1="0" x2="375" y2="180"/><circle cx="375" cy="5" r="4" fill="#ed187e"/>
+              <path className="line pink-line" d={chartPath("urgent")}/>
+              <path className="line orange-line" d={chartPath("high")}/>
+              <path className="line blue-line" d={chartPath("medium")}/>
+              <path className="line green-line" d={chartPath("low")}/>
             </svg>
-            <div className="chart-note">Đột biến: tin đồn ngân hàng</div>
-            <div className="x-axis"><span>11/07</span><span>12/07</span><span>13/07</span><span>14/07</span><span>15/07</span><span>16/07</span><span>17/07</span></div>
+            <div className="chart-note">Cập nhật theo {total} hồ sơ thực tế</div>
+            <div className="x-axis">{days.map((day) => <span key={day.label}>{day.label}</span>)}</div>
           </div>
         </section>
 
         <section className="chart-panel platform-panel">
           <header><h2>Phân bổ theo nền tảng</h2><b>⋮</b></header>
-          <div className="donut-wrap"><div className="donut"><span><strong>12.842</strong><small>Tổng</small></span></div><div className="donut-list"><p><i className="fb"/>Facebook <b>39% <em>(5.012)</em></b></p><p><i className="tt"/>TikTok <b>28% <em>(3.595)</em></b></p><p><i className="yt"/>YouTube <b>17% <em>(2.181)</em></b></p><p><i className="xx"/>X (Twitter) <b>11% <em>(1.413)</em></b></p><p><i className="other"/>Khác <b>5% <em>(641)</em></b></p></div></div>
+          <div className="donut-wrap"><div className="donut" style={{ background: platformGradient(platformCounts, total) }}><span><strong>{total.toLocaleString("vi-VN")}</strong><small>Tổng</small></span></div><div className="donut-list">{platformCounts.map(({ platform, count }, index) => <p key={platform}><i className={["fb","tt","yt","xx","other"][index]}/>{platform === "Forum" ? "Khác" : platform} <b>{total ? Math.round(count / total * 100) : 0}% <em>({count.toLocaleString("vi-VN")})</em></b></p>)}</div></div>
         </section>
 
         <section className="chart-panel topics-panel">
           <header><h2>Top chủ đề pháp lý nóng</h2><b>⋮</b></header>
-          <div className="topic-bars">{[["Tổ chức tín dụng","100%","2.842"],["Cư trú","73%","1.986"],["BHYT","54%","1.452"],["Lao động","42%","1.208"],["Giao thông","31%","986"]].map(([name,width,value])=><div key={name}><span>{name}</span><i><b style={{width}}/></i><em>{value}</em></div>)}</div>
+          <div className="topic-bars">{topicCounts.map(([name,count])=><div key={name}><span>{name}</span><i><b style={{width:`${count / maxTopic * 100}%`}}/></i><em>{count}</em></div>)}</div>
           <div className="bar-axis"><span>0</span><span>1K</span><span>2K</span><span>3K</span></div>
         </section>
 
         <section className="chart-panel heatmap-panel">
           <header><h2>Heatmap điểm nóng <small>ⓘ</small></h2><b>⋮</b></header>
           <div className="heat-platforms"><span>● Facebook</span><span>● TikTok</span><span>● YouTube</span><span>● X</span><span>● Khác</span></div>
-          <div className="heatmap">{["Tổ chức tín dụng","Cư trú","BHYT","Lao động","Giao thông","Khác"].map((name,row)=><div key={name}><span>{name}</span>{[0,1,2,3,4].map((col)=><i key={col} className={`heat-${(row * 3 + col * 2) % 5}`}/>)}</div>)}</div>
+          <div className="heatmap">{topicCounts.slice(0,6).map(([name])=><div key={name}><span>{name}</span>{platformCounts.map(({platform}, col)=>{const count=filtered.filter((item)=>item.document===name&&item.platform===platform).length;return <i key={col} className={`heat-${count ? Math.max(0,4-Math.min(4,count)) : 4}`}/>})}</div>)}</div>
           <div className="heat-legend"><span>■ Rất cao</span><span>■ Cao</span><span>■ Trung bình</span><span>■ Thấp</span><span>■ Rất thấp</span></div>
         </section>
 
         <section className="chart-panel pipeline-panel">
           <header><h2>Tiến trình kiểm chứng</h2><b>⋮</b></header>
-          <div className="market-pipeline">{[["Đã phát hiện","12.842","100%"],["Cần kiểm chứng","4.56","35.6%"],["Đang xử lý","2.181","17.0%"],["Đã xác minh","1.342","10.5%"],["Đã cảnh báo","286","2.2%"]].map((item,index)=><div key={item[0]} className={`step-${index}`}><small>{item[0]}</small><i>{index===0?"⌘":index===1?"⌕":index===2?"⚙":index===3?"✓":"♟"}</i><strong>{item[1]}</strong><span>{item[2]}</span></div>)}</div>
-          <p className="conversion">Tỷ lệ chuyển đổi tổng thể: <b>2,2%</b></p>
+          <div className="market-pipeline">{pipeline.map((item,index)=><div key={item[0]} className={`step-${index}`}><small>{item[0]}</small><i>{index===0?"⌘":index===1?"⌕":index===2?"⚙":index===3?"✓":"♟"}</i><strong>{item[1].toLocaleString("vi-VN")}</strong><span>{total ? (item[1] / total * 100).toFixed(1) : "0.0"}%</span></div>)}</div>
+          <p className="conversion">Tỷ lệ cảnh báo thực tế: <b>{total ? (urgent / total * 100).toFixed(1) : "0.0"}%</b></p>
         </section>
 
         <section className="chart-panel alerts-panel">
           <header><h2>Cảnh báo ưu tiên</h2></header>
-          <div className="alert-list">{alerts.map(([text,level,time])=><div key={text}><i/> <span>{text}</span><b className={slug(level)}>{level}</b><time>{time}</time></div>)}</div>
+          <div className="alert-list">{alerts.map((item)=><div key={item.id}><i/> <span>{item.claim}</span><b className={slug(item.priority)}>{item.priority}</b><time>{item.publishedAt.split("·").at(-1)?.trim() || "—"}</time></div>)}</div>
           <a>Xem tất cả cảnh báo <b>→</b></a>
         </section>
 
         <section className="chart-panel graph-panel">
           <header><h2>Knowledge Graph nổi bật <small>ⓘ</small></h2></header>
           <div className="graph-labels"><span>Claim</span><span>Chủ đề</span><span>Điều luật</span><span>Nguồn kiểm chứng</span></div>
-          <div className="graph-content"><div className="claim-node">Tin đồn rút tiền<br/>hàng loạt tại một số<br/>ngân hàng</div><b>╌╌→</b><div className="node-stack"><span>Tổ chức tín dụng</span><span>An ninh tài chính</span><span>Bảo vệ người tiêu dùng</span></div><b>╌╌→</b><div className="node-stack law"><span>Luật Các TCTD 2010</span><span>Luật Bảo vệ QLN 2010</span><span>NĐ 117/2018/NĐ-CP</span></div><b>╌╌→</b><div className="node-stack source"><span>NHNN Việt Nam</span><span>Báo Chính phủ</span><span>Cổng TTĐT Bộ Tư pháp</span></div></div>
+          {graphItem && <div className="graph-content"><div className="claim-node">{graphItem.claim}</div><b>╌╌→</b><div className="node-stack"><span>{graphItem.subject}</span><span>{graphItem.platform}</span><span>{graphItem.account}</span></div><b>╌╌→</b><div className="node-stack law"><span>{graphItem.document}</span><span>{graphItem.provision}</span><span>{graphItem.penalty}</span></div><b>╌╌→</b><div className="node-stack source"><span>{graphItem.sourceAgency}</span><span>{graphItem.sourceTitle}</span><span>{graphItem.sourceResult}</span></div></div>}
         </section>
 
         <section className="chart-panel signals-panel">
           <header><h2>Tín hiệu thị trường</h2></header>
-          <div className="signal-list"><p><i>♙</i><span><strong>Rủi ro tập trung ở nhóm tài chính–ngân hàng</strong><small>Chủ đề “Tổ chức tín dụng” chiếm 41% tổng rủi ro.</small></span></p><p><i>♪</i><span><strong>TikTok tăng 12% tín hiệu hiểu lầm</strong><small>Tỷ lệ hiểu lầm trên TikTok tăng từ 28% → 31%.</small></span></p><p><i>◇</i><span><strong>03 hồ sơ vượt ngưỡng can thiệp</strong><small>Đã kích hoạt quy trình cảnh báo nâng cao.</small></span></p><p><i>✓</i><span><strong>Hiệu quả kiểm chứng cải thiện</strong><small>Tỷ lệ xác minh tăng 6% so với tuần trước.</small></span></p><p><i>◴</i><span><strong>Thời điểm rủi ro cao nhất: 14:00 – 18:00</strong><small>Rủi ro tăng 32% trong khung giờ này.</small></span></p></div>
+          <div className="signal-list">
+            <p><i>♙</i><span><strong>Chủ đề nổi bật: {topicCounts[0]?.[0] || "Chưa có dữ liệu"}</strong><small>Chiếm {total && topicCounts[0] ? Math.round(topicCounts[0][1] / total * 100) : 0}% hồ sơ trong kỳ.</small></span></p>
+            <p><i>♪</i><span><strong>Nền tảng có nhiều tín hiệu nhất: {[...platformCounts].sort((a,b)=>b.count-a.count)[0]?.platform}</strong><small>{[...platformCounts].sort((a,b)=>b.count-a.count)[0]?.count || 0} nội dung được ghi nhận.</small></span></p>
+            <p><i>◇</i><span><strong>{urgent} hồ sơ vượt ngưỡng khẩn cấp</strong><small>Được tính trực tiếp từ mức ưu tiên của hàng đợi.</small></span></p>
+            <p><i>✓</i><span><strong>{filtered.filter((item)=>item.status==="Đã xử lý").length} hồ sơ đã xác minh</strong><small>{total ? Math.round(filtered.filter((item)=>item.status==="Đã xử lý").length / total * 100) : 0}% tổng hồ sơ trong kỳ.</small></span></p>
+            <p><i>◴</i><span><strong>Điểm rủi ro trung bình: {riskIndex}/100</strong><small>Tính từ AI score của toàn bộ dữ liệu đang lọc.</small></span></p>
+          </div>
         </section>
       </div>
     </div>
   );
+}
+
+function parseCaseDate(value: string) {
+  const match = value.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return match ? new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1])) : null;
+}
+
+function platformGradient(counts: Array<{ platform: Case["platform"]; count: number }>, total: number) {
+  const colors = ["#3b84f5", "#222d3a", "#f22f3f", "#3d4855", "#cfd3da"];
+  if (!total) return "#eef0f4";
+  let cursor = 0;
+  return `conic-gradient(${counts.map((entry, index) => {
+    const start = cursor;
+    cursor += entry.count / total * 100;
+    return `${colors[index]} ${start}% ${cursor}%`;
+  }).join(",")})`;
 }
 
 function Queue({
