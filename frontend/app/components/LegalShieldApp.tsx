@@ -228,15 +228,25 @@ export function LegalShieldApp() {
           <button className={activeView === "report" ? "active" : ""} onClick={() => { setActiveView("report"); setSelectedId(null); }}><span>◎</span> Báo cáo tổng hợp</button>
           <button className={activeView === "sources" ? "active" : ""} onClick={() => { setActiveView("sources"); setSelectedId(null); }}><span>⌘</span> Nguồn chính thức</button>
           <button className={activeView === "verify" ? "active" : ""} onClick={() => { setActiveView("verify"); setSelectedId(null); }}><span>✓</span> Tầng kiểm chứng</button>
+          <button onClick={() => { setActiveView("sources"); setSelectedId(null); }}><span>⌬</span> Knowledge Graph</button>
         </nav>
-        <div className="monitor-system"><i /> Hệ thống đang giám sát<small>Cập nhật 30 giây trước</small></div>
+        <div className="sidebar-insights">
+          <div className="sidebar-mini-report">
+            <small>BÁO CÁO NHANH HÔM NAY</small>
+            <span>Claims mới</span><strong>{caseItems.length} <em>↗ 18%</em></strong>
+            <svg viewBox="0 0 200 48" aria-hidden="true"><path d="M2 42 L18 26 L32 31 L48 17 L64 23 L81 12 L97 28 L113 19 L130 25 L148 9 L164 27 L181 18 L198 4" /></svg>
+          </div>
+          <div className="sidebar-support"><span>◉</span><div><strong>Trung tâm hỗ trợ</strong><small>Hướng dẫn & chính sách</small></div></div>
+          <div className="monitor-system"><i /> Legal Radar v2.4.1<small>Hệ thống hoạt động ổn định</small></div>
+        </div>
       </aside>
 
       <main className="monitor-main">
         <header className="monitor-topbar">
           <div className="monitor-search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm claim hoặc mã hồ sơ…" aria-label="Tìm kiếm hồ sơ" /></div>
           <div className={`monitor-live ${dataSource}`}><i /> {dataSource === "api" ? "Dữ liệu API trực tiếp" : "Dữ liệu mẫu dự phòng"}</div>
-          <button className="monitor-avatar" aria-label="Tài khoản Minh Anh">MA</button>
+          <button className="notification-button" aria-label="Thông báo">♢<b>3</b></button>
+          <button className="monitor-avatar" aria-label="Tài khoản Minh Anh">MA</button><span className="avatar-chevron">⌄</span>
         </header>
 
         {activeView === "report" ? (
@@ -245,25 +255,31 @@ export function LegalShieldApp() {
           <SourcesView />
         ) : activeView === "verify" ? (
           <VerificationView cases={studyCases} apiConnected={dataSource === "api"} />
-        ) : selectedWithStatus ? (
-          <CaseDetail
-            item={selectedWithStatus}
-            onBack={() => setSelectedId(null)}
-            onStatusChange={(status) => setStatusById((current) => ({ ...current, [selectedWithStatus.id]: status }))}
-          />
         ) : (
-          <Queue
-            rows={data}
-            allItems={caseItems}
-            verdictFilter={verdictFilter}
-            statusFilter={statusFilter}
-            sortDesc={sortDesc}
-            onVerdictFilter={setVerdictFilter}
-            onStatusFilter={setStatusFilter}
-            onSort={() => setSortDesc((value) => !value)}
-            onOpen={setSelectedId}
-            onCreate={() => setShowInput(true)}
-          />
+          <>
+            <Queue
+              rows={data}
+              allItems={caseItems.map((item) => ({ ...item, status: statusById[item.id] ?? item.status }))}
+              verdictFilter={verdictFilter}
+              statusFilter={statusFilter}
+              sortDesc={sortDesc}
+              onVerdictFilter={setVerdictFilter}
+              onStatusFilter={setStatusFilter}
+              onSort={() => setSortDesc((value) => !value)}
+              onOpen={setSelectedId}
+              onCreate={() => setShowInput(true)}
+            />
+            {selectedWithStatus && (
+              <>
+                <button className="detail-backdrop" onClick={() => setSelectedId(null)} aria-label="Đóng hồ sơ" />
+                <CaseDetail
+                  item={selectedWithStatus}
+                  onBack={() => setSelectedId(null)}
+                  onStatusChange={(status) => setStatusById((current) => ({ ...current, [selectedWithStatus.id]: status }))}
+                />
+              </>
+            )}
+          </>
         )}
       </main>
       {showInput && (
@@ -295,14 +311,37 @@ function Queue({
   onCreate: () => void;
 }) {
   const openCount = allItems.filter((item) => item.status !== "Đã xử lý").length;
+  const urgentCount = allItems.filter((item) => item.priority === "Khẩn cấp").length;
+  const verifyCount = allItems.filter((item) => item.verdict === "Cần kiểm chứng").length;
+  const processingCount = allItems.filter((item) => item.status === "Đang xử lý").length;
+  const [quickTab, setQuickTab] = useState<"all" | "urgent" | "verify" | "processing">("all");
+  const visibleRows = rows.filter((item) =>
+    quickTab === "all" ||
+    (quickTab === "urgent" && item.priority === "Khẩn cấp") ||
+    (quickTab === "verify" && item.verdict === "Cần kiểm chứng") ||
+    (quickTab === "processing" && item.status === "Đang xử lý"),
+  );
   return (
     <div className="monitor-page">
       <div className="queue-heading">
         <div><span className="eyebrow">ĐIỀU PHỐI NỘI DUNG</span><h1>Hàng đợi giám sát</h1><p>Nhập thủ công nội dung cần theo dõi, sau đó rà soát kết quả phân tích của AI.</p></div>
-        <div className="queue-summary"><small>CẦN XỬ LÝ</small><strong>{String(openCount).padStart(2, "0")}</strong><span>hồ sơ đang mở</span></div>
+        <div className="trend-card"><div><small>Xu hướng rủi ro 7 ngày</small><strong>↑ 18%</strong></div><svg viewBox="0 0 250 55" aria-hidden="true"><path d="M3 48 L25 23 L47 30 L69 17 L91 19 L113 8 L135 12 L157 4 L179 33 L201 42 L224 18 L247 25" /></svg></div>
       </div>
 
+      <section className="queue-metrics">
+        <article><div><small>Hồ sơ mới</small><strong>{allItems.filter((item) => item.status === "Mới").length}</strong><span className="up">↑ 18% <em>so với tuần trước</em></span></div><i className="metric-icon purple">▣</i></article>
+        <article><div><small>Khẩn cấp</small><strong>{urgentCount}</strong><span className="hot">↑ 33% <em>so với tuần trước</em></span></div><i className="metric-icon pink">ϟ</i></article>
+        <article><div><small>Cần kiểm chứng</small><strong>{verifyCount}</strong><span className="up">↑ 12% <em>so với tuần trước</em></span></div><i className="metric-icon amber">◇</i></article>
+        <article><div><small>Đang xử lý</small><strong>{processingCount || openCount}</strong><span className="hot">↑ 20% <em>đang trong hàng đợi</em></span></div><i className="metric-icon rose">◷</i></article>
+      </section>
+
       <section className="queue-card">
+        <div className="queue-tabs">
+          <button className={quickTab === "all" ? "active" : ""} onClick={() => setQuickTab("all")}>Tất cả</button>
+          <button className={quickTab === "urgent" ? "active" : ""} onClick={() => setQuickTab("urgent")}>Khẩn cấp <b>{urgentCount}</b></button>
+          <button className={quickTab === "verify" ? "active" : ""} onClick={() => setQuickTab("verify")}>Cần kiểm chứng <b>{verifyCount}</b></button>
+          <button className={quickTab === "processing" ? "active" : ""} onClick={() => setQuickTab("processing")}>Đang xử lý <b>{processingCount}</b></button>
+        </div>
         <div className="queue-toolbar">
           <div className="filter-group">
             <label>Kết quả AI<select value={verdictFilter} onChange={(event) => onVerdictFilter(event.target.value as (typeof verdicts)[number])}>{verdicts.map((value) => <option key={value}>{value}</option>)}</select></label>
@@ -312,23 +351,26 @@ function Queue({
         </div>
         <div className="queue-table-wrap">
           <table className="queue-table">
-            <thead><tr><th>CLAIM</th><th>NỀN TẢNG</th><th>MỨC ƯU TIÊN</th><th>KẾT QUẢ AI</th><th>TRẠNG THÁI</th><th /></tr></thead>
+            <thead><tr><th><span className="fake-checkbox" /></th><th>CLAIM / NỘI DUNG</th><th>NỀN TẢNG</th><th>MỨC RỦI RO</th><th>ĐÁNH GIÁ AI</th><th>ĐỘ TIN CẬY</th><th>CHỦ ĐỀ PHÁP LÝ</th><th>TRẠNG THÁI</th><th /></tr></thead>
             <tbody>
-              {rows.map((item) => (
+              {visibleRows.map((item) => (
                 <tr key={item.id} onClick={() => onOpen(item.id)} tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onOpen(item.id); }}>
+                  <td><span className="fake-checkbox" /></td>
                   <td><strong>{item.claim}</strong><small>{item.id} · {item.publishedAt}</small></td>
                   <td><span className={`platform-logo ${item.platform.toLowerCase()}`}>{platformIcon(item.platform)}</span>{item.platform}</td>
-                  <td><span className={`priority-badge ${slug(item.priority)}`}><i />{item.priority}</span><small className="score-copy">AI score {item.score}/100</small></td>
-                  <td><VerdictBadge value={item.verdict} /></td>
+                  <td><span className={`priority-badge ${slug(item.priority)}`}><i />{item.priority}</span></td>
+                  <td><VerdictBadge value={item.verdict} /><small className="score-copy">AI score {item.score}/100</small></td>
+                  <td><span className={`confidence-ring ${item.score >= 85 ? "strong" : item.score >= 65 ? "medium" : ""}`}>{item.score}%</span></td>
+                  <td><strong className="legal-topic">{item.document}</strong><small>{item.provision}</small></td>
                   <td><StatusBadge value={item.status} /></td>
                   <td><button className="row-arrow" aria-label={`Mở hồ sơ ${item.id}`}>→</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {rows.length === 0 && <div className="queue-empty"><strong>Không có hồ sơ phù hợp</strong><span>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</span></div>}
+          {visibleRows.length === 0 && <div className="queue-empty"><strong>Không có hồ sơ phù hợp</strong><span>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</span></div>}
         </div>
-        <footer className="queue-footer">Hiển thị <strong>{rows.length}</strong> / {allItems.length} hồ sơ <span>Dữ liệu mock · nội dung nhập mới chỉ lưu trong phiên hiện tại</span></footer>
+        <footer className="queue-footer">Hiển thị <strong>{visibleRows.length}</strong> / {allItems.length} hồ sơ <span>Dữ liệu mock · nội dung nhập mới chỉ lưu trong phiên hiện tại</span></footer>
       </section>
     </div>
   );
@@ -458,9 +500,9 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (items:
 function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () => void; onStatusChange: (status: Status) => void }) {
   return (
     <div className="monitor-page detail-page">
-      <button className="back-button" onClick={onBack}>← Quay lại hàng đợi</button>
+      <button className="drawer-close" onClick={onBack} aria-label="Đóng hồ sơ">×</button>
       <div className="detail-heading">
-        <div><span className="eyebrow">HỒ SƠ NỘI DUNG · {item.id}</span><h1>Thẩm định nội dung giám sát</h1><p>Phát hiện tự động lúc {item.publishedAt}</p></div>
+        <div><span className="eyebrow">CHI TIẾT HỒ SƠ · {item.id}</span><h1>{item.claim}</h1><p>{item.platform} · Công khai · {item.publishedAt}</p></div>
         <label className="status-control">Trạng thái xử lý<select value={item.status} onChange={(event) => onStatusChange(event.target.value as Status)}>{statuses.slice(1).map((value) => <option key={value}>{value}</option>)}</select></label>
       </div>
 
@@ -498,8 +540,13 @@ function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () =
             </dl>
             <div className="legal-note">Cần đối chiếu đầy đủ hành vi, chủ thể và tình tiết thực tế trước khi áp dụng.</div>
           </section>
+          <section className="knowledge-card">
+            <small>KNOWLEDGE GRAPH</small>
+            <div className="knowledge-flow"><span>Claim</span><i>→</i><span>Chủ thể</span><i>→</i><span>Điều luật</span><i>→</i><span>Nguồn</span></div>
+          </section>
         </aside>
       </div>
+      <div className="detail-actions"><button onClick={onBack}>← Quay lại hàng đợi</button><button onClick={() => onStatusChange("Đang xử lý")}>Bắt đầu kiểm chứng →</button></div>
     </div>
   );
 }
