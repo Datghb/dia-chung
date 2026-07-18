@@ -286,6 +286,20 @@
     "nhom": "tin_gia"
   },
   {
+    "type": "HanhVi",
+    "id": "hv-tin-don-sap-nhap",
+    "dieu_khoan_id": "nd174-d95-k1-a",
+    "mo_ta": "Đăng tin, chia sẻ thông tin sai sự thật về sáp nhập tỉnh, sắp xếp đơn vị hành chính khi chưa có chủ trương chính thức (dang tin sai su that ve sap nhap tinh, sap xep don vi hanh chinh)",
+    "nhom": "tin_gia"
+  },
+  {
+    "type": "HanhVi",
+    "id": "hv-hoang-mang-sap-nhap",
+    "dieu_khoan_id": "nd174-d95-k2-c",
+    "mo_ta": "Chia sẻ tin đồn sáp nhập tỉnh, gộp tỉnh, giảm số xã phường gây hoang mang trong Nhân dân (tin don sap nhap tinh, gop tinh, gay hoang mang)",
+    "nhom": "tin_gia"
+  },
+  {
     "type": "ChuThe",
     "id": "ct-ca-nhan",
     "loai": "ca_nhan",

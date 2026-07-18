@@ -85,6 +85,16 @@
   },
   {
     "type": "QUY_DINH_TAI",
+    "from_id": "hv-tin-don-sap-nhap",
+    "to_id": "nd174-d95-k1-a"
+  },
+  {
+    "type": "QUY_DINH_TAI",
+    "from_id": "hv-hoang-mang-sap-nhap",
+    "to_id": "nd174-d95-k2-c"
+  },
+  {
+    "type": "QUY_DINH_TAI",
     "from_id": "hv-tin-gia-nd15",
     "to_id": "nd15-d101-k1-a"
   },

@@ -2,11 +2,12 @@
 
 import re
 import math
+import unicodedata
 from collections import Counter
 from typing import Any
 
 from .model import (
-    KnowledgeGraph, DieuKhoan, MucPhat, HanhVi, LoaiChuThe,
+    KnowledgeGraph, DieuKhoan, FactRef, MucPhat, HanhVi, LoaiChuThe,
     NhanPhanLoai, NhanNguon, QueueItem,
 )
 
@@ -157,6 +158,79 @@ def match_hanh_vi(text: str, kg: KnowledgeGraph, min_score: float = 0.8) -> list
     return result
 
 
+# ── P1.4: Match FactRef (nguồn xác thực) ──
+
+def match_fact_ref(
+    claim: str,
+    fact_refs: list[FactRef],
+    min_score: float = 0.6,
+) -> FactRef | None:
+    """Tìm FactRef liên quan nhất tới claim bằng so khớp không dấu.
+
+    Dữ liệu FactRef (P2) viết không dấu trong khi claim có thể có dấu hoặc
+    không, nên cả hai phía đều đi qua ``normalize_text()`` rồi bỏ dấu
+    (NFD + bỏ combining mark, thay "đ" bằng "d") trước khi so khớp.
+    Điểm của mỗi FactRef = điểm từ khóa tốt nhất (tỉ lệ token của một cụm
+    ``tu_khoa`` xuất hiện trong claim) cộng điểm biến thể tốt nhất (tỉ lệ
+    token của một câu ``bien_the_tin_don_sai`` xuất hiện trong claim).
+    Cụm/biến thể chứa con số không có trong claim bị loại để tránh khớp
+    nhầm chủ đề chỉ vì trùng vài từ chung chung.
+
+    Args:
+        claim: Câu cần đối chiếu (tiếng Việt, có dấu hoặc không dấu).
+        fact_refs: Danh sách FactRef ground truth đã nạp từ
+            ``data/facts/fact_references.json``.
+        min_score: Ngưỡng điểm tối thiểu (thang 0-2) để coi là khớp;
+            mặc định 0.6 được hiệu chỉnh sao cho câu ngoài phạm vi
+            (vd "dieu chinh ranh gioi mot vai xa") không khớp FactRef nào.
+
+    Returns:
+        FactRef | None: FactRef điểm cao nhất đạt ngưỡng, hoặc ``None``
+        nếu claim rỗng, danh sách rỗng hay không FactRef nào đạt ngưỡng.
+    """
+    if not claim.strip() or not fact_refs:
+        return None
+
+    folded_claim = unicodedata.normalize("NFD", normalize_text(claim))
+    folded_claim = "".join(ch for ch in folded_claim if not unicodedata.combining(ch)).replace("đ", "d")
+    for slang, canonical in (("gop tinh", "sap nhap tinh"), ("dvhc", "don vi hanh chinh")):
+        folded_claim = folded_claim.replace(slang, canonical)
+    claim_tokens = {t for t in re.findall(r"\w+", folded_claim) if len(t) >= 2 or t.isdigit()}
+    claim_nums = {int(t) for t in claim_tokens if t.isdigit()}
+
+    best_ref: FactRef | None = None
+    best_score = 0.0
+    for ref in fact_refs:
+        keyword_best = 0.0
+        for phrase in ref.tu_khoa:
+            folded_phrase = unicodedata.normalize("NFD", normalize_text(phrase))
+            folded_phrase = "".join(ch for ch in folded_phrase if not unicodedata.combining(ch)).replace("đ", "d")
+            phrase_tokens = [t for t in re.findall(r"\w+", folded_phrase) if len(t) >= 2 or t.isdigit()]
+            if not phrase_tokens:
+                continue
+            if any(t.isdigit() and int(t) not in claim_nums for t in phrase_tokens):
+                continue
+            keyword_best = max(keyword_best, sum(1 for t in phrase_tokens if t in claim_tokens) / len(phrase_tokens))
+
+        variant_best = 0.0
+        for variant in ref.bien_the_tin_don_sai:
+            folded_variant = unicodedata.normalize("NFD", normalize_text(variant))
+            folded_variant = "".join(ch for ch in folded_variant if not unicodedata.combining(ch)).replace("đ", "d")
+            variant_tokens = [t for t in re.findall(r"\w+", folded_variant) if len(t) >= 2 or t.isdigit()]
+            if not variant_tokens:
+                continue
+            if any(t.isdigit() and int(t) not in claim_nums for t in variant_tokens):
+                continue
+            variant_best = max(variant_best, sum(1 for t in variant_tokens if t in claim_tokens) / len(variant_tokens))
+
+        score = keyword_best + variant_best
+        if score > best_score:
+            best_score = score
+            best_ref = ref
+
+    return best_ref if best_score >= min_score else None
+
+
 # ── P2.3: Phân loại claim ──
 
 _AMOUNT_RANGE_RE = re.compile(r'(\d+)\s*(?:[-\u2013\u2014~])\s*(\d+)\s*(?:trieu|tri\u1ec7u|tr)')
@@ -253,9 +327,120 @@ def phan_loai_claim(
     claim: str,
     loai_chu_the: str | None,
     kg: KnowledgeGraph,
+    fact_refs: list[FactRef] | None = None,
 ) -> tuple[NhanPhanLoai, str, list[str]]:
+    """Phân loại claim thành đúng / hiểu lầm / cần kiểm chứng.
+
+    Khi có ``fact_refs``, claim được đối chiếu nguồn xác thực trước
+    (nhánh FactRef): claim trích tin đồn kèm dấu hiệu bác bỏ được coi là
+    đúng và bổ sung mức phạt liên quan; claim khẳng định lại biến thể tin
+    đồn hoặc phủ định/mâu thuẫn số liệu với sự thật là hiểu lầm; câu hỏi
+    hay tin phỏng đoán là cần kiểm chứng. Không khớp FactRef nào (hoặc
+    khớp nhưng không đủ dấu hiệu kết luận) thì rơi xuống logic luật cũ
+    dựa trên hành vi + chủ thể + mức tiền, giữ nguyên hành vi trước đây.
+
+    Args:
+        claim: Câu khẳng định cần phân loại (có dấu hoặc không dấu).
+        loai_chu_the: ``"ca_nhan"``, ``"to_chuc"`` hoặc ``None`` nếu chưa
+            rõ chủ thể; ``None`` sẽ thử tự suy từ nội dung claim.
+        kg: KnowledgeGraph đã nạp điều khoản, hành vi và mức phạt.
+        fact_refs: Danh sách FactRef ground truth; ``None`` (mặc định)
+            bỏ qua nhánh đối chiếu nguồn xác thực để giữ tương thích với
+            các call site hiện có.
+
+    Returns:
+        tuple[NhanPhanLoai, str, list[str]]: Bộ ba (nhãn, lý do, danh
+        sách trích dẫn). Trích dẫn là điều khoản pháp lý hoặc tên nguồn
+        xác thực + URL tùy nhánh quyết định.
+    """
     if not claim.strip():
         return (NhanPhanLoai.CAN_KIEM_CHUNG, "Claim rỗng", [])
+
+    if fact_refs:
+        matched_ref = match_fact_ref(claim, fact_refs)
+        if matched_ref is not None:
+            folded_claim = unicodedata.normalize("NFD", normalize_text(claim))
+            folded_claim = "".join(ch for ch in folded_claim if not unicodedata.combining(ch)).replace("đ", "d")
+            folded_truth = unicodedata.normalize("NFD", normalize_text(matched_ref.tuyen_bo_dung))
+            folded_truth = "".join(ch for ch in folded_truth if not unicodedata.combining(ch)).replace("đ", "d")
+            claim_tokens = {t for t in re.findall(r"\w+", folded_claim) if len(t) >= 2 or t.isdigit()}
+            claim_nums = {int(t) for t in claim_tokens if t.isdigit()}
+            truth_nums = {int(t) for t in re.findall(r"\d+", folded_truth)}
+            ref_citations = [c for c in (matched_ref.nguon, matched_ref.url) if c]
+
+            if any(cue in folded_claim for cue in (
+                "sai su that", "tin gia", "tin sai", "bia dat", "khong phai",
+                "khong dung", "bac bo", "phu nhan", "khong co chuyen",
+                "chua co chuyen", "tin don that thiet", "khong xac nhan", "dinh chinh",
+            )):
+                # Claim nhắc tới tin đồn nhưng gọi nó là sai -> đồng ý với sự thật.
+                reason = "Khop nguon xac thuc: " + matched_ref.tuyen_bo_dung
+                citations = list(ref_citations)
+                for dk in match_hanh_vi(claim, kg)[:1]:
+                    penalty = _get_penalty_range_millions(dk, kg)
+                    if penalty is not None:
+                        lo_m, hi_m = penalty
+                        if (loai_chu_the or _detect_subject_type(claim)) == "ca_nhan":
+                            lo_m, hi_m = lo_m // 2, hi_m // 2
+                        reason += f" | Hanh vi dang tin sai nhu vay co the bi phat {lo_m}-{hi_m} trieu dong"
+                        citations.append(_build_citation(dk, kg))
+                return (NhanPhanLoai.DUNG, reason, citations)
+
+            variant_hit = False
+            for variant in matched_ref.bien_the_tin_don_sai:
+                folded_variant = unicodedata.normalize("NFD", normalize_text(variant))
+                folded_variant = "".join(ch for ch in folded_variant if not unicodedata.combining(ch)).replace("đ", "d")
+                variant_tokens = [t for t in re.findall(r"\w+", folded_variant) if len(t) >= 2 or t.isdigit()]
+                if not variant_tokens:
+                    continue
+                if any(t.isdigit() and int(t) not in claim_nums for t in variant_tokens):
+                    continue
+                if sum(1 for t in variant_tokens if t in claim_tokens) / len(variant_tokens) >= 0.7:
+                    variant_hit = True
+                    break
+            if variant_hit:
+                return (
+                    NhanPhanLoai.HIEU_LAM,
+                    "Mau thuan voi nguon xac thuc: " + matched_ref.tuyen_bo_dung,
+                    ref_citations,
+                )
+
+            if _detect_conditional_claim(claim) or any(cue in folded_claim for cue in (
+                "nghe noi", "nghe don", "khong biet", "co that khong", "khong ta", "co the",
+            )):
+                return (
+                    NhanPhanLoai.CAN_KIEM_CHUNG,
+                    "Cau hoi/phong doan chua khang dinh; nguon xac thuc lien quan: " + matched_ref.tuyen_bo_dung,
+                    ref_citations,
+                )
+
+            truth_word_tokens = {t for t in re.findall(r"\w+", folded_truth) if len(t) >= 2 and not t.isdigit()}
+            claim_word_tokens = {t for t in claim_tokens if not t.isdigit()}
+            if claim_nums and claim_nums <= truth_nums and len(claim_word_tokens & truth_word_tokens) >= 2:
+                return (
+                    NhanPhanLoai.DUNG,
+                    "Khop nguon xac thuc: " + matched_ref.tuyen_bo_dung,
+                    ref_citations,
+                )
+
+            if claim_nums and not claim_nums <= truth_nums and any(cue in folded_claim for cue in (
+                "giam xuong", "xuong con", "giam tu", "chi con", "giam con",
+                "sap nhap tiep", "sap nhap them", "sap nhap con",
+            )):
+                return (
+                    NhanPhanLoai.HIEU_LAM,
+                    "Mau thuan voi nguon xac thuc: " + matched_ref.tuyen_bo_dung,
+                    ref_citations,
+                )
+
+            if any(cue in folded_claim for cue in (
+                "van con", "dau co", "co thay", "chua bo", "khong bo", "van hoat dong",
+            )):
+                return (
+                    NhanPhanLoai.HIEU_LAM,
+                    "Mau thuan voi nguon xac thuc: " + matched_ref.tuyen_bo_dung,
+                    ref_citations,
+                )
 
     auto_subject = _detect_subject_type(claim)
     effective_subject = loai_chu_the or auto_subject

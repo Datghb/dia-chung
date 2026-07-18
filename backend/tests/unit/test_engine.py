@@ -3,10 +3,10 @@ from pathlib import Path
 
 from legal_radar.model import (
     load_kg, KnowledgeGraph, LoaiChuThe, NhanPhanLoai, NhanNguon,
-    QueueItem, MucPhat,
+    QueueItem, MucPhat, FactRef, load_fact_refs, validate_kg,
 )
 from legal_radar.engine import (
-    muc_phat_cho_chu_the, match_hanh_vi, phan_loai_claim,
+    muc_phat_cho_chu_the, match_hanh_vi, match_fact_ref, phan_loai_claim,
     diff_thay_the, xep_uu_tien, normalize_text,
     _detect_subject_type, _detect_old_regulation, _detect_conditional_claim,
     _extract_amounts_millions, tich_hop_nguon, _detect_call_to_action,
@@ -548,3 +548,136 @@ class TestTichHopNguon:
         )
         assert ly_do_moi == "Không khớp hành vi nào"
         assert bump == 1
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# P1: FactRef + match_fact_ref + nhánh FactRef trong phan_loai_claim
+# (top-level functions, tự nạp dữ liệu inline)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def test_fact_ref_dataclass_frozen_and_validates():
+    ref = FactRef(
+        id="fr-test",
+        chu_de="test",
+        tu_khoa=["sap nhap tinh"],
+        tuyen_bo_dung="Ca nuoc co 34 tinh thanh.",
+        bien_the_tin_don_sai=[],
+        nguon="Test",
+        ngay_hieu_luc="2025-07-01",
+    )
+    with pytest.raises(Exception):
+        ref.id = "fr-changed"
+    with pytest.raises(ValueError):
+        FactRef(
+            id="fr-bad",
+            chu_de="test",
+            tu_khoa=[],
+            tuyen_bo_dung="x",
+            bien_the_tin_don_sai=[],
+            nguon="Test",
+            ngay_hieu_luc="2025-07-01",
+        )
+
+
+def test_load_fact_refs_real_file_returns_four():
+    path = Path(__file__).resolve().parents[3] / "data" / "facts" / "fact_references.json"
+    refs = load_fact_refs(path)
+    assert len(refs) == 4
+    assert [r.id for r in refs] == ["fr-001", "fr-002", "fr-003", "fr-004"]
+
+
+def test_match_fact_ref_hit_above_threshold():
+    path = Path(__file__).resolve().parents[3] / "data" / "facts" / "fact_references.json"
+    refs = load_fact_refs(path)
+    ref = match_fact_ref("ca nuoc gio con 34 tinh thanh dung khong", refs)
+    assert ref is not None
+    assert ref.id == "fr-001"
+
+
+def test_match_fact_ref_no_match_returns_none():
+    path = Path(__file__).resolve().parents[3] / "data" / "facts" / "fact_references.json"
+    refs = load_fact_refs(path)
+    assert match_fact_ref("nghe noi co the se dieu chinh ranh gioi mot vai xa trong tuong lai xa", refs) is None
+    assert match_fact_ref("", refs) is None
+    assert match_fact_ref("34 tinh", []) is None
+
+
+def test_match_fact_ref_folds_diacritics():
+    path = Path(__file__).resolve().parents[3] / "data" / "facts" / "fact_references.json"
+    refs = load_fact_refs(path)
+    ref = match_fact_ref("cả nước sáp nhập tỉnh còn 34 tỉnh", refs)
+    assert ref is not None
+    assert ref.id == "fr-001"
+
+
+def test_phan_loai_claim_factref_agree_returns_dung():
+    root = Path(__file__).resolve().parents[3]
+    kg = load_kg(root / "data" / "kg" / "kg_nodes.json", root / "data" / "kg" / "kg_edges.json")
+    refs = load_fact_refs(root / "data" / "facts" / "fact_references.json")
+    nhan, ly_do, citations = phan_loai_claim(
+        "ca nuoc gio con 34 tinh thanh dung khong, 28 tinh 6 thanh pho", "ca_nhan", kg, refs,
+    )
+    assert nhan == NhanPhanLoai.DUNG
+    assert "34" in ly_do
+    assert len(citations) > 0
+
+
+def test_phan_loai_claim_factref_rumor_variant_returns_hieu_lam():
+    root = Path(__file__).resolve().parents[3]
+    kg = load_kg(root / "data" / "kg" / "kg_nodes.json", root / "data" / "kg" / "kg_edges.json")
+    refs = load_fact_refs(root / "data" / "facts" / "fact_references.json")
+    nhan, ly_do, citations = phan_loai_claim(
+        "sap nhap tiep tuc con 16 tinh thanh pho roi, doc bao thay vay", "ca_nhan", kg, refs,
+    )
+    assert nhan == NhanPhanLoai.HIEU_LAM
+    assert "34" in ly_do
+    assert len(citations) > 0
+
+
+def test_phan_loai_claim_factref_negated_truth_returns_hieu_lam():
+    root = Path(__file__).resolve().parents[3]
+    kg = load_kg(root / "data" / "kg" / "kg_nodes.json", root / "data" / "kg" / "kg_edges.json")
+    refs = load_fact_refs(root / "data" / "facts" / "fact_references.json")
+    nhan, ly_do, _ = phan_loai_claim(
+        "cap huyen van con hoat dong binh thuong ma, co thay bo dau", "ca_nhan", kg, refs,
+    )
+    assert nhan == NhanPhanLoai.HIEU_LAM
+    assert "2 cap" in ly_do
+
+
+def test_phan_loai_claim_hedged_returns_can_kiem_chung():
+    root = Path(__file__).resolve().parents[3]
+    kg = load_kg(root / "data" / "kg" / "kg_nodes.json", root / "data" / "kg" / "kg_edges.json")
+    refs = load_fact_refs(root / "data" / "facts" / "fact_references.json")
+    nhan, _, _ = phan_loai_claim(
+        "nghe noi co the sap nhap tiep, khong biet co that khong", "ca_nhan", kg, refs,
+    )
+    assert nhan == NhanPhanLoai.CAN_KIEM_CHUNG
+
+
+def test_phan_loai_claim_default_none_fact_refs_unchanged_behavior():
+    root = Path(__file__).resolve().parents[3]
+    kg = load_kg(root / "data" / "kg" / "kg_nodes.json", root / "data" / "kg" / "kg_edges.json")
+    claim = "tổ chức chia sẻ tin giả bị phạt 20-30 triệu"
+    without_arg = phan_loai_claim(claim, "to_chuc", kg)
+    with_none = phan_loai_claim(claim, "to_chuc", kg, None)
+    assert without_arg == with_none
+    assert without_arg[0] == NhanPhanLoai.DUNG
+
+
+def test_kg_new_dvhc_hanh_vi_nodes_loaded_and_linked():
+    root = Path(__file__).resolve().parents[3]
+    kg = load_kg(root / "data" / "kg" / "kg_nodes.json", root / "data" / "kg" / "kg_edges.json")
+    assert validate_kg(kg) == []
+    dks_tin_don = kg.get_dieu_khoan_for_hanh_vi("hv-tin-don-sap-nhap")
+    assert [dk.id for dk in dks_tin_don] == ["nd174-d95-k1-a"]
+    dks_hoang_mang = kg.get_dieu_khoan_for_hanh_vi("hv-hoang-mang-sap-nhap")
+    assert [dk.id for dk in dks_hoang_mang] == ["nd174-d95-k2-c"]
+    assert any(
+        e.loai == "QUY_DINH_TAI" and e.source == "hv-tin-don-sap-nhap" and e.target == "nd174-d95-k1-a"
+        for e in kg.edges
+    )
+    assert any(
+        e.loai == "QUY_DINH_TAI" and e.source == "hv-hoang-mang-sap-nhap" and e.target == "nd174-d95-k2-c"
+        for e in kg.edges
+    )

@@ -156,7 +156,7 @@ class TestEndToEnd:
         assert len(nodes) > 0
         assert len(edges) > 0
         assert len(cases) > 0
-        assert len(eval_cases) == 14
+        assert len(eval_cases) == 24
 
         node_ids = {n["id"] for n in nodes}
         for edge in edges:

@@ -16,7 +16,7 @@ class TestEvalCases:
 
     def test_file_is_list(self):
         assert isinstance(self.cases, list)
-        assert len(self.cases) == 14
+        assert len(self.cases) == 24
 
     def test_required_fields(self):
         for case in self.cases:

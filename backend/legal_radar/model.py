@@ -118,6 +118,53 @@ class NguonTin:
             raise ValueError(f"tier must be 0, 1, or 2 (id={self.id}, got {self.tier})")
 
 
+@dataclass(frozen=True)
+class FactRef:
+    """Verified ground-truth reference for a known rumor topic.
+
+    Mirrors the schema of ``data/facts/fact_references.json`` (designed by P2)
+    exactly, so the file loads without any field renaming.
+
+    Attributes:
+        id: Unique identifier, e.g. ``"fr-003"``.
+        chu_de: Topic slug in unaccented Vietnamese, e.g.
+            ``"tin_don_tiep_tuc_sap_nhap_con_16_tinh"``.
+        tu_khoa: Unaccented keyword phrases used for candidate matching.
+        tuyen_bo_dung: The verified true statement for this topic.
+        bien_the_tin_don_sai: Known false rumor phrasings that contradict
+            ``tuyen_bo_dung``; may be empty for purely affirmative facts.
+        nguon: Name of the authoritative source, e.g. a ministry or law.
+        ngay_hieu_luc: ISO date (``YYYY-MM-DD``) the fact took effect or was
+            published.
+        url: Link to the source publication; may be empty.
+        ghi_chu: Free-form verification notes; may be empty.
+    """
+
+    id: str
+    chu_de: str
+    tu_khoa: list[str]
+    tuyen_bo_dung: str
+    bien_the_tin_don_sai: list[str]
+    nguon: str
+    ngay_hieu_luc: str
+    url: str = ""
+    ghi_chu: str = ""
+
+    def __post_init__(self):
+        """Validates required fields.
+
+        Raises:
+            ValueError: If ``id`` or ``tuyen_bo_dung`` is empty, or if
+                ``tu_khoa`` contains no phrases.
+        """
+        if not self.id:
+            raise ValueError("FactRef id must be non-empty")
+        if not self.tuyen_bo_dung:
+            raise ValueError(f"tuyen_bo_dung must be non-empty (id={self.id})")
+        if not self.tu_khoa:
+            raise ValueError(f"tu_khoa must contain at least one phrase (id={self.id})")
+
+
 # ── Frozen dataclass (edge) ──
 
 @dataclass(frozen=True)
@@ -238,6 +285,32 @@ def load_kg(nodes_path: Path, edges_path: Path | None = None) -> KnowledgeGraph:
 def load_queue(path: Path) -> list[QueueItem]:
     data = json.loads(path.read_text(encoding="utf-8"))
     return [QueueItem(**item) for item in data]
+
+
+def load_fact_refs(path: Path) -> list[FactRef]:
+    """Loads verified fact references from a flat JSON array file.
+
+    Args:
+        path: Path to a JSON file containing a list of FactRef objects,
+            e.g. ``data/facts/fact_references.json``.
+
+    Returns:
+        list[FactRef]: One ``FactRef`` per entry, in file order.
+
+    Raises:
+        ValueError: If two entries share the same ``id``, or if an entry
+            fails ``FactRef`` field validation.
+        FileNotFoundError: If ``path`` does not exist.
+        json.JSONDecodeError: If the file is not valid JSON.
+    """
+    data = json.loads(path.read_text(encoding="utf-8"))
+    refs = [FactRef(**item) for item in data]
+    seen: set[str] = set()
+    for ref in refs:
+        if ref.id in seen:
+            raise ValueError(f"Duplicate FactRef id: {ref.id}")
+        seen.add(ref.id)
+    return refs
 
 
 # ── Validation ──
