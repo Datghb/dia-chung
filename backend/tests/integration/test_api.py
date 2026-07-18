@@ -20,7 +20,9 @@ def test_queue_returns_fixture_backed_items() -> None:
 
 
 def test_case_returns_matching_queue_item() -> None:
-    queue_item = next(item for item in client.get("/api/queue").json() if item["id"].startswith("C"))
+    queue_items = client.get("/api/queue").json()
+    assert queue_items
+    queue_item = queue_items[0]
     response = client.get(f"/api/cases/{queue_item['id']}")
     assert response.status_code == 200
     assert response.json()["id"] == queue_item["id"]
