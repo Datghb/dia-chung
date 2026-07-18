@@ -1,4 +1,4 @@
-from legal_radar.api.main import app
+from backend.legal_radar.api.main import app
 
 
 def test_required_paths_exist() -> None:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from ..data_access import list_study_cases
+from backend.legal_radar.api.data_access import list_study_cases
 
 router = APIRouter(tags=["verification"])
 

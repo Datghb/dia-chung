@@ -5,7 +5,7 @@ import math
 from collections import Counter
 from dataclasses import dataclass, field
 
-from .model import (
+from backend.legal_radar.model import (
     KnowledgeGraph, DieuKhoan, MucPhat, HanhVi, LoaiChuThe,
     NhanPhanLoai, NhanNguon, QueueItem,
 )
@@ -280,7 +280,7 @@ def _build_citation(dk: DieuKhoan, kg: KnowledgeGraph) -> str:
 
 def _match_study_case(claim: str, kg: KnowledgeGraph) -> tuple[NhanPhanLoai, str, list[str]] | None:
     try:
-        from .paths import data_dir
+        from backend.legal_radar.paths import data_dir
         import json
         path = data_dir() / "study_cases" / "study_cases.json"
         if not path.is_file():

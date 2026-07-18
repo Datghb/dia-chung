@@ -6,12 +6,12 @@ import sys
 from pathlib import Path
 
 # Add backend directory to sys.path if run directly
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from legal_radar.model import load_kg, NhanPhanLoai
-from legal_radar.engine import phan_loai_claim
-from legal_radar.guardrails import sanitize_injection, anonymize_pii, validate_label
-from legal_radar.paths import data_dir
+from backend.legal_radar.model import load_kg, NhanPhanLoai
+from backend.legal_radar.engine import phan_loai_claim
+from backend.legal_radar.guardrails import sanitize_injection, anonymize_pii, validate_label
+from backend.legal_radar.paths import data_dir
 
 
 def main() -> int:

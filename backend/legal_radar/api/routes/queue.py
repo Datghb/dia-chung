@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
-from ..data_access import list_queue_items, update_queue_item_status
-from ..schemas import QueueItemResponse
+from backend.legal_radar.api.data_access import list_queue_items, update_queue_item_status
+from backend.legal_radar.api.schemas import QueueItemResponse
 
 router = APIRouter(tags=["queue"])
 
@@ -30,11 +30,11 @@ def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
 
 @router.delete("/queue")
 def clear_queue() -> dict[str, object]:
-    from ..dependencies import runs_dir
+    from backend.legal_radar.api.dependencies import runs_dir
     queue_path = runs_dir() / "queue.jsonl"
     deleted = 0
     if queue_path.exists():
-        from ..data_access import _queue_from_jsonl
+        from backend.legal_radar.api.data_access import _queue_from_jsonl
         deleted = len(_queue_from_jsonl(queue_path))
         queue_path.unlink()
     return {"deleted": deleted, "message": f"Đã xóa {deleted} hồ sơ khỏi hàng đợi."}

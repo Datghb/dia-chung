@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from legal_radar.model import NhanNguon
-from legal_radar.api.main import app
+from backend.legal_radar.model import NhanNguon
+from backend.legal_radar.api.main import app
 
 client = TestClient(app)
 
@@ -80,11 +80,11 @@ def test_qa_returns_supported_schema() -> None:
     assert response.json()["label"] in {"dung", "hieu_lam", "can_kiem_chung"}
 
 def test_crawl_returns_supported_schema(monkeypatch, tmp_path) -> None:
-    from legal_radar.api.routes import crawl
+    from backend.legal_radar.api.routes import crawl
 
     monkeypatch.setattr(crawl, "runs_dir", lambda: tmp_path)
     monkeypatch.setattr(crawl, "_try_live_crawl", lambda *a, **kw: {"items": [], "crawled": 0, "relevant": 0})
-    with patch("legal_radar.source_search.search_brightdata", return_value=[]):
+    with patch("backend.legal_radar.source_search.search_brightdata", return_value=[]):
         response = client.post("/api/crawl", json={"keywords": ["tin giả"], "max_posts_per_platform": 2})
     assert response.status_code == 200
     lines = [ln for ln in response.text.strip().split("\n") if ln.strip()]
@@ -94,7 +94,7 @@ def test_crawl_returns_supported_schema(monkeypatch, tmp_path) -> None:
 
 
 def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) -> None:
-    from legal_radar.api.routes import crawl
+    from backend.legal_radar.api.routes import crawl
 
     fixture_path = (
         Path(__file__).resolve().parents[3]
@@ -123,7 +123,7 @@ def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) ->
     monkeypatch.setattr(crawl, "runs_dir", lambda: tmp_path)
     monkeypatch.setattr(crawl, "_load_sample_items", lambda: [fixture_post])
 
-    import legal_radar.pipeline as pipeline_mod
+    import backend.legal_radar.pipeline as pipeline_mod
     monkeypatch.setattr(pipeline_mod, "_queue_path", lambda: queue_path)
     monkeypatch.setattr(crawl, "_queue_path", lambda: queue_path)
     monkeypatch.setattr(crawl, "_build_crawled_ingestor", lambda qp: pipeline_mod.CommentIngestor(provider, MagicMock(), str(qp)))
@@ -131,7 +131,7 @@ def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) ->
 
     official_url = "https://chinhphu.vn/thong-tin-chinh-thuc"
     with patch(
-        "legal_radar.source_search.search_brightdata",
+        "backend.legal_radar.source_search.search_brightdata",
         return_value=[{
             "tieu_de": "Thông tin chính thức",
             "nguon": "Cổng TTĐT Chính phủ",
@@ -142,7 +142,7 @@ def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) ->
             "la_xac_nhan": True,
         }],
     ), patch(
-        "legal_radar.pipeline.xac_thuc_nguon",
+        "backend.legal_radar.pipeline.xac_thuc_nguon",
         return_value=(NhanNguon.CO_NGUON_XAC_NHAN, [{
             "tieu_de": "Thông tin chính thức",
             "nguon": "Cổng TTĐT Chính phủ",

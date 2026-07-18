@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field
 
-from ..model import ClaimLabel, SourceLabel
+from backend.legal_radar.model import ClaimLabel, SourceLabel
 
 
 class QueueItemResponse(BaseModel):

@@ -278,7 +278,7 @@ frontend/app/
 ```powershell
 cd backend
 python -m pip install -e ".[dev]"
-uvicorn legal_radar.api.main:app --reload
+uvicorn backend.legal_radar.api.main:app --reload
 ```
 
 ## Chạy frontend

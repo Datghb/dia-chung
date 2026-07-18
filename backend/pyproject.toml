@@ -19,10 +19,18 @@ crawlers = []
 dev = ["httpx2", "pytest>=8.3,<9", "ruff>=0.9,<1"]
 
 [project.scripts]
-legal-radar = "legal_radar.cli:main"
+legal-radar = "backend.legal_radar.cli:main"
 
-[tool.setuptools.packages.find]
-include = ["legal_radar*"]
+[tool.setuptools]
+packages = [
+  "backend.legal_radar",
+  "backend.legal_radar.api",
+  "backend.legal_radar.api.routes",
+  "backend.legal_radar.crawlers"
+]
+
+[tool.setuptools.package-dir]
+"backend.legal_radar" = "legal_radar"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

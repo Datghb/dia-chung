@@ -2,7 +2,7 @@ import pytest
 import json
 from pathlib import Path
 
-from legal_radar.model import (
+from backend.legal_radar.model import (
     VanBan, DieuKhoan, HanhVi, ChuThe, MucPhat, BienPhapKhacPhuc,
     NguonTin, Edge, KnowledgeGraph, QueueItem,
     NhomHanhVi, LoaiChuThe, NhanNguon, NhanPhanLoai,

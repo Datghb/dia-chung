@@ -39,8 +39,8 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
-    from legal_radar.pipeline import CommentIngestor, VanBanIngestor
-    from legal_radar.providers import GeminiProvider, GroqProvider, OpenRouterProvider
+    from backend.legal_radar.pipeline import CommentIngestor, VanBanIngestor
+    from backend.legal_radar.providers import GeminiProvider, GroqProvider, OpenRouterProvider
 
     if args.command == "vanban":
         try:

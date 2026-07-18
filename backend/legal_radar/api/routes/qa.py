@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from ...pipeline import analyze_comment
-from ..schemas import QuestionRequest, QueueItemResponse
+from backend.legal_radar.pipeline import analyze_comment
+from backend.legal_radar.api.schemas import QuestionRequest, QueueItemResponse
 
 router = APIRouter(tags=["qa"])
 

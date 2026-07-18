@@ -16,7 +16,7 @@ from pathlib import Path
 
 import requests
 
-from legal_radar.settings import get_settings
+from backend.legal_radar.settings import get_settings
 
 logger = logging.getLogger(__name__)
 

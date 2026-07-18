@@ -2,8 +2,8 @@
 
 import argparse
 
-from .pipeline import analyze_comment
-from .report import render_json
+from backend.legal_radar.pipeline import analyze_comment
+from backend.legal_radar.report import render_json
 
 
 def main() -> None:

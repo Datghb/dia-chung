@@ -1,11 +1,11 @@
 import pytest
 from pathlib import Path
 
-from legal_radar.model import (
+from backend.legal_radar.model import (
     load_kg, KnowledgeGraph, LoaiChuThe, NhanPhanLoai, NhanNguon,
     QueueItem, MucPhat,
 )
-from legal_radar.engine import (
+from backend.legal_radar.engine import (
     muc_phat_cho_chu_the, match_hanh_vi, phan_loai_claim,
     diff_thay_the, xep_uu_tien, normalize_text,
     _detect_subject_type, _detect_old_regulation, _detect_conditional_claim,

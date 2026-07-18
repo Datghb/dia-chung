@@ -1,4 +1,4 @@
-from legal_radar.paths import data_dir, repo_root
+from backend.legal_radar.paths import data_dir, repo_root
 
 
 def test_data_directory_contains_knowledge_graph() -> None:

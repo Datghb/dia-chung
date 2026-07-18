@@ -1,9 +1,9 @@
 ﻿import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
-from legal_radar.source_classifier import (
+from backend.legal_radar.source_classifier import (
     classify_tier,
     apply_fusion_rules,
     xac_thuc_nguon,

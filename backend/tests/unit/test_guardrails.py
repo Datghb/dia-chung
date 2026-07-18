@@ -2,9 +2,9 @@
 import os
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
-from legal_radar.guardrails import (
+from backend.legal_radar.guardrails import (
     validate_label,
     assert_rule_half,
     anonymize_pii,

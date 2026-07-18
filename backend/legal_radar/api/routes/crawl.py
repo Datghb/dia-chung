@@ -11,9 +11,9 @@ from hashlib import sha1
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from ...pipeline import _build_crawled_ingestor, _queue_path
-from ..dependencies import data_dir, runs_dir
-from ..schemas import CrawlRequest
+from backend.legal_radar.pipeline import _build_crawled_ingestor, _queue_path
+from backend.legal_radar.api.dependencies import data_dir, runs_dir
+from backend.legal_radar.api.schemas import CrawlRequest
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ router = APIRouter(tags=["crawl"])
 
 def _try_live_crawl(keywords, max_posts, output_path):
     """Try Bright Data crawl in a background thread with timeout."""
-    from ...crawlers.scheduler import crawl_and_process
+    from backend.legal_radar.crawlers.scheduler import crawl_and_process
     result = {"items": [], "crawled": 0, "relevant": 0}
     def _run():
         try:

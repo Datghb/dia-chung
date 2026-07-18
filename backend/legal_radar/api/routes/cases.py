@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from ..data_access import get_queue_item
-from ..schemas import QueueItemResponse
+from backend.legal_radar.api.data_access import get_queue_item
+from backend.legal_radar.api.schemas import QueueItemResponse
 
 router = APIRouter(tags=["cases"])
 

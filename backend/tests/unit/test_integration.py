@@ -2,13 +2,13 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data")
 EVAL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "eval")
 
-from legal_radar.source_classifier import classify_tier, apply_fusion_rules, SearchDoc, NhanNguon
-from legal_radar.guardrails import validate_label, assert_rule_half, anonymize_pii, sanitize_injection
+from backend.legal_radar.source_classifier import classify_tier, apply_fusion_rules, SearchDoc, NhanNguon
+from backend.legal_radar.guardrails import validate_label, assert_rule_half, anonymize_pii, sanitize_injection
 
 
 def _load_json(dirpath, filename):
