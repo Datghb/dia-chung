@@ -3,7 +3,7 @@
 import json
 from dataclasses import asdict
 
-from .model import QueueItem
+from backend.legal_radar.model import QueueItem
 
 
 def render_json(item: QueueItem) -> str:

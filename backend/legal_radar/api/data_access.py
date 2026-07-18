@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .dependencies import data_dir, runs_dir
+from backend.legal_radar.api.dependencies import data_dir, runs_dir
 
 
 def _read_json(path: Path) -> Any:

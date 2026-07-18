@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import logging
 
-from .model import SourceLabel
-from .source_classifier import xac_thuc_nguon
-from .source_search import search_brightdata
+from backend.legal_radar.model import SourceLabel
+from backend.legal_radar.source_classifier import xac_thuc_nguon
+from backend.legal_radar.source_search import search_brightdata
 
 logger = logging.getLogger(__name__)
 

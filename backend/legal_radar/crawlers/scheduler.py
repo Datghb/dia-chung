@@ -12,8 +12,8 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from ..paths import runs_dir
-from .facebook import crawl_facebook
+from backend.legal_radar.paths import runs_dir
+from backend.legal_radar.crawlers.facebook import crawl_facebook
 
 logger = logging.getLogger(__name__)
 
@@ -100,8 +100,8 @@ def crawl_and_process(
     output_path: str | Path | None = None,
 ) -> dict[str, Any]:
     """Crawl → clean → filter. Return {crawled, relevant, items}."""
-    from .cleaner import clean_post
-    from .filter import is_relevant
+    from backend.legal_radar.crawlers.cleaner import clean_post
+    from backend.legal_radar.crawlers.filter import is_relevant
 
     raw_items = crawl_now(keywords=keywords, max_posts_per_platform=max_posts, output_path=output_path)
 

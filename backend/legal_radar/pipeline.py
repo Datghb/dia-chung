@@ -15,15 +15,15 @@ from hashlib import sha1
 from pathlib import Path
 from uuid import uuid4
 
-from .model import QueueItem, NhanPhanLoai, NhanNguon, load_kg
-from .engine import classify_claim_full, tich_hop_nguon
-from .providers import TokenRouterProvider, GeminiProvider, GroqProvider, OpenRouterProvider, FallbackProvider
-from .source_classifier import xac_thuc_nguon
-from .guardrails import validate_label, sanitize_injection
-from .paths import data_dir as project_data_dir
-from .paths import repo_root
-from .paths import runs_dir as project_runs_dir
-from .settings import get_settings
+from backend.legal_radar.model import QueueItem, NhanPhanLoai, NhanNguon, load_kg
+from backend.legal_radar.engine import classify_claim_full, tich_hop_nguon
+from backend.legal_radar.providers import TokenRouterProvider, GeminiProvider, GroqProvider, OpenRouterProvider, FallbackProvider
+from backend.legal_radar.source_classifier import xac_thuc_nguon
+from backend.legal_radar.guardrails import validate_label, sanitize_injection
+from backend.legal_radar.paths import data_dir as project_data_dir
+from backend.legal_radar.paths import repo_root
+from backend.legal_radar.paths import runs_dir as project_runs_dir
+from backend.legal_radar.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +57,9 @@ def analyze_comment(comment: str) -> dict:
     source_agency = ""
 
     try:
-        from .source_search import search_brightdata
+        from backend.legal_radar.source_search import search_brightdata
         search_results = search_brightdata(result.citations or [comment], "")
-        from .source_classifier import xac_thuc_nguon
+        from backend.legal_radar.source_classifier import xac_thuc_nguon
         nhan_nguon, matched_docs, ly_do_nguon = xac_thuc_nguon(
             result.citations or [comment], "", search_results,
         )
@@ -262,7 +262,7 @@ class CommentIngestor:
             search_results = []
             if not skip_source_search:
                 try:
-                    from .source_search import search_brightdata
+                    from backend.legal_radar.source_search import search_brightdata
                     search_results = search_brightdata(
                         extracted["keywords"],
                         comment.get("thoi_gian", ""),

@@ -8,8 +8,8 @@ from urllib.parse import urlparse
 
 import requests as http_requests
 
-from .source_classifier import TIER_0_DOMAINS, TIER_1_DOMAINS, TIER_2_DOMAINS
-from .settings import get_settings
+from backend.legal_radar.source_classifier import TIER_0_DOMAINS, TIER_1_DOMAINS, TIER_2_DOMAINS
+from backend.legal_radar.settings import get_settings
 
 logger = logging.getLogger(__name__)
 

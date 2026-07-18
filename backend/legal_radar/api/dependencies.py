@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from ..paths import data_dir as project_data_dir
-from ..paths import repo_root as project_repo_root
-from ..paths import runs_dir as project_runs_dir
+from backend.legal_radar.paths import data_dir as project_data_dir
+from backend.legal_radar.paths import repo_root as project_repo_root
+from backend.legal_radar.paths import runs_dir as project_runs_dir
 
 
 def repo_root() -> Path:
