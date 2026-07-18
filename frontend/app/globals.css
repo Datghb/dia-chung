@@ -43,3 +43,7 @@ html,body{background:#f7f8fc}body{padding:0}.monitor-app{min-height:100vh;border
 @media(max-width:980px){.monitor-sidebar{width:78px}.monitor-main{margin-left:78px}.sidebar-insights{display:none}.monitor-brand{padding-left:3px}.monitor-sidebar nav button span{width:auto}.queue-metrics{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.monitor-sidebar{width:auto}.monitor-main{margin-left:0}.queue-metrics{grid-template-columns:1fr 1fr}.queue-metrics article{min-height:102px;padding:14px}.queue-metrics span em{display:none}.queue-tabs{overflow-x:auto}.queue-tabs button{white-space:nowrap}.detail-page{padding:22px 16px 86px}.detail-actions{padding:12px 16px}.notification-button,.avatar-chevron{display:none}}
 @media(max-width:480px){.queue-metrics{grid-template-columns:1fr}.queue-metrics article{min-height:92px}.queue-heading h1{font-size:31px}}
+
+/* Keep the selection column compact instead of letting the auto table layout stretch it. */
+.queue-table th:first-child,.queue-table td:first-child{width:44px;min-width:44px;max-width:44px;text-align:center;padding-left:10px;padding-right:6px}
+.queue-table th:nth-child(2),.queue-table td:nth-child(2){width:340px;min-width:340px}
