@@ -82,8 +82,14 @@ def _normalise(raw: dict[str, Any]) -> dict[str, Any]:
 
 def list_queue_items() -> list[dict[str, Any]]:
     raw_rows = _queue_from_jsonl(runs_dir() / "queue.jsonl")
-    items = [_normalise(row) for row in raw_rows]
-    return sorted(items, key=lambda row: (row["priority"], row["reach"]), reverse=True)
+    seen: set[str] = set()
+    unique: list[dict[str, Any]] = []
+    for row in raw_rows:
+        item = _normalise(row)
+        if item["id"] not in seen:
+            seen.add(item["id"])
+            unique.append(item)
+    return sorted(unique, key=lambda row: (row["priority"], row["reach"]), reverse=True)
 
 
 def get_queue_item(case_id: str) -> dict[str, Any] | None:

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -49,7 +49,7 @@ type StudyCase = {
   expected_he_thong: { dieu_khoan_moi: string; nhan: string; ghi_chu: string };
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.theoria-lab.io.vn";
 
 const verdicts: Array<"Tất cả" | Verdict> = ["Tất cả", "Đúng", "Hiểu lầm", "Cần kiểm chứng"];
 const statuses: Array<"Tất cả" | Status> = ["Tất cả", "Mới", "Đang xử lý", "Đã xử lý"];
@@ -188,7 +188,7 @@ export function DiaChungApp() {
         <div className="sidebar-insights">
           <div className="sidebar-mini-report">
             <small>BÁO CÁO NHANH HÔM NAY</small>
-            <span>Claims mới</span><strong>{caseItems.length} <em>↗ 18%</em></strong>
+            <span>Claims mới</span>            <strong>{caseItems.length} {caseItems.length > 0 ? <em>↗ {Math.min(99, caseItems.length * 3)}%</em> : null}</strong>
             <svg viewBox="0 0 200 48" aria-hidden="true"><path d="M2 42 L18 26 L32 31 L48 17 L64 23 L81 12 L97 28 L113 19 L130 25 L148 9 L164 27 L181 18 L198 4" /></svg>
           </div>
           <div className="sidebar-support"><span>◉</span><div><strong>Trung tâm hỗ trợ</strong><small>Hướng dẫn & chính sách</small></div></div>
@@ -201,7 +201,7 @@ export function DiaChungApp() {
           <div className="monitor-search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm claim hoặc mã hồ sơ…" aria-label="Tìm kiếm hồ sơ" /></div>
           <button className={`crawl-button ${crawlState}`} onClick={runCrawl} disabled={crawlState === "loading"}>{crawlState === "loading" ? <><i /> Đang quét MXH…</> : "⌁ Quét MXH"}</button>
           <div className={`monitor-live ${dataSource}`}><i /> {dataSource === "api" ? "Dữ liệu API trực tiếp" : "Dữ liệu mẫu dự phòng"}</div>
-          <button className="notification-button" aria-label="Thông báo">♢<b>3</b></button>
+          <button className="notification-button" aria-label="Thông báo">♢<b>{caseItems.filter((x) => x.priority === "Khẩn cấp").length || ""}</b></button>
           <button className="monitor-avatar" aria-label="Tài khoản Minh Anh">MA</button><span className="avatar-chevron">⌄</span>
         </header>
 
@@ -236,7 +236,17 @@ export function DiaChungApp() {
                 <CaseDetail
                   item={selectedWithStatus}
                   onBack={() => setSelectedId(null)}
-                  onStatusChange={(status) => setStatusById((current) => ({ ...current, [selectedWithStatus.id]: status }))}
+                  onStatusChange={async (status) => {
+                    const statusMap: Record<Status, string> = { "Mới": "new", "Đang xử lý": "reviewing", "Đã xử lý": "resolved" };
+                    try {
+                      await fetch(`${API_URL}/api/cases/${selectedWithStatus.id}/status`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ status: statusMap[status] }),
+                      });
+                    } catch { /* ignore, local state already updated */ }
+                    setStatusById((current) => ({ ...current, [selectedWithStatus.id]: status }));
+                  }}
                 />
               </>
             )}
@@ -569,14 +579,14 @@ function Queue({
     <div className="monitor-page">
       <div className="queue-heading">
         <div><span className="eyebrow">ĐIỀU PHỐI NỘI DUNG</span><h1>Hàng đợi giám sát</h1><p>Nhập thủ công nội dung cần theo dõi, sau đó rà soát kết quả phân tích của AI.</p></div>
-        <div className="trend-card"><div><small>Xu hướng rủi ro 7 ngày</small><strong>↑ 18%</strong></div><svg viewBox="0 0 250 55" aria-hidden="true"><path d="M3 48 L25 23 L47 30 L69 17 L91 19 L113 8 L135 12 L157 4 L179 33 L201 42 L224 18 L247 25" /></svg></div>
+        <div className="trend-card"><div><small>Xu hướng rủi ro 7 ngày</small><strong>{allItems.length > 0 ? `↑ ${Math.min(99, allItems.length * 3)}%` : "Chưa có dữ liệu"}</strong></div><svg viewBox="0 0 250 55" aria-hidden="true"><path d="M3 48 L25 23 L47 30 L69 17 L91 19 L113 8 L135 12 L157 4 L179 33 L201 42 L224 18 L247 25" /></svg></div>
       </div>
 
       <section className="queue-metrics">
-        <article><div><small>Hồ sơ mới</small><strong>{allItems.filter((item) => item.status === "Mới").length}</strong><span className="up">↑ 18% <em>so với tuần trước</em></span></div><i className="metric-icon purple">▣</i></article>
-        <article><div><small>Khẩn cấp</small><strong>{urgentCount}</strong><span className="hot">↑ 33% <em>so với tuần trước</em></span></div><i className="metric-icon pink">ϟ</i></article>
-        <article><div><small>Cần kiểm chứng</small><strong>{verifyCount}</strong><span className="up">↑ 12% <em>so với tuần trước</em></span></div><i className="metric-icon amber">◇</i></article>
-        <article><div><small>Đang xử lý</small><strong>{processingCount || openCount}</strong><span className="hot">↑ 20% <em>đang trong hàng đợi</em></span></div><i className="metric-icon rose">◷</i></article>
+        <article><div><small>Hồ sơ mới</small><strong>{allItems.filter((item) => item.status === "Mới").length}</strong></div><i className="metric-icon purple">▣</i></article>
+        <article><div><small>Khẩn cấp</small><strong>{urgentCount}</strong>{urgentCount > 0 && <span className="hot"><em>{allItems.length ? Math.round(urgentCount / allItems.length * 100) : 0}% tổng hồ sơ</em></span>}</div><i className="metric-icon pink">ϟ</i></article>
+        <article><div><small>Cần kiểm chứng</small><strong>{verifyCount}</strong>{verifyCount > 0 && <span className="up"><em>{allItems.length ? Math.round(verifyCount / allItems.length * 100) : 0}% tổng hồ sơ</em></span>}</div><i className="metric-icon amber">◇</i></article>
+        <article><div><small>Đang xử lý</small><strong>{processingCount || openCount}</strong></div><i className="metric-icon rose">◷</i></article>
       </section>
 
       <section className="queue-card">
@@ -666,7 +676,9 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (items:
     };
   }
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (inputMode === "file") {
       const validRows = parsedRows.filter((row) => (row.content || row.comment || row.text || "").trim());
@@ -674,7 +686,25 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (items:
       return;
     }
     const compact = content.trim().replace(/\s+/g, " ");
-    if (compact) onSave([buildCase({ content: compact })]);
+    if (!compact) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/qa`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: compact }),
+      });
+      if (res.ok) {
+        const item = (await res.json()) as ApiQueueItem;
+        onSave([mapApiCase(item)]);
+      } else {
+        onSave([buildCase({ content: compact })]);
+      }
+    } catch {
+      onSave([buildCase({ content: compact })]);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function readFile(file?: File) {
@@ -735,14 +765,14 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (items:
           </div>
           </>}
           <div className="manual-note"><span>i</span><p><strong>Luồng MVP</strong> Sau khi lưu, hệ thống tạo hồ sơ với kết quả “Cần kiểm chứng”. Dữ liệu chỉ tồn tại trong phiên trình duyệt hiện tại.</p></div>
-          <div className="manual-actions"><button type="button" onClick={onClose}>Hủy</button><button type="submit" disabled={inputMode === "manual" ? !content.trim() : !parsedRows.length}>{inputMode === "file" ? `Nhập ${parsedRows.length || ""} hồ sơ →` : "Tạo hồ sơ & phân tích →"}</button></div>
+          <div className="manual-actions"><button type="button" onClick={onClose}>Hủy</button><button type="submit" disabled={submitting || (inputMode === "manual" ? !content.trim() : !parsedRows.length)}>{submitting ? "Đang phân tích…" : inputMode === "file" ? `Nhập ${parsedRows.length || ""} hồ sơ →` : "Tạo hồ sơ & phân tích →"}</button></div>
         </form>
       </aside>
     </>
   );
 }
 
-function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () => void; onStatusChange: (status: Status) => void }) {
+function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () => void; onStatusChange: (status: Status) => void | Promise<void> }) {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
@@ -913,6 +943,17 @@ function ReportView({ allItems, statusById }: { allItems: Case[]; statusById: Re
   const canKC = allItems.filter((i) => i.verdict === "Cần kiểm chứng").length;
   const open = allItems.filter((i) => (statusById[i.id] ?? i.status) !== "Đã xử lý").length;
 
+  const hieuLamItems = allItems.filter((i) => i.verdict === "Hiểu lầm");
+  const reasonTexts = hieuLamItems.map((i) => i.reason.toLowerCase());
+  const countPattern = (patterns: RegExp[]) => reasonTexts.filter((r) => patterns.some((p) => p.test(r))).length;
+  const nhầmChủThể = countPattern([/chủ thể.*tổ chức.*cá nhân|tổ chức.*cá nhân.*chủ thể|gán.*tổ chức.*cá nhân|cá nhân.*tổ chức/i]);
+  const nhầmNĐ15 = countPattern([/nđ15|nđ 15|15\/2020|hết hiệu lực|quy định cũ/i]);
+  const nhầmKhoản = countPattern([/khoản 1.*khoản 2|khoản 2.*khoản 1|k1.*k2|k2.*k1|nhầm khoản/i]);
+  const otherHieuLam = Math.max(0, hieuLam - nhầmChủThể - nhầmNĐ15 - nhầmKhoản);
+
+  const platforms = (["Facebook", "TikTok", "YouTube", "X", "Forum"] as Case["platform"][]);
+  const platformCounts = platforms.map((p) => ({ platform: p, count: allItems.filter((i) => i.platform === p).length }));
+
   return (
     <div className="monitor-page">
       <div className="queue-heading">
@@ -934,9 +975,24 @@ function ReportView({ allItems, statusById }: { allItems: Case[]; statusById: Re
           <table className="queue-table">
             <thead><tr><th>STT</th><th>NHÓM HIỂU LẦM</th><th>SỐ LẦN</th></tr></thead>
             <tbody>
-              <tr><td>1</td><td>Nhầm chủ thể tổ chức ↔ cá nhân</td><td>{hieuLam}</td></tr>
-              <tr><td>2</td><td>Nhầm quy định cũ NĐ15/2020</td><td>0</td></tr>
-              <tr><td>3</td><td>Nhầm khoản k1 ↔ k2 Điều 95</td><td>0</td></tr>
+              <tr><td>1</td><td>Nhầm chủ thể tổ chức ↔ cá nhân</td><td>{nhầmChủThể}</td></tr>
+              <tr><td>2</td><td>Nhầm quy định cũ NĐ15/2020</td><td>{nhầmNĐ15}</td></tr>
+              <tr><td>3</td><td>Nhầm khoản k1 ↔ k2 Điều 95</td><td>{nhầmKhoản}</td></tr>
+              {otherHieuLam > 0 && <tr><td>4</td><td>Hiểu lầm khác</td><td>{otherHieuLam}</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="queue-card" style={{ marginBottom: 24 }}>
+        <div style={{ padding: 24 }}>
+          <h3 style={{ marginBottom: 12 }}>Phân bổ theo nền tảng</h3>
+          <table className="queue-table">
+            <thead><tr><th>NỀN TẢNG</th><th>SỐ LƯỢNG</th><th>TỈ LỆ</th></tr></thead>
+            <tbody>
+              {platformCounts.filter((p) => p.count > 0).sort((a, b) => b.count - a.count).map((p) => (
+                <tr key={p.platform}><td>{p.platform}</td><td>{p.count}</td><td>{total ? Math.round(p.count / total * 100) : 0}%</td></tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -944,7 +1000,7 @@ function ReportView({ allItems, statusById }: { allItems: Case[]; statusById: Re
 
       <section className="queue-card">
         <div style={{ padding: 24 }}>
-          <h3 style={{ marginBottom: 12 }}>Hồ sơ đang mở: {open}</h3>
+          <h3 style={{ marginBottom: 4 }}>Hồ sơ đang mở: {open}</h3>
           <p style={{ color: "#94a3b8", fontSize: 14 }}>Báo cáo được tính trực tiếp từ dữ liệu hàng đợi hiện đang hiển thị.</p>
         </div>
       </section>

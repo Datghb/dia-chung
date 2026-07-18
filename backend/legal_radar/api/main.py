@@ -27,7 +27,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
     allow_origin_regex=r"https://.*\.chatgpt\.site",
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
     allow_credentials=False,
 )
