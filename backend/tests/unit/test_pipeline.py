@@ -302,11 +302,12 @@ class TestIngestCrawledItems:
             first = ingest_crawled_items([post])
             second = ingest_crawled_items([post])
 
-        assert len(first) == 3
+        assert len(first) == 1
         assert second == []
+        assert len(first[0].comments) == 2
         rows = [
             json.loads(line)
             for line in queue_path.read_text(encoding="utf-8").splitlines()
         ]
-        assert len(rows) == 3
+        assert len(rows) == 1
         assert [row["id"] for row in rows] == [item.id for item in first]

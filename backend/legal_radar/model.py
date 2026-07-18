@@ -168,6 +168,9 @@ class QueueItem:
     status: str = "new"
     score: int = 30
     confidence: int = 50
+    comments: list[dict] = None
+
+    comments: list[dict] = None
 
     def __post_init__(self):
         if isinstance(self.nhan, str):
@@ -176,6 +179,8 @@ class QueueItem:
             self.nhan_nguon = NhanNguon(self.nhan_nguon)
         if self.citations is None:
             self.citations = []
+        if self.comments is None:
+            self.comments = []
 
 
 # ── KnowledgeGraph container ──

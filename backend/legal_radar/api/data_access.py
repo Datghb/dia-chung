@@ -77,6 +77,7 @@ def _normalise(raw: dict[str, Any]) -> dict[str, Any]:
         "source_agency": source_agency,
         "score": int(raw.get("score", score)),
         "confidence": int(raw.get("confidence", 50)),
+        "comments": list(raw.get("comments") or []),
     }
 
 

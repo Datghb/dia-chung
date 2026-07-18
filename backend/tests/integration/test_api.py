@@ -103,7 +103,7 @@ def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) ->
         / "crawled_sample.json"
     )
     fixture_post = json.loads(fixture_path.read_text(encoding="utf-8"))[0]
-    expected_count = 1 + len(fixture_post.get("comments", []))
+    expected_count = 1
     queue_path = tmp_path / "queue.jsonl"
     provider = MagicMock()
     provider.generate.return_value = json.dumps(

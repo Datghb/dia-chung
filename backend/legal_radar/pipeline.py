@@ -249,6 +249,7 @@ class CommentIngestor:
                 score=50,
                 confidence=30,
                 url=str(comment.get("url", "")),
+                comments=list(comment.get("comments") or []),
             )
         try:
             cls_result = classify_claim_full(
@@ -323,6 +324,7 @@ class CommentIngestor:
             status="new",
             score=_compute_score(nhan, priority, int(comment.get("reach", 0) or 0)),
             confidence=_compute_confidence(nhan, nhan_nguon, bool(getattr(cls_result, "citations", []) if cls_result else [])),
+            comments=list(comment.get("comments") or []),
         )
 
     def run_batch(self, batch_path: str) -> int:
@@ -436,9 +438,9 @@ def _build_crawled_ingestor(queue_path: Path) -> CommentIngestor:
 
 
 def ingest_crawled_items(items: list[dict]) -> list[QueueItem]:
-    """Analyze cleaned crawler posts and comments, then append new queue items.
+    """Analyze cleaned crawler posts, then append new queue items.
 
-    Each post and each of its comments becomes an independent QueueItem.
+    Each post becomes a single QueueItem with up to 20 comments bundled.
     Stable SHA-1 IDs derived from the source URL provide idempotent ingestion.
     """
     queue_path = _queue_path()
@@ -451,41 +453,45 @@ def ingest_crawled_items(items: list[dict]) -> list[QueueItem]:
         for post in items:
             url = str(post.get("url", ""))
             timestamp = str(post.get("timestamp", ""))
-            candidates = [
-                {
-                    "id": sha1(url.encode("utf-8")).hexdigest(),
-                    "text": str(post.get("text", "")),
-                    "thoi_gian": timestamp,
-                }
-            ]
-            candidates.extend(
-                {
-                    "id": sha1(f"{url}#c{index}".encode("utf-8")).hexdigest(),
-                    "text": str(comment.get("text", "")),
-                    "thoi_gian": str(comment.get("timestamp", timestamp)),
-                }
-                for index, comment in enumerate(post.get("comments") or [])
-            )
+            post_id = sha1(url.encode("utf-8")).hexdigest()
 
-            for candidate in candidates:
-                if candidate["id"] in seen_ids:
-                    continue
-                if not candidate.get("text", "").strip():
-                    continue
-                try:
-                    queue_item = ingestor.process_one(candidate, skip_source_search=False)
-                    queue_file.write(
-                        json.dumps(asdict(queue_item), ensure_ascii=False) + "\n"
-                    )
-                    queue_file.flush()
-                except Exception as exc:
-                    logger.exception(
-                        "Bỏ qua crawled item %s vì pipeline lỗi: %s",
-                        candidate["id"],
-                        exc,
-                    )
-                    continue
-                seen_ids.add(candidate["id"])
-                appended.append(queue_item)
+            if post_id in seen_ids:
+                continue
+
+            raw_comments = post.get("comments") or []
+            bundled_comments = [
+                {
+                    "text": str(c.get("text", "")),
+                    "author": str(c.get("author", "")),
+                    "timestamp": str(c.get("timestamp", "")),
+                }
+                for c in raw_comments[:20]
+                if str(c.get("text", "")).strip()
+            ]
+
+            candidate = {
+                "id": post_id,
+                "text": str(post.get("text", "")),
+                "thoi_gian": timestamp,
+                "comments": bundled_comments,
+            }
+
+            if not candidate.get("text", "").strip():
+                continue
+            try:
+                queue_item = ingestor.process_one(candidate, skip_source_search=False)
+                queue_file.write(
+                    json.dumps(asdict(queue_item), ensure_ascii=False) + "\n"
+                )
+                queue_file.flush()
+            except Exception as exc:
+                logger.exception(
+                    "Bỏ qua crawled item %s vì pipeline lỗi: %s",
+                    candidate["id"],
+                    exc,
+                )
+                continue
+            seen_ids.add(candidate["id"])
+            appended.append(queue_item)
 
     return appended

@@ -30,6 +30,7 @@ class QueueItemResponse(BaseModel):
     source_agency: str = ""
     score: int = 50
     confidence: int = 50
+    comments: list[dict] = Field(default_factory=list)
 
 
 class QuestionRequest(BaseModel):

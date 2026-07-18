@@ -31,6 +31,7 @@ type Case = {
   contentType?: "post" | "comment";
   parentContent?: string;
   keywords?: string[];
+  postComments?: Array<{ text: string; author: string; timestamp: string }>;
 };
 
 type ApiQueueItem = {
@@ -42,6 +43,7 @@ type ApiQueueItem = {
   source_title?: string; source_url?: string; source_agency?: string;
   score?: number;
   confidence?: number;
+  comments?: Array<{ text: string; author: string; timestamp: string }>;
 };
 
 type StudyCase = {
@@ -904,10 +906,34 @@ function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () =
       <div className="detail-grid">
         <div className="detail-primary">
           <section className="detail-card original-card">
-            <div className="card-heading"><div><span>01</span><div><small>NỘI DUNG GỐC</small><h2>{item.contentType === "comment" ? "Bình luận được giám sát" : "Bài viết được giám sát"}</h2></div></div><em>{item.reach}</em></div>
+            <div className="card-heading"><div><span>01</span><div><small>NỘI DUNG GỐC</small><h2>Bài viết được giám sát</h2></div></div><em>{item.reach}</em></div>
             <div className="post-author"><span className={`platform-logo ${item.platform.toLowerCase()}`}>{platformIcon(item.platform)}</span><div><strong>{item.account}</strong><small>{item.platform} · {item.publishedAt}</small></div></div>
-            {item.contentType === "comment" && item.parentContent && <div className="parent-context"><small>NGỮ CẢNH BÀI VIẾT GỐC</small><p>{item.parentContent}</p></div>}
-            <blockquote>“{item.original}”</blockquote>
+            {item.sourceUrl && item.sourceUrl !== "#" && (
+              <div className="post-link" style={{ marginBottom: 12 }}>
+                <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", fontSize: 13, textDecoration: "none" }}>
+                  🔗 Xem bài viết gốc trên {item.platform} ↗
+                </a>
+              </div>
+            )}
+            <blockquote>"{item.original}"</blockquote>
+            {item.postComments && item.postComments.length > 0 && (
+              <div className="post-comments" style={{ marginTop: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <small style={{ color: "#94a3b8", fontSize: 12, letterSpacing: "0.05em" }}>BÌNH LUẬN BÀI VIẾT ({item.postComments.length})</small>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 400, overflowY: "auto", paddingRight: 4 }}>
+                  {item.postComments.map((comment, idx) => (
+                    <div key={idx} style={{ background: "#0f172a", borderRadius: 8, padding: "10px 14px", borderLeft: "3px solid #334155" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <strong style={{ fontSize: 13, color: "#e2e8f0" }}>{comment.author || "Ẩn danh"}</strong>
+                        <small style={{ color: "#64748b", fontSize: 11 }}>{comment.timestamp || ""}</small>
+                      </div>
+                      <p style={{ fontSize: 13, color: "#cbd5e1", margin: 0, lineHeight: 1.5 }}>{comment.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="detail-card">
@@ -1013,8 +1039,9 @@ function mapApiCase(item: ApiQueueItem): Case {
     sourceUrl: item.source_url || "",
     sourceResult,
     reach: `${item.reach.toLocaleString("vi-VN")} lượt tương tác`,
-    contentType: "comment",
+    contentType: "post",
     keywords: item.keywords || [],
+    postComments: item.comments || [],
   };
 }
 

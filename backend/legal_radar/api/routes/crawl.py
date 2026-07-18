@@ -83,54 +83,51 @@ def trigger_crawl(request: CrawlRequest):
                 engagement = post.get("engagement") or {}
                 post_reach = sum(int(v or 0) for v in engagement.values() if isinstance(v, (int, float)))
 
-                candidates = [
+                raw_comments = post.get("comments") or []
+                bundled_comments = [
                     {
-                        "id": sha1(url.encode("utf-8")).hexdigest(),
-                        "text": str(post.get("text", "")),
-                        "url": url,
-                        "thoi_gian": timestamp,
-                        "platform": post_platform,
-                        "account": post_author,
-                        "published_at": str(post.get("timestamp", "")),
-                        "reach": post_reach,
+                        "text": str(c.get("text", "")),
+                        "author": str(c.get("author", "")),
+                        "timestamp": str(c.get("timestamp", "")),
                     }
+                    for c in raw_comments[:20]
+                    if str(c.get("text", "")).strip()
                 ]
-                candidates.extend(
-                    {
-                        "id": sha1(f"{url}#c{index}".encode("utf-8")).hexdigest(),
-                        "text": str(comment.get("text", "")),
-                        "url": url,
-                        "thoi_gian": str(comment.get("timestamp", timestamp)),
-                        "platform": post_platform,
-                        "account": str(comment.get("author", post_author)),
-                        "published_at": str(comment.get("timestamp", timestamp)),
-                        "reach": 0,
-                    }
-                    for index, comment in enumerate(post.get("comments") or [])
-                )
 
-                for candidate in candidates:
-                    if not candidate.get("text", "").strip():
-                        continue
-                    try:
-                        queue_item = ingestor.process_one(candidate, skip_source_search=False)
-                        queue_file.write(json.dumps(asdict(queue_item), ensure_ascii=False) + "\n")
-                        queue_file.flush()
-                        count += 1
-                        yield json.dumps({
-                            "type": "item",
-                            "count": count,
-                            "id": queue_item.id,
-                            "claim": queue_item.claim[:100],
-                            "label": queue_item.nhan.value,
-                            "subject": queue_item.subject,
-                            "source_title": queue_item.source_title,
-                            "source_url": queue_item.source_url,
-                            "source_agency": queue_item.source_agency,
-                        }, ensure_ascii=False) + "\n"
-                    except Exception as exc:
-                        logger.warning("Crawl item error: %s", exc)
-                        continue
+                candidate = {
+                    "id": sha1(url.encode("utf-8")).hexdigest(),
+                    "text": str(post.get("text", "")),
+                    "url": url,
+                    "thoi_gian": timestamp,
+                    "platform": post_platform,
+                    "account": post_author,
+                    "published_at": str(post.get("timestamp", "")),
+                    "reach": post_reach,
+                    "comments": bundled_comments,
+                }
+
+                if not candidate.get("text", "").strip():
+                    continue
+                try:
+                    queue_item = ingestor.process_one(candidate, skip_source_search=False)
+                    queue_file.write(json.dumps(asdict(queue_item), ensure_ascii=False) + "\n")
+                    queue_file.flush()
+                    count += 1
+                    yield json.dumps({
+                        "type": "item",
+                        "count": count,
+                        "id": queue_item.id,
+                        "claim": queue_item.claim[:100],
+                        "label": queue_item.nhan.value,
+                        "subject": queue_item.subject,
+                        "source_title": queue_item.source_title,
+                        "source_url": queue_item.source_url,
+                        "source_agency": queue_item.source_agency,
+                        "comments_count": len(bundled_comments),
+                    }, ensure_ascii=False) + "\n"
+                except Exception as exc:
+                    logger.warning("Crawl item error: %s", exc)
+                    continue
 
         yield json.dumps({"type": "done", "analyzed": count}, ensure_ascii=False) + "\n"
 
