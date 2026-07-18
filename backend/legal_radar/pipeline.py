@@ -12,7 +12,7 @@ import os
 from uuid import uuid4
 
 from .model import QueueItem, NhanPhanLoai, NhanNguon, load_kg
-from .engine import phan_loai_claim, match_hanh_vi, muc_phat_cho_chu_the, normalize_text
+from .engine import phan_loai_claim, match_hanh_vi, muc_phat_cho_chu_the, normalize_text, tich_hop_nguon
 from .source_classifier import xac_thuc_nguon
 from .guardrails import validate_label, sanitize_injection
 
@@ -32,14 +32,56 @@ def analyze_comment(comment: str) -> dict:
 
 
 class CommentIngestor:
-    """Pipeline: raw comment -> LLM extract -> engine -> runs/queue.jsonl."""
+    """Pipeline that processes social media comments through LLM extraction, legal engine classification, and source verification.
+
+    Orchestrates the full processing flow: receives a raw comment, calls
+    an LLM provider to extract claims and keywords, runs the legal engine
+    for classification, verifies sources, integrates source labels via
+    ``tich_hop_nguon()``, and writes results to a JSONL queue file.
+
+    Attributes:
+        provider: LLM provider instance with a ``generate(prompt) -> str`` method.
+        kg: KnowledgeGraph instance containing loaded legal regulation data.
+        queue_path: Filesystem path to the output JSONL queue file.
+    """
 
     def __init__(self, provider, kg, queue_path: str = "runs/queue.jsonl") -> None:
+        """Initialize the ingestor with an LLM provider, knowledge graph, and queue path.
+
+        Args:
+            provider: An LLM provider instance exposing ``generate(prompt) -> str``.
+            kg: A ``KnowledgeGraph`` instance already loaded from data files.
+            queue_path: Path to the JSONL file where results are appended.
+                Defaults to ``"runs/queue.jsonl"``.
+
+        Returns:
+            None.
+        """
         self.provider = provider
         self.kg = kg
         self.queue_path = queue_path
 
     def extract_claim(self, text: str) -> dict:
+        """Call the LLM to extract a claim, keywords, and subject type from a raw comment.
+
+        Sanitizes input against prompt injection, sends a structured prompt
+        to the LLM, and parses the JSON response. Retries up to 2 times on
+        LLM failure or JSON corruption. If both attempts fail, returns a
+        dict with a ``"loi"`` key containing the error message — the item
+        is never dropped or silently guessed.
+
+        Args:
+            text: Raw comment text to extract from.
+
+        Returns:
+            A dict with keys:
+                - ``claim`` (str): The main assertion (Vietnamese, slang-normalized).
+                - ``keywords`` (list[str]): 3-6 related legal keywords.
+                - ``subject`` (str | None): ``"ca_nhan"`` or ``"to_chuc"`` if
+                  identifiable, otherwise ``None``.
+                - ``loi`` (str, optional): Error message if extraction failed
+                  after all retries.
+        """
         sanitized = sanitize_injection(text)
         prompt = (
             "Ban la bo tach thong tin. Doc binh luan mang xa hoi nam giua "
@@ -71,6 +113,25 @@ class CommentIngestor:
         return {"claim": text, "keywords": [], "subject": None, "loi": last_error}
 
     def process_one(self, comment: dict) -> QueueItem:
+        """Process a single comment through the full pipeline and return a QueueItem.
+
+        Flow: ``extract_claim`` -> ``phan_loai_claim`` -> ``dynamic_search``
+        -> ``xac_thuc_nguon`` -> ``tich_hop_nguon`` -> compute final priority
+        -> ``QueueItem``.
+
+        If LLM extraction fails, returns a QueueItem with
+        ``nhan=CAN_KIEM_CHUNG``. If the engine or source search raises an
+        exception, catches it and returns ``CAN_KIEM_CHUNG`` with the error
+        reason attached.
+
+        Args:
+            comment: A dict containing at least ``"id"`` and ``"text"`` keys.
+                May also contain ``"thoi_gian"`` for temporal source comparison.
+
+        Returns:
+            A fully classified ``QueueItem`` with source label and computed
+            priority.
+        """
         extracted = self.extract_claim(comment["text"])
         if "loi" in extracted:
             return QueueItem(
@@ -105,11 +166,8 @@ class CommentIngestor:
                 comment.get("thoi_gian", ""),
                 search_results,
             )
-            if nhan_nguon.value == "co_bac_bo_chinh_thuc":
-                ly_do = f"{ly_do} | Nguon: {ly_do_nguon}"
-            priority = 1 if nhan == NhanPhanLoai.HIEU_LAM else 0
-            if nhan_nguon.value == "chua_tim_thay_nguon":
-                priority += 1
+            ly_do, priority_bump = tich_hop_nguon(nhan, ly_do, nhan_nguon, ly_do_nguon, extracted["claim"])
+            priority = (1 if nhan == NhanPhanLoai.HIEU_LAM else 0) + priority_bump
         except Exception as exc:
             nhan = NhanPhanLoai.CAN_KIEM_CHUNG
             ly_do = f"Engine loi ({str(exc)[:120]}) — can can bo doi chieu"
@@ -128,6 +186,20 @@ class CommentIngestor:
         )
 
     def run_batch(self, batch_path: str) -> int:
+        """Run the pipeline on an entire batch of comments from a JSON file.
+
+        Reads a JSON array of comment dicts, skips any whose IDs are already
+        present in the queue file, processes each remaining comment via
+        ``process_one``, and appends results to the JSONL queue. Flushes
+        after each item to ensure data is not lost on mid-batch crashes.
+
+        Args:
+            batch_path: Filesystem path to a JSON file containing a list of
+                comment dicts, each with at least ``"id"`` and ``"text"``.
+
+        Returns:
+            The number of new comments processed and appended to the queue.
+        """
         from dataclasses import asdict
         with open(batch_path, encoding="utf-8") as f:
             comments = json.load(f)

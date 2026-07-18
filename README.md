@@ -1,3 +1,5 @@
+![CI](https://github.com/Datghb/Parasitic-/actions/workflows/ci.yml/badge.svg)
+
 # Legal-KG Dashboard
 
 Dashboard AI pháp lý sử dụng RAG và Knowledge Graph để hỗ trợ giám sát nội

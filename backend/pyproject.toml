@@ -24,9 +24,11 @@ dev = ["httpx>=0.28,<1", "pytest>=8.3,<9", "ruff>=0.9,<1"]
 [project.scripts]
 legal-radar = "legal_radar.cli:main"
 
+[tool.setuptools.packages.find]
+include = ["legal_radar*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-

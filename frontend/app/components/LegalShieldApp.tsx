@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Verdict = "Đúng" | "Hiểu lầm" | "Cần kiểm chứng";
 type Status = "Mới" | "Đang xử lý" | "Đã xử lý";
@@ -10,7 +10,7 @@ type Case = {
   id: string;
   claim: string;
   original: string;
-  platform: "Facebook" | "TikTok" | "YouTube" | "X";
+  platform: "Facebook" | "TikTok" | "YouTube" | "X" | "Forum";
   account: string;
   publishedAt: string;
   priority: Priority;
@@ -30,6 +30,21 @@ type Case = {
   contentType?: "post" | "comment";
   parentContent?: string;
 };
+
+type ApiQueueItem = {
+  id: string; text: string; claim: string; label: "dung" | "hieu_lam" | "can_kiem_chung";
+  source_label: string; reason: string; priority: number; platform: string; account: string;
+  published_at: string; reach: number; status: string;
+};
+
+type StudyCase = {
+  id: string; ten_vu: string; nguon_cong_bo: string; ngay_quyet_dinh: string;
+  hanh_vi: string; dieu_khoan_vien_dan: string; muc_phat: number; chu_the: string;
+  bien_phap_khac_phuc: string; nguon_url: string; an_danh: string;
+  expected_he_thong: { dieu_khoan_moi: string; nhan: string; ghi_chu: string };
+};
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const cases: Case[] = [
   {
@@ -157,7 +172,31 @@ export function LegalShieldApp() {
   const [sortDesc, setSortDesc] = useState(true);
   const [statusById, setStatusById] = useState<Record<string, Status>>({});
   const [query, setQuery] = useState("");
-  const [activeView, setActiveView] = useState<"queue" | "report" | "sources">("queue");
+  const [activeView, setActiveView] = useState<"queue" | "report" | "sources" | "verify">("queue");
+  const [studyCases, setStudyCases] = useState<StudyCase[]>([]);
+  const [dataSource, setDataSource] = useState<"api" | "fallback">("fallback");
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetch(`${API_URL}/api/queue`).then((response) => {
+        if (!response.ok) throw new Error("Queue API unavailable");
+        return response.json() as Promise<ApiQueueItem[]>;
+      }),
+      fetch(`${API_URL}/api/verify`).then((response) => {
+        if (!response.ok) throw new Error("Verify API unavailable");
+        return response.json() as Promise<{ cases: StudyCase[] }>;
+      }),
+    ]).then(([queue, verify]) => {
+      if (!active) return;
+      if (queue.length) setCaseItems(queue.map(mapApiCase));
+      setStudyCases(verify.cases);
+      setDataSource("api");
+    }).catch(() => {
+      if (active) setDataSource("fallback");
+    });
+    return () => { active = false; };
+  }, []);
 
   const data = useMemo(
     () =>
@@ -188,6 +227,7 @@ export function LegalShieldApp() {
           <button className={activeView === "queue" ? "active" : ""} onClick={() => { setActiveView("queue"); setSelectedId(null); }}><span>▦</span> Hàng đợi giám sát <b>{caseItems.filter((x) => (statusById[x.id] ?? x.status) !== "Đã xử lý").length}</b></button>
           <button className={activeView === "report" ? "active" : ""} onClick={() => { setActiveView("report"); setSelectedId(null); }}><span>◎</span> Báo cáo tổng hợp</button>
           <button className={activeView === "sources" ? "active" : ""} onClick={() => { setActiveView("sources"); setSelectedId(null); }}><span>⌘</span> Nguồn chính thức</button>
+          <button className={activeView === "verify" ? "active" : ""} onClick={() => { setActiveView("verify"); setSelectedId(null); }}><span>✓</span> Tầng kiểm chứng</button>
         </nav>
         <div className="monitor-system"><i /> Hệ thống đang giám sát<small>Cập nhật 30 giây trước</small></div>
       </aside>
@@ -195,7 +235,7 @@ export function LegalShieldApp() {
       <main className="monitor-main">
         <header className="monitor-topbar">
           <div className="monitor-search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm claim hoặc mã hồ sơ…" aria-label="Tìm kiếm hồ sơ" /></div>
-          <div className="monitor-live"><i /> Dữ liệu trực tiếp</div>
+          <div className={`monitor-live ${dataSource}`}><i /> {dataSource === "api" ? "Dữ liệu API trực tiếp" : "Dữ liệu mẫu dự phòng"}</div>
           <button className="monitor-avatar" aria-label="Tài khoản Minh Anh">MA</button>
         </header>
 
@@ -203,6 +243,8 @@ export function LegalShieldApp() {
           <ReportView allItems={caseItems} statusById={statusById} />
         ) : activeView === "sources" ? (
           <SourcesView />
+        ) : activeView === "verify" ? (
+          <VerificationView cases={studyCases} apiConnected={dataSource === "api"} />
         ) : selectedWithStatus ? (
           <CaseDetail
             item={selectedWithStatus}
@@ -227,10 +269,10 @@ export function LegalShieldApp() {
       {showInput && (
         <ManualInput
           onClose={() => setShowInput(false)}
-          onSave={(item) => {
-            setCaseItems((current) => [item, ...current]);
+          onSave={(items) => {
+            setCaseItems((current) => [...items, ...current]);
             setShowInput(false);
-            setSelectedId(item.id);
+            setSelectedId(items.length === 1 ? items[0].id : null);
           }}
         />
       )}
@@ -275,7 +317,7 @@ function Queue({
               {rows.map((item) => (
                 <tr key={item.id} onClick={() => onOpen(item.id)} tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onOpen(item.id); }}>
                   <td><strong>{item.claim}</strong><small>{item.id} · {item.publishedAt}</small></td>
-                  <td><span className={`platform-logo ${item.platform.toLowerCase()}`}>{item.platform === "Facebook" ? "f" : item.platform === "TikTok" ? "♪" : item.platform === "YouTube" ? "▶" : "𝕏"}</span>{item.platform}</td>
+                  <td><span className={`platform-logo ${item.platform.toLowerCase()}`}>{platformIcon(item.platform)}</span>{item.platform}</td>
                   <td><span className={`priority-badge ${slug(item.priority)}`}><i />{item.priority}</span><small className="score-copy">AI score {item.score}/100</small></td>
                   <td><VerdictBadge value={item.verdict} /></td>
                   <td><StatusBadge value={item.status} /></td>
@@ -292,7 +334,8 @@ function Queue({
   );
 }
 
-function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: Case) => void }) {
+function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (items: Case[]) => void }) {
+  const [inputMode, setInputMode] = useState<"manual" | "file">("manual");
   const [contentType, setContentType] = useState<"post" | "comment">("post");
   const [content, setContent] = useState("");
   const [parentContent, setParentContent] = useState("");
@@ -300,23 +343,28 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: 
   const [account, setAccount] = useState("");
   const [publishedAt, setPublishedAt] = useState("");
   const [reach, setReach] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [fileError, setFileError] = useState("");
+  const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const compact = content.trim().replace(/\s+/g, " ");
-    const claim = compact.split(/[.!?]/)[0].slice(0, 150) || compact.slice(0, 150);
-    onSave({
-      id: `HS-MVP-${Date.now().toString().slice(-6)}`,
+  function buildCase(row: Record<string, string>, index = 0): Case {
+    const rawContent = (row.content || row.comment || row.text || content).trim().replace(/\s+/g, " ");
+    const claim = rawContent.split(/[.!?]/)[0].slice(0, 150) || rawContent.slice(0, 150);
+    const rowType = (row.type === "comment" || contentType === "comment") ? "comment" : "post";
+    const allowedPlatforms: Case["platform"][] = ["Facebook", "TikTok", "YouTube", "X"];
+    const rowPlatform = allowedPlatforms.find((value) => value.toLowerCase() === (row.platform || platform).toLowerCase()) || platform;
+    return {
+      id: `HS-MVP-${Date.now().toString().slice(-6)}-${index + 1}`,
       claim,
-      original: compact,
-      platform,
-      account: account.trim() || "Chưa xác định",
-      publishedAt: publishedAt ? new Date(publishedAt).toLocaleString("vi-VN") : "Vừa nhập",
+      original: rawContent,
+      platform: rowPlatform,
+      account: (row.account || row.author || account).trim() || "Chưa xác định",
+      publishedAt: row.publishedAt || row.published_at || (publishedAt ? new Date(publishedAt).toLocaleString("vi-VN") : "Vừa nhập"),
       priority: "Cao",
       score: 75,
       verdict: "Cần kiểm chứng",
       status: "Mới",
-      reason: "Nội dung vừa được nhập thủ công và đang chờ đối chiếu với nguồn chính thức. Kết quả hiện tại là dữ liệu mô phỏng cho luồng MVP.",
+      reason: "Nội dung vừa được nhập bằng file và đang chờ đối chiếu với nguồn chính thức. Kết quả hiện tại là dữ liệu mô phỏng cho luồng MVP.",
       document: "Đang xác định",
       provision: "Chờ ánh xạ điều / khoản / điểm",
       subject: "Chủ thể đăng tải nội dung",
@@ -325,10 +373,44 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: 
       sourceAgency: "Đang chờ kiểm chứng",
       sourceUrl: "#",
       sourceResult: "Chưa đủ bằng chứng",
-      reach: reach.trim() ? `${reach.trim()} lượt tương tác` : "Chưa có số liệu tương tác",
-      contentType,
-      parentContent: contentType === "comment" ? parentContent.trim() : undefined,
-    });
+      reach: (row.reach || reach).trim() ? `${(row.reach || reach).trim()} lượt tương tác` : "Chưa có số liệu tương tác",
+      contentType: rowType,
+      parentContent: rowType === "comment" ? (row.parentContent || row.parent_content || parentContent).trim() : undefined,
+    };
+  }
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (inputMode === "file") {
+      const validRows = parsedRows.filter((row) => (row.content || row.comment || row.text || "").trim());
+      if (validRows.length) onSave(validRows.map((row, index) => buildCase(row, index)));
+      return;
+    }
+    const compact = content.trim().replace(/\s+/g, " ");
+    if (compact) onSave([buildCase({ content: compact })]);
+  }
+
+  async function readFile(file?: File) {
+    if (!file) return;
+    setFileName(file.name); setFileError(""); setParsedRows([]);
+    try {
+      const text = await file.text();
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      let rows: Record<string, string>[] = [];
+      if (extension === "json") {
+        const parsed = JSON.parse(text);
+        rows = (Array.isArray(parsed) ? parsed : [parsed]).map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key, String(value ?? "")])));
+      } else if (extension === "csv") {
+        rows = parseCsv(text);
+      } else {
+        rows = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => ({ content: line, type: contentType }));
+      }
+      const valid = rows.filter((row) => (row.content || row.comment || row.text || "").trim());
+      if (!valid.length) throw new Error("Không tìm thấy nội dung hợp lệ.");
+      setParsedRows(valid);
+    } catch {
+      setFileError("Không đọc được file. Kiểm tra lại định dạng và tên cột.");
+    }
   }
 
   return (
@@ -337,12 +419,25 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: 
       <aside className="input-drawer" aria-labelledby="manual-input-title">
         <div className="input-drawer-head"><div><span className="eyebrow">MVP · NHẬP THỦ CÔNG</span><h2 id="manual-input-title">Thêm nội dung giám sát</h2><p>Nhập nguyên văn bài đăng để tạo hồ sơ mới trong hàng đợi.</p></div><button onClick={onClose} aria-label="Đóng">×</button></div>
         <form onSubmit={submit}>
+          <div className="input-mode-switch"><button type="button" className={inputMode === "manual" ? "active" : ""} onClick={() => setInputMode("manual")}>Nhập thủ công</button><button type="button" className={inputMode === "file" ? "active" : ""} onClick={() => setInputMode("file")}>Tải file hàng loạt</button></div>
           <div className="input-type-tabs" role="tablist" aria-label="Loại nội dung">
             <button type="button" role="tab" aria-selected={contentType === "post"} className={contentType === "post" ? "active" : ""} onClick={() => setContentType("post")}><span>▤</span><div><strong>Bài viết</strong><small>Nhập nội dung bài đăng độc lập</small></div></button>
             <button type="button" role="tab" aria-selected={contentType === "comment"} className={contentType === "comment" ? "active" : ""} onClick={() => setContentType("comment")}><span>◌</span><div><strong>Bình luận</strong><small>Nhập comment và ngữ cảnh bài gốc</small></div></button>
           </div>
-          {contentType === "comment" && <label className="manual-field"><span>Ngữ cảnh bài viết gốc</span><textarea className="context-textarea" value={parentContent} onChange={(event) => setParentContent(event.target.value)} placeholder="Dán nội dung hoặc tóm tắt bài viết chứa bình luận…" /></label>}
-          <label className="manual-field"><span>{contentType === "post" ? "Nội dung bài viết" : "Nội dung bình luận"} <b>*</b></span><textarea required value={content} onChange={(event) => setContent(event.target.value)} placeholder={contentType === "post" ? "Dán nguyên văn nội dung bài viết cần kiểm tra…" : "Dán nguyên văn bình luận cần kiểm tra…"} /><small>{content.length} / 5.000 ký tự</small></label>
+          {inputMode === "file" ? (
+            <>
+              <label className={`file-drop ${parsedRows.length ? "ready" : ""}`}><input type="file" accept=".csv,.json,.txt,text/csv,application/json,text/plain" onChange={(event) => readFile(event.target.files?.[0])} /><span>{parsedRows.length ? "✓" : "⇧"}</span><strong>{fileName || `Chọn file ${contentType === "post" ? "bài viết" : "bình luận"}`}</strong><small>CSV, JSON hoặc TXT · tối đa theo khả năng trình duyệt</small></label>
+              {parsedRows.length > 0 && <div className="file-result"><strong>{parsedRows.length} bản ghi hợp lệ</strong><span>Sẵn sàng đưa vào hàng đợi giám sát</span></div>}
+              {fileError && <div className="file-error">{fileError}</div>}
+              <div className="file-format"><strong>Cấu trúc gợi ý</strong><code>{contentType === "post" ? "content, platform, account, publishedAt, reach" : "comment, parentContent, platform, account, publishedAt, reach"}</code><p>File TXT: mỗi dòng được xem là một bài viết hoặc bình luận.</p></div>
+            </>
+          ) : (
+            <>
+              {contentType === "comment" && <label className="manual-field"><span>Ngữ cảnh bài viết gốc</span><textarea className="context-textarea" value={parentContent} onChange={(event) => setParentContent(event.target.value)} placeholder="Dán nội dung hoặc tóm tắt bài viết chứa bình luận…" /></label>}
+              <label className="manual-field"><span>{contentType === "post" ? "Nội dung bài viết" : "Nội dung bình luận"} <b>*</b></span><textarea required value={content} onChange={(event) => setContent(event.target.value)} placeholder={contentType === "post" ? "Dán nguyên văn nội dung bài viết cần kiểm tra…" : "Dán nguyên văn bình luận cần kiểm tra…"} /><small>{content.length} / 5.000 ký tự</small></label>
+            </>
+          )}
+          {inputMode === "manual" && <>
           <div className="manual-grid">
             <label className="manual-field"><span>Nền tảng</span><select value={platform} onChange={(event) => setPlatform(event.target.value as Case["platform"])}><option>Facebook</option><option>TikTok</option><option>YouTube</option><option>X</option></select></label>
             <label className="manual-field"><span>{contentType === "post" ? "Tài khoản đăng" : "Người bình luận"}</span><input value={account} onChange={(event) => setAccount(event.target.value)} placeholder={contentType === "post" ? "Tên tài khoản hoặc kênh" : "Tên tài khoản bình luận"} /></label>
@@ -351,8 +446,9 @@ function ManualInput({ onClose, onSave }: { onClose: () => void; onSave: (item: 
             <label className="manual-field"><span>Thời gian đăng</span><input type="datetime-local" value={publishedAt} onChange={(event) => setPublishedAt(event.target.value)} /></label>
             <label className="manual-field"><span>Lượt tương tác</span><input type="number" min="0" value={reach} onChange={(event) => setReach(event.target.value)} placeholder="Ví dụ: 12500" /></label>
           </div>
+          </>}
           <div className="manual-note"><span>i</span><p><strong>Luồng MVP</strong> Sau khi lưu, hệ thống tạo hồ sơ với kết quả “Cần kiểm chứng”. Dữ liệu chỉ tồn tại trong phiên trình duyệt hiện tại.</p></div>
-          <div className="manual-actions"><button type="button" onClick={onClose}>Hủy</button><button type="submit" disabled={!content.trim()}>Tạo hồ sơ &amp; phân tích →</button></div>
+          <div className="manual-actions"><button type="button" onClick={onClose}>Hủy</button><button type="submit" disabled={inputMode === "manual" ? !content.trim() : !parsedRows.length}>{inputMode === "file" ? `Nhập ${parsedRows.length || ""} hồ sơ →` : "Tạo hồ sơ & phân tích →"}</button></div>
         </form>
       </aside>
     </>
@@ -372,7 +468,7 @@ function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () =
         <div className="detail-primary">
           <section className="detail-card original-card">
             <div className="card-heading"><div><span>01</span><div><small>NỘI DUNG GỐC</small><h2>{item.contentType === "comment" ? "Bình luận được giám sát" : "Bài viết được giám sát"}</h2></div></div><em>{item.reach}</em></div>
-            <div className="post-author"><span className={`platform-logo ${item.platform.toLowerCase()}`}>{item.platform === "Facebook" ? "f" : item.platform === "TikTok" ? "♪" : item.platform === "YouTube" ? "▶" : "𝕏"}</span><div><strong>{item.account}</strong><small>{item.platform} · {item.publishedAt}</small></div></div>
+            <div className="post-author"><span className={`platform-logo ${item.platform.toLowerCase()}`}>{platformIcon(item.platform)}</span><div><strong>{item.account}</strong><small>{item.platform} · {item.publishedAt}</small></div></div>
             {item.contentType === "comment" && item.parentContent && <div className="parent-context"><small>NGỮ CẢNH BÀI VIẾT GỐC</small><p>{item.parentContent}</p></div>}
             <blockquote>“{item.original}”</blockquote>
           </section>
@@ -420,6 +516,59 @@ function slug(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "-");
 }
 
+function platformIcon(platform: Case["platform"]) {
+  return platform === "Facebook" ? "f" : platform === "TikTok" ? "♪" : platform === "YouTube" ? "▶" : platform === "X" ? "𝕏" : "◉";
+}
+
+function mapApiCase(item: ApiQueueItem): Case {
+  const verdictMap: Record<ApiQueueItem["label"], Verdict> = {
+    dung: "Đúng", hieu_lam: "Hiểu lầm", can_kiem_chung: "Cần kiểm chứng",
+  };
+  const priority: Priority = item.priority >= 2 ? "Khẩn cấp" : item.priority === 1 ? "Cao" : item.reach >= 150 ? "Trung bình" : "Thấp";
+  const platform = (["Facebook", "TikTok", "YouTube", "X", "Forum"].includes(item.platform) ? item.platform : "Forum") as Case["platform"];
+  const sourceResult = item.source_label === "co_nguon_xac_nhan" ? "Có nguồn chính thức xác nhận" : item.source_label === "co_bac_bo_chinh_thuc" ? "Có nguồn chính thức bác bỏ" : "Chưa tìm thấy nguồn phù hợp";
+  return {
+    id: item.id,
+    claim: item.claim,
+    original: item.text || item.claim,
+    platform,
+    account: item.account,
+    publishedAt: item.published_at || "Chưa xác định",
+    priority,
+    score: Math.min(98, 55 + item.priority * 18 + Math.min(20, Math.round(item.reach / 20))),
+    verdict: verdictMap[item.label],
+    status: item.status === "resolved" ? "Đã xử lý" : item.status === "reviewing" ? "Đang xử lý" : "Mới",
+    reason: item.reason,
+    document: "Nghị định 174/2026/NĐ-CP",
+    provision: "Điều 95 — cần đối chiếu claim cụ thể",
+    subject: "Cá nhân hoặc tổ chức đăng tải",
+    penalty: "Cần xác định chủ thể trước khi tính mức phạt",
+    sourceTitle: sourceResult,
+    sourceAgency: "Hệ thống xác thực nguồn động",
+    sourceUrl: "#",
+    sourceResult,
+    reach: `${item.reach.toLocaleString("vi-VN")} lượt tương tác`,
+    contentType: "comment",
+  };
+}
+
+function VerificationView({ cases, apiConnected }: { cases: StudyCase[]; apiConnected: boolean }) {
+  return (
+    <div className="monitor-page">
+      <div className="queue-heading">
+        <div><span className="eyebrow">ĐỐI CHIẾU THỰC TẾ</span><h1>Tầng kiểm chứng</h1><p>So sánh kết quả hệ thống với các quyết định xử phạt đã được công bố.</p></div>
+        <div className={`verify-state ${apiConnected ? "connected" : ""}`}><i />{apiConnected ? `${cases.length} study case từ API` : "Đang chờ Backend API"}</div>
+      </div>
+      {!cases.length ? <section className="queue-card verify-empty"><strong>Chưa tải được study case</strong><p>Khởi động backend tại cổng 8000 để xem dữ liệu kiểm chứng thật.</p></section> :
+        <div className="verify-list">{cases.map((item) => <article className="verify-card" key={item.id}>
+          <header><div><small>{item.id} · {item.ngay_quyet_dinh}</small><h2>{item.ten_vu}</h2><p>{item.nguon_cong_bo}</p></div><span>KHỚP CASE THẬT</span></header>
+          <div className="verify-columns"><div><small>HÀNH VI THỰC TẾ</small><p>{item.hanh_vi}</p><dl><div><dt>Chủ thể</dt><dd>{item.chu_the}</dd></div><div><dt>Mức phạt thực tế</dt><dd>{item.muc_phat.toLocaleString("vi-VN")} đồng</dd></div><div><dt>Điều khoản viện dẫn</dt><dd>{item.dieu_khoan_vien_dan}</dd></div></dl></div><div><small>KỲ VỌNG HỆ THỐNG</small><p className="expected-label">✓ {item.expected_he_thong.nhan}</p><strong>{item.expected_he_thong.dieu_khoan_moi}</strong><p>{item.expected_he_thong.ghi_chu}</p></div></div>
+          <footer><span>Biện pháp: {item.bien_phap_khac_phuc}</span><a href={item.nguon_url} target="_blank" rel="noreferrer">Mở nguồn công bố ↗</a></footer>
+        </article>)}</div>}
+    </div>
+  );
+}
+
 function ReportView({ allItems, statusById }: { allItems: Case[]; statusById: Record<string, Status> }) {
   const total = allItems.length;
   const dung = allItems.filter((i) => i.verdict === "Đúng").length;
@@ -459,7 +608,7 @@ function ReportView({ allItems, statusById }: { allItems: Case[]; statusById: Re
       <section className="queue-card">
         <div style={{ padding: 24 }}>
           <h3 style={{ marginBottom: 12 }}>Hồ sơ đang mở: {open}</h3>
-          <p style={{ color: "#94a3b8", fontSize: 14 }}>Dữ liệu mock — khi chạy pipeline thật, báo cáo sẽ tự động cập nhật từ queue.jsonl.</p>
+          <p style={{ color: "#94a3b8", fontSize: 14 }}>Báo cáo được tính trực tiếp từ dữ liệu hàng đợi hiện đang hiển thị.</p>
         </div>
       </section>
     </div>
@@ -508,4 +657,22 @@ function SourcesView() {
       ))}
     </div>
   );
+}
+
+function parseCsv(text: string) {
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
+  if (lines.length < 2) return [];
+  const split = (line: string) => {
+    const values: string[] = []; let current = ""; let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"' && line[i + 1] === '"') { current += '"'; i++; }
+      else if (char === '"') quoted = !quoted;
+      else if (char === "," && !quoted) { values.push(current.trim()); current = ""; }
+      else current += char;
+    }
+    values.push(current.trim()); return values;
+  };
+  const headers = split(lines[0]);
+  return lines.slice(1).map((line) => Object.fromEntries(headers.map((header, index) => [header.trim(), split(line)[index] || ""])));
 }
