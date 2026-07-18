@@ -57,8 +57,8 @@ def analyze_comment(comment: str) -> dict:
     source_agency = ""
 
     try:
-        from .source_search import dynamic_search_gemini
-        search_results = dynamic_search_gemini(result.citations or [comment], "")
+        from .source_search import search_brightdata
+        search_results = search_brightdata(result.citations or [comment], "")
         from .source_classifier import xac_thuc_nguon
         nhan_nguon, matched_docs, ly_do_nguon = xac_thuc_nguon(
             result.citations or [comment], "", search_results,
@@ -262,8 +262,8 @@ class CommentIngestor:
             search_results = []
             if not skip_source_search:
                 try:
-                    from .source_search import dynamic_search_gemini
-                    search_results = dynamic_search_gemini(
+                    from .source_search import search_brightdata
+                    search_results = search_brightdata(
                         extracted["keywords"],
                         comment.get("thoi_gian", ""),
                     )

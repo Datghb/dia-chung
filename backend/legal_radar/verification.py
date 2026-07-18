@@ -9,7 +9,7 @@ import logging
 
 from .model import SourceLabel
 from .source_classifier import xac_thuc_nguon
-from .source_search import dynamic_search_gemini
+from .source_search import search_brightdata
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def verify_source(
         (nhan_nguon, matched_docs, ly_do)
     """
     try:
-        search_results = dynamic_search_gemini(claim_keywords, thoi_gian)
+        search_results = search_brightdata(claim_keywords, thoi_gian)
     except Exception as exc:
         logger.warning("Source search failed: %s", exc)
         search_results = []

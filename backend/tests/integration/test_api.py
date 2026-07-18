@@ -84,7 +84,7 @@ def test_crawl_returns_supported_schema(monkeypatch, tmp_path) -> None:
 
     monkeypatch.setattr(crawl, "runs_dir", lambda: tmp_path)
     monkeypatch.setattr(crawl, "_try_live_crawl", lambda *a, **kw: {"items": [], "crawled": 0, "relevant": 0})
-    with patch("backend.legal_radar.source_search.dynamic_search_gemini", return_value=[]):
+    with patch("backend.legal_radar.source_search.search_brightdata", return_value=[]):
         response = client.post("/api/crawl", json={"keywords": ["tin giả"], "max_posts_per_platform": 2})
     assert response.status_code == 200
     lines = [ln for ln in response.text.strip().split("\n") if ln.strip()]
@@ -131,7 +131,7 @@ def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) ->
 
     official_url = "https://chinhphu.vn/thong-tin-chinh-thuc"
     with patch(
-        "backend.legal_radar.source_search.dynamic_search_gemini",
+        "backend.legal_radar.source_search.search_brightdata",
         return_value=[{
             "tieu_de": "Thông tin chính thức",
             "nguon": "Cổng TTĐT Chính phủ",
