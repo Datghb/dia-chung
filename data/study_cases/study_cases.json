@@ -46,5 +46,29 @@
       "nhan": "dung",
       "ghi_chu": "7.5tr nằm trong khung 5-10tr cá nhân NĐ15. Vụ xử phạt ngày 16/7/2026, NĐ174 đã có hiệu lực. Tuy nhiên điều khoản viện dẫn không rõ ràng — cần cán bộ đối chiếu thêm (yếu tố AI ghép mặt + riêng tư)."
     }
+  },
+  {
+    "id": "sc-003",
+    "ten_vu": "Bình luận tiêu cực, sai sự thật về việc sáp nhập tỉnh trên mạng xã hội",
+    "nguon_cong_bo": "Phòng An ninh mạng và phòng, chống tội phạm sử dụng công nghệ cao (theo báo Tuổi Trẻ)",
+    "ngay_quyet_dinh": "2025-05-06",
+    "so_quyet_dinh": "không công bố số cụ thể",
+    "hanh_vi": "Đăng bình luận tiêu cực, sai sự thật liên quan đến chủ trương sắp xếp đơn vị hành chính cấp tỉnh trên mạng xã hội, gây hoang mang trong một bộ phận người theo dõi.",
+    "dieu_khoan_vien_dan": "Điểm a khoản 1 Điều 101 NĐ 15/2020/NĐ-CP",
+    "muc_phat": 7500000,
+    "chu_the": "ca_nhan",
+    "bien_phap_khac_phuc": "Buộc gỡ bỏ thông tin sai sự thật",
+    "nguon_url": "https://tuoitre.vn/binh-luan-tieu-cuc-viec-sap-nhap-tinh-bi-phat-7-5-trieu-dong-20250506093424225.htm",
+    "an_danh": "Cá nhân (chưa xác định danh tính công khai) — xử phạt ngày 06/5/2025",
+    "expected_he_thong": {
+      "dieu_khoan_cu": "điểm a, khoản 1, Điều 101 — NĐ 15/2020/NĐ-CP",
+      "dieu_khoan_moi": "điểm a, khoản 1, Điều 95 — NĐ 174/2026/NĐ-CP",
+      "muc_phat_to_chuc_cu": [10000000, 20000000],
+      "muc_phat_ca_nhan_cu": [5000000, 10000000],
+      "muc_phat_to_chuc_moi": [20000000, 30000000],
+      "muc_phat_ca_nhan_moi": [10000000, 15000000],
+      "nhan": "dung",
+      "ghi_chu": "7.5tr nằm trong khung 5-10tr cá nhân NĐ15 — khớp đúng. Vụ xử phạt ngày 06/5/2025, trước khi NĐ174 có hiệu lực hơn 1 năm. Nếu hành vi tương tự xảy ra sau 01/7/2026 → khung mới 10-15tr cá nhân theo Điều 95 NĐ174. Đây là case mẫu cho domain giám sát tin đồn sáp nhập ĐVHC — đối chiếu được với fact_references fr-001/fr-002/fr-003."
+    }
   }
 ]

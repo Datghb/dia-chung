@@ -7,10 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .routes import cases, crawl, qa, queue, verify
 
-frontend_origins = [
+_origins = [
     origin.strip()
     for origin in os.getenv(
-        "FRONTEND_ORIGIN", "https://theoria-lab.io.vn"
+        "FRONTEND_ORIGIN", "https://theoria-lab.io.vn,http://localhost:3000,http://localhost:3001"
     ).split(",")
     if origin.strip()
 ]
@@ -18,7 +18,7 @@ frontend_origins = [
 app = FastAPI(title="Legal-KG API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=frontend_origins,
+    allow_origins=_origins,
     allow_origin_regex=r"https://.*\.chatgpt\.site",
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],

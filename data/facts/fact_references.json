@@ -1,34 +1,55 @@
 [
   {
     "id": "fr-001",
-    "chu_de": "sáp nhập đơn vị hành chính",
-    "su_that": "Quốc hội thông qua Nghị quyết sắp xếp đơn vị hành chính cấp huyện, cấp xã giai đoạn 2023-2030. Theo đó giảm từ 713 xuống 513 đơn vị hành chính cấp huyện và từ 10.599 xuống 7.946 đơn vị hành chính cấp xã",
-    "nguon": "Quốc hội",
-    "url": "https://quochoi.vn",
-    "ngay_dang": "2025-06-25"
+    "chu_de": "so_luong_don_vi_hanh_chinh_cap_tinh",
+    "tu_khoa": ["sap nhap tinh", "34 tinh", "so luong tinh thanh", "don vi hanh chinh cap tinh", "28 tinh 6 thanh pho"],
+    "tuyen_bo_dung": "Ca nuoc co 34 don vi hanh chinh cap tinh, gom 28 tinh va 6 thanh pho, chinh thuc hoat dong tu 01/7/2025 theo Nghi quyet 202/2025/QH15 cua Quoc hoi (thong qua 12/6/2025, 461/465 dai bieu tan thanh).",
+    "bien_the_tin_don_sai": [],
+    "nguon": "Quoc hoi khoa XV - Nghi quyet 202/2025/QH15",
+    "ngay_hieu_luc": "2025-07-01",
+    "url": "https://xaydungchinhsach.chinhphu.vn/toan-van-nghi-quyet-so-202-2025-qh15-ve-sap-xep-don-vi-hanh-chinh-cap-tinh-119250612174148722.htm",
+    "ghi_chu": "11 tinh/thanh khong sap nhap (giu nguyen): Cao Bang, Dien Bien, Ha Tinh, Lai Chau, Lang Son, Nghe An, Quang Ninh, Thanh Hoa, Son La, thanh pho Ha Noi, thanh pho Hue. 19 tinh + 4 thanh pho con lai hinh thanh sau sap nhap."
   },
   {
     "id": "fr-002",
-    "chu_de": "sáp nhập tỉnh",
-    "su_that": "Bộ Nội vụ khẳng định chưa có chủ trương sáp nhập tỉnh nào. Việc sắp xếp đơn vị hành chính chỉ thực hiện ở cấp huyện và cấp xã theo Nghị quyết của Quốc hội",
-    "nguon": "Bộ Nội vụ",
-    "url": "https://moha.gov.vn",
-    "ngay_dang": "2026-05-15"
+    "chu_de": "mo_hinh_chinh_quyen_dia_phuong_2_cap",
+    "tu_khoa": ["bo cap huyen", "2 cap chinh quyen", "chinh quyen dia phuong", "cap xa cap tinh"],
+    "tuyen_bo_dung": "Tu 01/7/2025, mo hinh chinh quyen dia phuong Viet Nam chuyen tu 3 cap xuong con 2 cap: cap tinh (tinh, thanh pho truc thuoc trung uong) va cap xa (xa, phuong, dac khu truc thuoc tinh). Cap huyen bi bai bo hoan toan. Can cu: Luat To chuc chinh quyen dia phuong so 72/2025/QH15, Quoc hoi thong qua 16/6/2025.",
+    "bien_the_tin_don_sai": [],
+    "nguon": "Quoc hoi khoa XV - Luat so 72/2025/QH15",
+    "ngay_hieu_luc": "2025-06-16",
+    "url": "https://xaydungchinhsach.chinhphu.vn/toan-van-luat-so-72-2025-qh15-to-chuc-chinh-quyen-dia-phuong-119250618161434371.htm",
+    "ghi_chu": "Thay doi mang tinh cai cach lon nhat: bo cap huyen, tang quyen tu chu cho cap xa/phuong ve do thi, cong nghe, doi moi sang tao."
   },
   {
     "id": "fr-003",
-    "chu_de": "sáp nhập tỉnh Thanh Hóa",
-    "su_that": "Thông tin sáp nhập tỉnh Thanh Hóa với các tỉnh khác là không chính xác. UBND tỉnh Thanh Hóa bác bỏ thông tin lan truyền trên mạng xã hội",
-    "nguon": "UBND tỉnh Thanh Hóa",
-    "url": "https://thanhoa.gov.vn",
-    "ngay_dang": "2026-06-10"
+    "chu_de": "tin_don_tiep_tuc_sap_nhap_con_16_tinh",
+    "tu_khoa": ["sap nhap tiep", "16 tinh", "giam con 16", "sap nhap them", "34 tinh xuong 16"],
+    "tuyen_bo_dung": "Khong co chu truong tiep tuc sap nhap tinh, thanh pho, don vi hanh chinh cap xa trong thoi gian toi. Ca nuoc van giu on dinh 34 don vi hanh chinh cap tinh (28 tinh + 6 thanh pho) va 3.321 xa/phuong/dac khu theo mo hinh 2 cap da van hanh tu 01/7/2025.",
+    "bien_the_tin_don_sai": [
+      "sap nhap tiep tuc con 16 tinh thanh pho",
+      "34 tinh sap giam xuong 16",
+      "sap toi day se con 16 tinh thoi",
+      "nghe noi lai chuan bi sap nhap tiep"
+    ],
+    "nguon": "Bo Noi vu (qua Cong TTDT Chinh phu)",
+    "ngay_hieu_luc": "2025-11-17",
+    "url": "https://baochinhphu.vn/bo-noi-vu-bac-thong-tin-tiep-tuc-sap-nhap-con-16-tinh-thanh-pho-102251117104548065.htm",
+    "ghi_chu": "Ong Phan Trung Tuan, Cuc truong Cuc Chinh quyen dia phuong (Bo Noi vu), khang dinh thong tin 34 tinh giam con 16 la hoan toan khong chinh xac. Dang, Quoc hoi, Chinh phu hien chua co ke hoach sap nhap them. Tin don nay tai xuat hien lan 2 dau thang 3/2026, duoc Bo Noi vu bac bo lai qua Tuoi Tre (xem fact-014 trong facts_corpus.json) — hai lan bac bo Tier 0/Tier 2 cach nhau ~3.5 thang la vi du tot cho fusion rule 'da nguon xac nhan qua thoi gian'."
   },
   {
     "id": "fr-004",
-    "chu_de": "giảm từ 63 xuống 34 tỉnh",
-    "su_that": "Thông tin Việt Nam giảm từ 63 xuống 34 tỉnh là tin giả. Hiện tại Việt Nam vẫn có 63 tỉnh, thành phố trực thuộc trung ương. Không có quyết định nào của cơ quan có thẩm quyền về việc sáp nhập tỉnh",
-    "nguon": "Bộ Nội vụ",
-    "url": "https://moha.gov.vn",
-    "ngay_dang": "2026-07-01"
+    "chu_de": "tin_don_thanh_hoa_giam_xa",
+    "tu_khoa": ["thanh hoa", "166 xa", "58 xa", "giam xa phuong", "sap nhap xa thanh hoa"],
+    "tuyen_bo_dung": "Tinh Thanh Hoa hien van giu nguyen 166 xa, phuong sau sap xep don vi hanh chinh cap xa tu 01/7/2025. Khong co quyet dinh hay chu truong giam xuong con 58 don vi.",
+    "bien_the_tin_don_sai": [
+      "thanh hoa giam tu 166 xuong con 58 xa phuong",
+      "thanh hoa sap tiep tuc sap nhap con 58 xa",
+      "thanh hoa tach ra doc lap lap quoc gia rieng"
+    ],
+    "nguon": "Ban Tuyen giao va Dan van Tinh uy Thanh Hoa",
+    "ngay_hieu_luc": "2026-06-04",
+    "url": "https://dantri.com.vn/noi-vu/bac-bo-tin-don-thanh-hoa-chi-con-58-xa-phuong-20260604170436471.htm",
+    "ghi_chu": "Nguon phat tan tin gia: trang Facebook ca nhan 'Hoang Dung', co tinh bia dat noi dung 'tach ra doc lap', 'lap quoc gia rieng' de kich dong du luan. Tinh khang dinh viec sap xep duoc thuc hien cong khai, minh bach, dung quy dinh phap luat."
   }
 ]

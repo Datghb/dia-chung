@@ -1,6 +1,5 @@
 ﻿# Vietnamese text normalization helpers
 
-import re
 import unicodedata
 
 

@@ -1,4 +1,4 @@
-﻿"""Unit tests for crawlers: facebook, youtube, scheduler, cleaner, filter."""
+﻿"""Unit tests for crawlers: facebook, scheduler, cleaner, filter."""
 from __future__ import annotations
 
 import json
@@ -146,67 +146,6 @@ class TestFacebookCrawler:
 
 # ── YouTube crawler tests ──
 
-class TestYouTubeCrawler:
-    """Tests for youtube.py"""
-
-    def test_parse_timestamp_valid(self):
-        from legal_radar.crawlers.youtube import _parse_timestamp
-        result = _parse_timestamp("2026-07-17T10:30:00Z")
-        assert "2026-07-17" in result
-
-    def test_parse_timestamp_invalid(self):
-        from legal_radar.crawlers.youtube import _parse_timestamp
-        result = _parse_timestamp("not-a-date")
-        assert result
-
-    def test_parse_timestamp_empty(self):
-        from legal_radar.crawlers.youtube import _parse_timestamp
-        result = _parse_timestamp("")
-        assert result
-
-    def test_crawl_youtube_no_api_key(self):
-        from legal_radar.crawlers.youtube import crawl_youtube
-        with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("YOUTUBE_API_KEY", None)
-            result = crawl_youtube(api_key=None)
-            assert result == []
-
-    def test_crawl_youtube_no_library(self):
-        with patch.dict("sys.modules", {"googleapiclient": None, "googleapiclient.discovery": None}):
-            from legal_radar.crawlers.youtube import crawl_youtube
-            result = crawl_youtube(api_key="fake-key")
-            assert result == []
-
-    def test_crawl_youtube_with_mock_api(self):
-        from legal_radar.crawlers.youtube import crawl_youtube
-        mock_search_resp = {"items": [{"id": {"videoId": "vid001"}}, {"id": {"videoId": "vid002"}}]}
-        mock_videos_resp = {"items": [
-            {"id": "vid001", "snippet": {"title": "Test Video 1", "description": "Desc 1",
-                                          "channelTitle": "Channel 1", "publishedAt": "2026-07-17T10:00:00Z"},
-             "statistics": {"viewCount": "1000", "likeCount": "50", "commentCount": "10"}},
-            {"id": "vid002", "snippet": {"title": "Test Video 2", "description": "Desc 2",
-                                          "channelTitle": "Channel 2", "publishedAt": "2026-07-16T08:00:00Z"},
-             "statistics": {"viewCount": "5000", "likeCount": "200", "commentCount": "30"}},
-        ]}
-        mock_comments_resp = {"items": [{"snippet": {"topLevelComment": {"snippet": {
-            "textDisplay": "Great!", "authorDisplayName": "User1",
-            "publishedAt": "2026-07-17T11:00:00Z", "likeCount": 5}}}}]}
-        mock_youtube = MagicMock()
-        mock_youtube.search().list().execute.return_value = mock_search_resp
-        mock_youtube.videos().list().execute.return_value = mock_videos_resp
-        mock_youtube.commentThreads().list().execute.return_value = mock_comments_resp
-        with patch("legal_radar.crawlers.youtube._get_client", return_value=mock_youtube):
-            results = crawl_youtube(keywords=["test"], max_results=2, api_key="fake")
-        assert len(results) == 2
-        assert results[0]["platform"] == "youtube"
-        assert results[0]["engagement"]["views"] == 1000
-        assert len(results[0]["comments"]) == 1
-
-    def test_default_keywords_not_empty(self):
-        from legal_radar.crawlers.youtube import DEFAULT_KEYWORDS
-        assert len(DEFAULT_KEYWORDS) > 0
-
-
 # ── Scheduler tests ──
 
 class TestScheduler:
@@ -318,13 +257,12 @@ class TestFixtureData:
         for item in data:
             assert required.issubset(item.keys())
 
-    def test_fixture_has_both_platforms(self):
+    def test_fixture_has_facebook_platform(self):
         fixture_path = Path(__file__).resolve().parent.parent.parent.parent / "data" / "fixtures" / "crawled_sample.json"
         with open(fixture_path, encoding="utf-8") as f:
             data = json.load(f)
         platforms = {item["platform"] for item in data}
         assert "facebook" in platforms
-        assert "youtube" in platforms
 
     def test_fixture_comments_have_fields(self):
         fixture_path = Path(__file__).resolve().parent.parent.parent.parent / "data" / "fixtures" / "crawled_sample.json"

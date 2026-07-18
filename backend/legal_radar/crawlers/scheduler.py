@@ -14,7 +14,6 @@ from typing import Any
 
 from ..paths import runs_dir
 from .facebook import crawl_facebook
-from .youtube import crawl_youtube
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,6 @@ CRAWL_KEYWORDS: list[str] = [
     "sắp xếp ĐVHC",
     "Bộ Nội vụ bác bỏ",
 ]
-YOUTUBE_MAX_RESULTS = 10
 
 _DEFAULT_OUTPUT_DIR = runs_dir()
 _DEFAULT_OUTPUT_FILE = "crawled_raw.jsonl"
@@ -87,13 +85,6 @@ def crawl_now(
 
     fb_results = crawl_facebook(keywords=kw, max_posts=max_posts_per_platform)
     all_items.extend(fb_results)
-
-    yt_results = crawl_youtube(
-        keywords=kw,
-        max_results=YOUTUBE_MAX_RESULTS,
-        max_comments_per_video=10,
-    )
-    all_items.extend(yt_results)
 
     appended = _append_results(out, all_items, seen_urls)
     logger.info(

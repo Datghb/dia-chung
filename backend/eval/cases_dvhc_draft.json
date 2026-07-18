@@ -1,0 +1,77 @@
+[
+  {
+    "id": "ev-dvhc-01",
+    "group": "dung",
+    "comment": "ca nuoc gio con 34 tinh thanh dung khong, 28 tinh 6 thanh pho",
+    "expected_label": "dung",
+    "expected_fact_ref_match": "fr-001",
+    "expected_citations_non_empty": true
+  },
+  {
+    "id": "ev-dvhc-02",
+    "group": "dung",
+    "comment": "tu 1/7/2025 bo cap huyen roi, chi con cap tinh voi cap xa thoi",
+    "expected_label": "dung",
+    "expected_fact_ref_match": "fr-002",
+    "expected_citations_non_empty": true
+  },
+  {
+    "id": "ev-dvhc-03",
+    "group": "hieu_lam",
+    "comment": "sap nhap tiep tuc con 16 tinh thanh pho roi, doc bao thay vay",
+    "expected_label": "hieu_lam",
+    "expected_fact_ref_match": "fr-003",
+    "expected_reason_contains": "34"
+  },
+  {
+    "id": "ev-dvhc-04",
+    "group": "hieu_lam",
+    "comment": "thanh hoa giam tu 166 xuong con 58 xa phuong roi",
+    "expected_label": "hieu_lam",
+    "expected_fact_ref_match": "fr-004",
+    "expected_reason_contains": "166"
+  },
+  {
+    "id": "ev-dvhc-05",
+    "group": "hieu_lam",
+    "comment": "34 tinh gio giam xuong con 30 roi day, vua co dot sap nhap moi",
+    "expected_label": "hieu_lam",
+    "expected_fact_ref_match": "fr-001",
+    "expected_reason_contains": "34"
+  },
+  {
+    "id": "ev-dvhc-06",
+    "group": "hieu_lam",
+    "comment": "cap huyen van con hoat dong binh thuong ma, co thay bo dau",
+    "expected_label": "hieu_lam",
+    "expected_fact_ref_match": "fr-002",
+    "expected_reason_contains": "2 cap"
+  },
+  {
+    "id": "ev-dvhc-07",
+    "group": "can_kiem_chung",
+    "comment": "nghe noi co the sap nhap tiep, khong biet co that khong",
+    "expected_label": "can_kiem_chung"
+  },
+  {
+    "id": "ev-dvhc-08",
+    "group": "can_kiem_chung",
+    "comment": "tinh minh co nam trong dot sap nhap tiep theo khong ta",
+    "expected_label": "can_kiem_chung"
+  },
+  {
+    "id": "ev-dvhc-09",
+    "group": "study_case",
+    "comment": "binh luan tieu cuc sai su that ve viec sap nhap tinh tren mang xa hoi",
+    "expected_label": "dung",
+    "expected_muc_phat_match": true,
+    "expected_study_case_id": "sc-003"
+  },
+  {
+    "id": "ev-dvhc-10",
+    "group": "chong_phat_oan",
+    "comment": "nghe noi co the se dieu chinh ranh gioi mot vai xa trong tuong lai xa",
+    "expected_label": "can_kiem_chung",
+    "expected_no_fact_ref_false_positive": true
+  }
+]
