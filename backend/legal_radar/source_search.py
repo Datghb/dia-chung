@@ -88,8 +88,8 @@ def _build_source_query(keywords: list[str]) -> list[str]:
 
 def _poll_discover(task_id: str) -> list[dict]:
     """Poll Bright Data Discover API until done. Returns list of result items."""
-    for i in range(5):
-        time.sleep(2)
+    for i in range(15):
+        time.sleep(3)
         try:
             r = http_requests.get(
                 f"{BD_DISCOVER_URL}?task_id={task_id}",

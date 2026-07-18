@@ -105,8 +105,8 @@ def _is_post_url(url: str) -> bool:
 
 def _poll_discover(task_id: str) -> list[dict]:
     """Poll Discover API until done. Returns list of result items."""
-    for i in range(5):
-        time.sleep(2)
+    for i in range(15):
+        time.sleep(3)
         try:
             r = requests.get(
                 f"{BD_DISCOVER_URL}?task_id={task_id}",
@@ -117,12 +117,15 @@ def _poll_discover(task_id: str) -> list[dict]:
             logger.warning("Discover poll %d failed for task %s", i, task_id)
             continue
         if r.status_code != 200:
+            logger.warning("Discover poll %d HTTP %s for task %s", i, r.status_code, task_id)
             continue
         data = r.json()
-        if data.get("status") == "done":
+        status = data.get("status", "unknown")
+        if status == "done":
             logger.info("Discover task %s done after %d polls, got %d results", task_id, i + 1, len(data.get("results", [])))
             return data.get("results", [])
-    logger.warning("Discover task %s timed out after 5 polls", task_id)
+        logger.info("Discover poll %d: status=%s for task %s", i, status, task_id)
+    logger.warning("Discover task %s timed out after 15 polls (45s)", task_id)
     return []
 
 
