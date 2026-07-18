@@ -22,6 +22,7 @@ export type Case = {
   sourceTitle: string;
   sourceAgency: string;
   sourceUrl: string;
+  postUrl: string;
   sourceResult: string;
   reach: string;
   contentType?: "post" | "comment";

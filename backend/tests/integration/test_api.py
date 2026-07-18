@@ -83,14 +83,14 @@ def test_crawl_returns_supported_schema(monkeypatch, tmp_path) -> None:
     from backend.legal_radar.api.routes import crawl
 
     monkeypatch.setattr(crawl, "runs_dir", lambda: tmp_path)
-    monkeypatch.setattr(crawl, "_try_live_crawl", lambda *a, **kw: {"items": [], "crawled": 0, "relevant": 0})
+    monkeypatch.setattr(crawl, "_try_live_crawl", lambda *a, **kw: ({"items": [], "crawled": 0, "relevant": 0}, "Test: no items"))
     with patch("backend.legal_radar.source_search.search_brightdata", return_value=[]):
         response = client.post("/api/crawl", json={"keywords": ["tin giả"], "max_posts_per_platform": 2})
     assert response.status_code == 200
     lines = [ln for ln in response.text.strip().split("\n") if ln.strip()]
     assert len(lines) >= 1
     start_msg = json.loads(lines[0])
-    assert start_msg["type"] == "start"
+    assert start_msg["type"] == "error"
 
 
 def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) -> None:
@@ -118,10 +118,9 @@ def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) ->
     monkeypatch.setattr(
         crawl,
         "_try_live_crawl",
-        lambda *a, **kw: {"crawled": 1, "relevant": 1, "items": [fixture_post]},
+        lambda *a, **kw: ({"crawled": 1, "relevant": 1, "items": [fixture_post]}, None),
     )
     monkeypatch.setattr(crawl, "runs_dir", lambda: tmp_path)
-    monkeypatch.setattr(crawl, "_load_sample_items", lambda: [fixture_post])
 
     import backend.legal_radar.pipeline as pipeline_mod
     monkeypatch.setattr(pipeline_mod, "_queue_path", lambda: queue_path)

@@ -58,6 +58,7 @@ export function ManualInputDrawer({
       sourceTitle: "Chưa có nguồn đối chiếu",
       sourceAgency: "Đang chờ kiểm chứng",
       sourceUrl: "#",
+      postUrl: row.url || row.postUrl || "#",
       sourceResult: "Chưa đủ bằng chứng",
       reach: (row.reach || reach).trim() ? `${(row.reach || reach).trim()} lượt tương tác` : "Chưa có số liệu tương tác",
       contentType: rowType,

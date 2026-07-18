@@ -46,6 +46,7 @@ export function mapApiCase(item: ApiQueueItem): Case {
     sourceTitle: item.source_title || sourceResult,
     sourceAgency: item.source_agency || "",
     sourceUrl: item.source_url || "",
+    postUrl: item.url || "",
     sourceResult,
     reach: `${item.reach.toLocaleString("vi-VN")} lượt tương tác`,
     contentType: "post",

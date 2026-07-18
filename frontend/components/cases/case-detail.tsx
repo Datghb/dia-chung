@@ -151,10 +151,10 @@ export function CaseDetail({ item }: { item: Case }) {
                 </small>
               </div>
             </div>
-            {item.sourceUrl && item.sourceUrl !== "#" && (
+            {item.postUrl && item.postUrl !== "#" && (
               <div className="post-link" style={{ marginBottom: 12 }}>
                 <a
-                  href={item.sourceUrl}
+                  href={item.postUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "#3b82f6", fontSize: 13, textDecoration: "none" }}
