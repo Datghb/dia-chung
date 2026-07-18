@@ -51,5 +51,21 @@
     "ngay_hieu_luc": "2026-06-04",
     "url": "https://dantri.com.vn/noi-vu/bac-bo-tin-don-thanh-hoa-chi-con-58-xa-phuong-20260604170436471.htm",
     "ghi_chu": "Nguon phat tan tin gia: trang Facebook ca nhan 'Hoang Dung', co tinh bia dat noi dung 'tach ra doc lap', 'lap quoc gia rieng' de kich dong du luan. Tinh khang dinh viec sap xep duoc thuc hien cong khai, minh bach, dung quy dinh phap luat."
+  },
+  {
+    "id": "fr-005",
+    "chu_de": "phu_nhan_sap_nhap_tinh_da_xay_ra",
+    "tu_khoa": ["van con 63 tinh", "chua sap nhap", "34 tinh la tin gia", "63 tinh thanh"],
+    "tuyen_bo_dung": "Viet Nam DA chinh thuc giam tu 63 xuong 34 don vi hanh chinh cap tinh, hieu luc tu 01/7/2025 (xem fr-001, Nghi quyet 202/2025/QH15). Tuyen bo 'Viet Nam van con 63 tinh' hoac '34 tinh la tin gia' la SAI — day la dang tin don phu nhan mot su kien co that da xay ra va duoc cong bo chinh thuc, khong phai tin don lan truyen thong tin sai thong thuong.",
+    "bien_the_tin_don_sai": [
+      "viet nam van con 63 tinh thanh",
+      "34 tinh la tin gia",
+      "chua he co sap nhap tinh nao",
+      "thong tin giam tu 63 xuong 34 tinh la khong chinh xac"
+    ],
+    "nguon": "Doi chieu voi fr-001 (Nghi quyet 202/2025/QH15)",
+    "ngay_hieu_luc": "2025-07-01",
+    "url": "",
+    "ghi_chu": "Bien the tin don NGUOC — thay vi lan truyen thong tin sai, day la dang phu nhan mot su kien co that da duoc cong bo chinh thuc. Phat hien duoc trong luc doi chieu du lieu voi 1 nhanh khac (branch khac trong cung repo) tu ghi nham day la 'su that' (fr-004/fact-015 tren main, tuyen bo Viet Nam van con 63 tinh) — da xac minh lai qua nhieu nguon doc lap (baochinhphu.vn, xaydungchinhsach.chinhphu.vn, thuvienphapluat.vn...) va khang dinh 34 tinh moi la dung. Chua co URL rieng cho dang tin don phu nhan nay (chi la suy luan logic tu fr-001) — de trong thay vi doan URL, theo dung nguyen tac 'URL sai con te hon khong co URL'."
   }
 ]

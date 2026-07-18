@@ -36,6 +36,14 @@ Ghi lại ai verify, verify bằng nguồn nào, lúc nào — để trả lời
 - **Cách verify:** WebFetch trực tiếp bài Dân Trí + WebFetch chéo bài VietnamNet cùng chủ đề, cùng ngày — 2 nguồn độc lập khớp nhau.
 - **URL đã click thật:** https://dantri.com.vn/noi-vu/bac-bo-tin-don-thanh-hoa-chi-con-58-xa-phuong-20260604170436471.htm
 
+## fr-005 — Phủ nhận sự kiện sáp nhập tỉnh đã xảy ra (thêm sau đối chiếu chéo với branch khác)
+
+- **Bối cảnh phát hiện:** khi so sánh `fact_references.json` của nhánh này với 1 bản khác đang tồn tại trên `main` (viết bởi phiên làm việc khác), phát hiện bản kia có entry khẳng định **"Việt Nam vẫn còn 63 tỉnh, thông tin giảm còn 34 tỉnh là tin giả"** — ngược hoàn toàn với fr-001 đã verify.
+- **Cách verify lại:** không tin ngay bên nào — kiểm tra lại fr-001 bằng cách đối chiếu thêm nhiều nguồn độc lập khác (báo Chính phủ, thư viện pháp luật, VASS, Hà Tĩnh gov...) — tất cả đều xác nhận 34 tỉnh là đúng, hiệu lực 01/7/2025. Kết luận: bản kia sai (có thể do URL chỉ ghi trang chủ `moha.gov.vn`/`baotintuc.vn`, không phải link bài cụ thể — dấu hiệu không thực sự fetch nội dung).
+- **Xử lý:** không sửa dữ liệu của nhánh khác, mà biến claim sai đó thành 1 FactRef hợp lệ để track — vì "phủ nhận sự kiện có thật" cũng là 1 dạng tin đồn/hiểu lầm cần phát hiện được.
+- **URL:** để trống — đây là suy luận logic từ fr-001 (đối chiếu chéo giữa 2 nguồn dữ liệu), không phải 1 bài báo cụ thể nói riêng về việc "phủ nhận". Không đoán URL, theo đúng nguyên tắc P2.1.
+- Không đưa vào ground truth: claim khác của bản kia về cải cách cấp huyện/xã ("713→513 huyện") — verify lại thấy số liệu cũng sai (đúng là 713→696 huyện theo Nghị quyết 35/2023/UBTVQH15, không phải 513) — nhưng chủ đề này (cấp huyện/xã, 2023-2025) khác tầng với domain đang track (cấp tỉnh), nên không cần sửa/thêm vào đây, chỉ cần biết là KHÔNG dùng số liệu đó.
+
 ---
 
 ## Case xử phạt thật (study_cases.json)
