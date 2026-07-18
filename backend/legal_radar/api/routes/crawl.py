@@ -87,6 +87,7 @@ def trigger_crawl(request: CrawlRequest):
                     {
                         "id": sha1(url.encode("utf-8")).hexdigest(),
                         "text": str(post.get("text", "")),
+                        "url": url,
                         "thoi_gian": timestamp,
                         "platform": post_platform,
                         "account": post_author,
@@ -98,6 +99,7 @@ def trigger_crawl(request: CrawlRequest):
                     {
                         "id": sha1(f"{url}#c{index}".encode("utf-8")).hexdigest(),
                         "text": str(comment.get("text", "")),
+                        "url": url,
                         "thoi_gian": str(comment.get("timestamp", timestamp)),
                         "platform": post_platform,
                         "account": str(comment.get("author", post_author)),
@@ -122,6 +124,9 @@ def trigger_crawl(request: CrawlRequest):
                             "claim": queue_item.claim[:100],
                             "label": queue_item.nhan.value,
                             "subject": queue_item.subject,
+                            "source_title": queue_item.source_title,
+                            "source_url": queue_item.source_url,
+                            "source_agency": queue_item.source_agency,
                         }, ensure_ascii=False) + "\n"
                     except Exception as exc:
                         logger.warning("Crawl item error: %s", exc)

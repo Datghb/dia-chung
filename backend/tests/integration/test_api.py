@@ -30,6 +30,17 @@ def test_cors_preflight_allows_production_frontend() -> None:
         == "https://diachung.dpdns.org"
     )
 
+def test_cors_preflight_allows_local_frontend() -> None:
+    response = client.options(
+        "/api/crawl",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
 
 def test_queue_returns_list_with_supported_schema() -> None:
     response = client.get("/api/queue")
@@ -73,7 +84,8 @@ def test_crawl_returns_supported_schema(monkeypatch, tmp_path) -> None:
 
     monkeypatch.setattr(crawl, "runs_dir", lambda: tmp_path)
     monkeypatch.setattr(crawl, "_try_live_crawl", lambda *a, **kw: {"items": [], "crawled": 0, "relevant": 0})
-    response = client.post("/api/crawl", json={"keywords": ["tin giả"], "max_posts_per_platform": 2})
+    with patch("legal_radar.source_search.dynamic_search_gemini", return_value=[]):
+        response = client.post("/api/crawl", json={"keywords": ["tin giả"], "max_posts_per_platform": 2})
     assert response.status_code == 200
     lines = [ln for ln in response.text.strip().split("\n") if ln.strip()]
     assert len(lines) >= 1
@@ -117,12 +129,25 @@ def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) ->
     monkeypatch.setattr(crawl, "_build_crawled_ingestor", lambda qp: pipeline_mod.CommentIngestor(provider, MagicMock(), str(qp)))
     monkeypatch.setattr(pipeline_mod, "_default_provider", lambda: provider)
 
+    official_url = "https://chinhphu.vn/thong-tin-chinh-thuc"
     with patch(
         "legal_radar.source_search.dynamic_search_gemini",
-        return_value=[],
+        return_value=[{
+            "tieu_de": "Thông tin chính thức",
+            "nguon": "Cổng TTĐT Chính phủ",
+            "url": official_url,
+            "ngay_dang": "2026-07-16",
+            "noi_dung_tom_tat": "Thông tin đối chiếu",
+            "la_bac_bo": False,
+            "la_xac_nhan": True,
+        }],
     ), patch(
         "legal_radar.pipeline.xac_thuc_nguon",
-        return_value=(NhanNguon.CHUA_TIM_THAY_NGUON, [], "Khong tim thay nguon"),
+        return_value=(NhanNguon.CO_NGUON_XAC_NHAN, [{
+            "tieu_de": "Thông tin chính thức",
+            "nguon": "Cổng TTĐT Chính phủ",
+            "url": official_url,
+        }], "Có nguồn xác nhận"),
     ):
         response = client.post(
             "/api/crawl",
@@ -142,3 +167,7 @@ def test_crawl_analyzes_fixture_posts_and_writes_queue(monkeypatch, tmp_path) ->
         for line in queue_path.read_text(encoding="utf-8").splitlines()
     ]
     assert len(rows) == expected_count
+    assert all(row["source_url"] == official_url for row in rows)
+    assert all(row["url"] == fixture_post["url"] for row in rows)
+    item_messages = [json.loads(line) for line in lines if json.loads(line)["type"] == "item"]
+    assert all(message["source_url"] == official_url for message in item_messages)

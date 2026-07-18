@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
 from ..data_access import list_queue_items, update_queue_item_status
@@ -12,7 +12,8 @@ class StatusUpdate(BaseModel):
 
 
 @router.get("/queue", response_model=list[QueueItemResponse])
-def list_queue() -> list[QueueItemResponse]:
+def list_queue(response: Response) -> list[QueueItemResponse]:
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     return [QueueItemResponse.model_validate(item) for item in list_queue_items()]
 
 

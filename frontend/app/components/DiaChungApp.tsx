@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Verdict = "Đúng" | "Hiểu lầm" | "Cần kiểm chứng";
 type Status = "Mới" | "Đang xử lý" | "Đã xử lý";
@@ -30,10 +30,12 @@ type Case = {
   reach: string;
   contentType?: "post" | "comment";
   parentContent?: string;
+  keywords?: string[];
 };
 
 type ApiQueueItem = {
   id: string; text: string; url?: string; claim: string; label: "dung" | "hieu_lam" | "can_kiem_chung";
+  keywords?: string[];
   source_label: string; reason: string; priority: number; platform: string; account: string;
   published_at: string; reach: number; status: string;
   document?: string; provision?: string; penalty?: string; subject?: string;
@@ -70,28 +72,49 @@ export function DiaChungApp() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [crawlState, setCrawlState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [crawlMessage, setCrawlMessage] = useState("");
+  const queueRequestId = useRef(0);
+
+  async function syncQueue() {
+    const requestId = ++queueRequestId.current;
+    try {
+      const response = await fetch(`${API_URL}/api/queue?_=${Date.now()}-${requestId}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      if (!response.ok) throw new Error("Queue API unavailable");
+      const queue = await response.json() as ApiQueueItem[];
+      // Multiple crawl items can trigger overlapping reads. Only the newest
+      // response may replace the dashboard snapshot.
+      if (requestId !== queueRequestId.current) return;
+      setCaseItems(queue.map(mapApiCase));
+      setDataSource("api");
+    } catch {
+      if (requestId === queueRequestId.current) setDataSource("fallback");
+    }
+  }
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      fetch(`${API_URL}/api/queue`).then((response) => {
-        if (!response.ok) throw new Error("Queue API unavailable");
-        return response.json() as Promise<ApiQueueItem[]>;
-      }),
-      fetch(`${API_URL}/api/verify`).then((response) => {
+    void syncQueue();
+
+    fetch(`${API_URL}/api/verify`, { cache: "no-store" })
+      .then((response) => {
         if (!response.ok) throw new Error("Verify API unavailable");
         return response.json() as Promise<{ cases: StudyCase[] }>;
-      }),
-    ]).then(([queue, verify]) => {
-      if (!active) return;
-      if (queue.length) setCaseItems(queue.map(mapApiCase));
-      setStudyCases(verify.cases);
-      setDataSource("api");
-    }).catch(() => {
-      if (active) setDataSource("fallback");
-    });
+      })
+      .then((verify) => {
+        if (active) setStudyCases(verify.cases);
+      })
+      .catch(() => {
+        if (active) setStudyCases([]);
+      });
     return () => { active = false; };
   }, [refreshKey]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRefreshKey((value) => value + 1), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   async function clearQueue() {
     try {
@@ -137,15 +160,16 @@ export function DiaChungApp() {
             } else if (msg.type === "item") {
               itemCount = msg.count;
               setCrawlMessage(`Đã phân tích ${itemCount} nội dung: ${msg.claim}...`);
-              setRefreshKey((v) => v + 1);
+              void syncQueue();
             } else if (msg.type === "done") {
               setCrawlMessage(`Hoàn tất! ${itemCount} nội dung đã được thêm vào hàng đợi.`);
             }
           } catch { /* skip non-JSON lines */ }
         }
       }
+      // Wait for the final, uncached queue snapshot before announcing success.
+      await syncQueue();
       setCrawlState("success");
-      setRefreshKey((v) => v + 1);
     } catch {
       setCrawlMessage("Không thể quét nguồn lúc này. Kiểm tra Backend và API key crawler.");
       setCrawlState("error");
@@ -270,24 +294,30 @@ export function DiaChungApp() {
 
 function MarketOverviewV2({ allItems }: { allItems: Case[] }) {
   const [period, setPeriod] = useState<1 | 7 | 30>(7);
+  const [hoveredDay, setHoveredDay] = useState<number | null>(null);
   const rows = allItems.map((item) => ({ item, date: parseCaseDate(item.publishedAt) }));
   const dated = rows.filter((row): row is { item: Case; date: Date } => Boolean(row.date));
-  const latest = dated.reduce((value, row) => row.date > value ? row.date : value, new Date());
+  // Dashboard periods are relative to the user's current time, not the most
+  // recent record. This keeps missing-data days visible instead of shifting
+  // the entire chart backwards.
+  const latest = new Date();
   const start = new Date(latest);
-  start.setDate(start.getDate() - period + 1);
+  if (period === 1) start.setTime(start.getTime() - 24 * 60 * 60 * 1000);
+  else start.setDate(start.getDate() - period + 1);
   const previousStart = new Date(start);
-  previousStart.setDate(previousStart.getDate() - period);
-  const current = rows.filter((row) => !row.date || row.date >= start).map((row) => row.item);
+  if (period === 1) previousStart.setTime(previousStart.getTime() - 24 * 60 * 60 * 1000);
+  else previousStart.setDate(previousStart.getDate() - period);
+  // Records without a usable publication time must not silently inflate a
+  // time-bounded dashboard. They remain available in the monitoring queue.
+  const current = rows.filter((row) => row.date && row.date >= start && row.date <= latest).map((row) => row.item);
   const previous = rows.filter((row) => row.date && row.date >= previousStart && row.date < start).map((row) => row.item);
-  const average = (items: Case[]) => items.length ? Math.round(items.reduce((sum, item) => sum + item.score, 0) / items.length) : 0;
   const delta = (now: number, before: number) => before ? Math.round(((now - before) / before) * 100) : now ? 100 : 0;
-  const riskIndex = average(current);
-  const riskDelta = delta(riskIndex, average(previous));
+  const discussionDelta = delta(current.length, previous.length);
   const urgent = current.filter((item) => item.priority === "Khẩn cấp").length;
   const urgentDelta = delta(urgent, previous.filter((item) => item.priority === "Khẩn cấp").length);
 
   const topicMap = (items: Case[]) => items.reduce((map, item) => {
-    const topic = legalTopicName(item.document);
+    const topic = discussionTopicName(item);
     map.set(topic, (map.get(topic) || 0) + 1);
     return map;
   }, new Map<string, number>());
@@ -296,31 +326,54 @@ function MarketOverviewV2({ allItems }: { allItems: Case[] }) {
   const topics = Array.from(currentTopics).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const maxTopic = Math.max(1, ...topics.map(([, count]) => count));
   const hotTopics = topics.filter(([, count]) => count >= maxTopic * .5).length;
+  const [topTopicName, topTopicCount] = topics[0] || ["Chưa có dữ liệu", 0];
+  const topTopicShare = current.length ? Math.round(topTopicCount / current.length * 100) : 0;
   const platforms = (["Facebook", "TikTok", "YouTube", "X", "Forum"] as Case["platform"][]);
   const heatMax = Math.max(1, ...topics.flatMap(([topic]) => platforms.map((platform) =>
-    current.filter((item) => legalTopicName(item.document) === topic && item.platform === platform).length
+    current.filter((item) => discussionTopicName(item) === topic && item.platform === platform).length
   )));
   const topPlatform = platforms.map((platform) => ({
     platform,
     count: current.filter((item) => item.platform === platform).length,
   })).sort((a, b) => b.count - a.count)[0]?.platform || "Facebook";
 
-  const days = Array.from({ length: 7 }, (_, index) => {
+  const chartDays = period === 30 ? 30 : period === 1 ? 1 : 7;
+  const days = Array.from({ length: chartDays }, (_, index) => {
     const date = new Date(latest);
-    date.setDate(date.getDate() - 6 + index);
-    const matches = dated.filter((row) => row.date.toDateString() === date.toDateString()).map((row) => row.item);
-    return { label: `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`, value: average(matches) };
+    date.setDate(date.getDate() - chartDays + 1 + index);
+    const dayItems = chartDays === 1
+      ? current
+      : dated
+        .filter((row) => row.date >= start && row.date <= latest && row.date.toDateString() === date.toDateString())
+        .map((row) => row.item);
+    const dailyTopics = Array.from(topicMap(dayItems)).sort((a, b) => b[1] - a[1]);
+    return {
+      label: `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`,
+      value: dayItems.length,
+      topTopic: dailyTopics[0]?.[0] || "Chưa có thảo luận",
+      topTopicCount: dailyTopics[0]?.[1] || 0,
+    };
   });
-  const points = days.map((day, index) => `${36 + index * 116},${168 - day.value * 1.25}`);
+  const maxDiscussions = Math.max(1, ...days.map((day) => day.value));
+  const chartCeiling = Math.max(4, Math.ceil(maxDiscussions / 4) * 4);
+  const averageDiscussions = days.length ? days.reduce((sum, day) => sum + day.value, 0) / days.length : 0;
+  const chartX = (index: number) => days.length === 1 ? 384 : 36 + index * (696 / (days.length - 1));
+  const chartY = (value: number) => 168 - value / chartCeiling * 145;
+  const points = days.map((day, index) => `${chartX(index)},${chartY(day.value)}`);
   const linePath = points.length ? `M${points.join(" L")}` : "";
   const peak = days.reduce<{ label: string; value: number; index: number }>((best, day, index) => day.value > best.value ? { ...day, index } : best, { value: -1, index: 0, label: "" });
   const signed = (value: number) => `${value >= 0 ? "+" : ""}${value}%`;
   const trendClass = (value: number) => value >= 0 ? "up" : "down";
+  const discussionChange = previous.length
+    ? signed(discussionDelta)
+    : current.length
+      ? `${current.length} lượt mới`
+      : "Không thay đổi";
 
   return (
     <div className="monitor-page market-page market-v2">
       <div className="market-title market-v2-title">
-        <div><small>BẢNG ĐIỀU KHIỂN CHIẾN LƯỢC</small><h1>Toàn cảnh thị trường thông tin</h1><p>Giúp lãnh đạo theo dõi rủi ro pháp lý &amp; sai lệch thông tin, chủ động ra quyết định kịp thời.</p></div>
+        <div><small>BẢNG ĐIỀU KHIỂN CHIẾN LƯỢC</small><h1>Toàn cảnh thảo luận thị trường</h1><p>Giúp lãnh đạo nhận biết chủ đề đang được quan tâm, mức độ thảo luận và nền tảng phát sinh nhiều tín hiệu nhất.</p></div>
         <div className="period-switch" aria-label="Khoảng thời gian">
           <button className={period === 1 ? "active" : ""} onClick={() => setPeriod(1)}>24 giờ</button>
           <button className={period === 7 ? "active" : ""} onClick={() => setPeriod(7)}>7 ngày</button>
@@ -330,46 +383,81 @@ function MarketOverviewV2({ allItems }: { allItems: Case[] }) {
       </div>
 
       <section className="market-v2-kpis">
-        <article><i className="shield-icon">{kpiIcon("shield")}</i><div><small>Risk Index</small><strong>{riskIndex}<b>/100</b></strong><span className={trendClass(riskDelta)}>↑ {signed(riskDelta)} <em>so với kỳ trước</em></span></div></article>
-        <article><i className="warning-icon">{kpiIcon("warning")}</i><div><small>Claim rủi ro cao</small><strong>{urgent}</strong><span className={trendClass(urgentDelta)}>↑ {signed(urgentDelta)} <em>so với kỳ trước</em></span></div></article>
-        <article><i className="search-icon">{kpiIcon("search")}</i><div><small>Chủ đề nóng</small><strong>{hotTopics}</strong><span className="up">↑ {topics.length} <em>chủ đề đang theo dõi</em></span></div></article>
-        <article><i className="trend-icon">{kpiIcon("trend")}</i><div><small>Biến động {period} ngày</small><strong>{signed(riskDelta)}</strong><span className={trendClass(riskDelta)}>{riskDelta >= 0 ? "xu hướng tăng" : "xu hướng giảm"}</span></div></article>
+        <article className="topic-kpi"><i className="shield-icon">{kpiIcon("search")}</i><div><small>Chủ đề được bàn luận nhiều nhất</small><strong title={topTopicName}>{topTopicName}</strong><span className="up">{topTopicCount} lượt đề cập <em>{topTopicShare}% thảo luận trong kỳ</em></span></div></article>
+        <article><i className="warning-icon">{kpiIcon("warning")}</i><div><small>Claim rủi ro cao</small><strong>{urgent}</strong><span className={trendClass(urgentDelta)}>{urgentDelta >= 0 ? "↑" : "↓"} {signed(urgentDelta)} <em>so với kỳ trước</em></span></div></article>
+        <article><i className="search-icon">{kpiIcon("search")}</i><div><small>Chủ đề nổi bật</small><strong>{hotTopics}</strong><span className="up">{topics.length} <em>chủ đề đang được theo dõi</em></span></div></article>
+        <article><i className="trend-icon">{kpiIcon("trend")}</i><div><small>Lượng thảo luận {period === 1 ? "24 giờ" : `${period} ngày`}</small><strong>{current.length}</strong><span className={trendClass(discussionDelta)}>{discussionDelta >= 0 ? "↑" : "↓"} {discussionChange} <em>so với kỳ trước</em></span></div></article>
       </section>
 
       <div className="market-v2-grid">
         <section className="chart-panel risk-v2">
-          <header><h2>Xung nhịp rủi ro thị trường <small>ⓘ</small></h2><span className={trendClass(riskDelta)}>↑ {signed(riskDelta)} <em>so với kỳ trước</em></span><b>⋮</b></header>
-          <div className="risk-v2-legend"><span><i /> Risk Index</span><span><i /> Vùng rủi ro cao</span></div>
+          <header><h2>Xu hướng thảo luận theo thời gian <small>ⓘ</small></h2><span className={trendClass(discussionDelta)}>{discussionDelta >= 0 ? "↑" : "↓"} {discussionChange} <em>so với kỳ trước</em></span><b>⋮</b></header>
+          <div className="risk-v2-legend"><span><i /> Lượt đề cập</span><span><i /> Mức trung bình trong kỳ</span></div>
           <div className="risk-v2-chart">
-            <div className="risk-y">{[100, 75, 50, 25, 0].map((value) => <span key={value}>{value}</span>)}</div>
-            <svg viewBox="0 0 768 190" preserveAspectRatio="none" aria-label="Biểu đồ Risk Index 7 ngày">
+            <div className="risk-y">{[1, .75, .5, .25, 0].map((ratio) => <span key={ratio}>{chartCeiling * ratio}</span>)}</div>
+            <svg
+              viewBox="0 0 768 190"
+              preserveAspectRatio="none"
+              aria-label={`Biểu đồ lượt thảo luận ${period === 1 ? "24 giờ" : `${period} ngày`}`}
+              onPointerLeave={() => setHoveredDay(null)}
+            >
               <defs><linearGradient id="riskAreaV2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ed198b" stopOpacity=".24" /><stop offset="1" stopColor="#ed198b" stopOpacity="0" /></linearGradient></defs>
               {[18, 55, 92, 129, 166].map((y) => <line key={y} x1="36" x2="752" y1={y} y2={y} className="grid-line" />)}
-              <line x1="36" x2="752" y1="73" y2="73" className="threshold-line" />
-              <path d={`${linePath} L732,168 L36,168 Z`} className="risk-area" />
+              <line x1="36" x2="752" y1={chartY(averageDiscussions)} y2={chartY(averageDiscussions)} className="threshold-line" />
+              <path d={`${linePath} L${chartX(days.length - 1)},168 L${chartX(0)},168 Z`} className="risk-area" />
               <path d={linePath} className="risk-line" />
-              <line x1={36 + peak.index * 116} x2={36 + peak.index * 116} y1="18" y2="168" className="peak-line" />
-              <circle cx={36 + peak.index * 116} cy={168 - Math.max(0, peak.value) * 1.25} r="6" className="peak-dot" />
+              <path
+                d={linePath}
+                className="risk-line-hover"
+                onPointerMove={(event) => {
+                  const bounds = event.currentTarget.ownerSVGElement?.getBoundingClientRect();
+                  if (!bounds || !days.length) return;
+                  const pointerX = (event.clientX - bounds.left) / bounds.width * 768;
+                  const nearest = days.reduce((best, _, index) =>
+                    Math.abs(chartX(index) - pointerX) < Math.abs(chartX(best) - pointerX) ? index : best, 0);
+                  setHoveredDay(nearest);
+                }}
+              />
+              <line x1={chartX(peak.index)} x2={chartX(peak.index)} y1="18" y2="168" className="peak-line" />
+              <circle cx={chartX(peak.index)} cy={chartY(Math.max(0, peak.value))} r="6" className="peak-dot" />
+              {hoveredDay !== null && days[hoveredDay] && (
+                <circle cx={chartX(hoveredDay)} cy={chartY(days[hoveredDay].value)} r="5" className="hover-dot" />
+              )}
             </svg>
-            <div className="peak-note">Đột biến: {topics[0]?.[0]?.toLowerCase() || "chưa xác định"}</div>
-            <div className="risk-x">{days.map((day) => <span key={day.label}>{day.label}</span>)}</div>
+            {hoveredDay !== null && days[hoveredDay] && (
+              <div
+                className="risk-tooltip"
+                style={{
+                  left: `${chartX(hoveredDay) / 768 * 100}%`,
+                  top: `${chartY(days[hoveredDay].value) / 190 * 202}px`,
+                }}
+                role="tooltip"
+              >
+                <strong>{days[hoveredDay].label}</strong>
+                <span>Lượt đề cập: <b>{days[hoveredDay].value}</b></span>
+                <span>Chủ đề nổi bật: <b>{days[hoveredDay].topTopic}</b></span>
+                {days[hoveredDay].topTopicCount > 0 && <span>Đề cập chủ đề: <b>{days[hoveredDay].topTopicCount}</b></span>}
+              </div>
+            )}
+            <div className="peak-note">Cao điểm: {peak.label || "chưa có dữ liệu"} · {Math.max(0, peak.value)} lượt đề cập</div>
+            <div className="risk-x">{days.filter((_, index) => period !== 30 || index % 5 === 0 || index === days.length - 1).map((day) => <span key={day.label}>{day.label}</span>)}</div>
           </div>
         </section>
 
         <section className="chart-panel topics-v2">
-          <header><h2>Top chủ đề pháp lý nóng</h2><b>⋮</b></header>
+          <header><h2>Top chủ đề được bàn luận nhiều nhất</h2><b>⋮</b></header>
           <div className="topics-v2-list">{topics.map(([topic, count]) => {
             const change = delta(count, previousTopics.get(topic) || 0);
             return <div key={topic}><strong>{topic}</strong><i><b style={{ width: `${Math.max(8, count / maxTopic * 100)}%` }} /></i><em>{count}</em><span className={trendClass(change)}>{change >= 0 ? "↑" : "↓"} {Math.abs(change)}%</span></div>;
           })}</div>
-          <footer><span>● &nbsp;Chỉ số chủ đề (số hồ sơ)</span><span>so với kỳ trước</span></footer>
+          <footer><span>● &nbsp;Số lượt đề cập theo chủ đề</span><span>so với kỳ trước</span></footer>
         </section>
 
         <section className="chart-panel heatmap-v2">
           <header><h2>Heatmap điểm nóng <small>ⓘ</small></h2><b>⋮</b></header>
           <div className="heat-v2-platforms"><span>Chủ đề</span>{platforms.map((platform) => <span key={platform}>{platformIcon(platform)} {platform === "Forum" ? "Khác" : platform}</span>)}</div>
           <div className="heat-v2-body">{topics.map(([topic]) => <div key={topic}><strong>{topic}</strong>{platforms.map((platform) => {
-            const count = current.filter((item) => legalTopicName(item.document) === topic && item.platform === platform).length;
+            const count = current.filter((item) => discussionTopicName(item) === topic && item.platform === platform).length;
             const level = Math.min(4, 4 - Math.round(count / heatMax * 4));
             return <i key={platform} className={`heat-level-${level}`} title={`${topic} · ${platform}: ${count} hồ sơ`} />;
           })}</div>)}</div>
@@ -379,7 +467,7 @@ function MarketOverviewV2({ allItems }: { allItems: Case[] }) {
         <section className="chart-panel executive-v2">
           <header><h2><span>✪</span> Nhận định điều hành</h2><b>⋮</b></header>
           <div className="executive-v2-list">
-            <p><i>◎</i><span>Rủi ro đang tập trung vào nhóm <b>{topics[0]?.[0] || "chưa xác định"}</b>.</span></p>
+            <p><i>◎</i><span>Thảo luận đang tập trung vào chủ đề <b>{topics[0]?.[0] || "chưa xác định"}</b>.</span></p>
             <p><i>{platformIcon(topPlatform)}</i><span><b>{topPlatform}</b> là nền tảng ghi nhận nhiều tín hiệu nhất trong kỳ.</span></p>
             <p><i>△</i><span><b>{urgent || 0} claim</b> ở mức khẩn cấp cần được ưu tiên xử lý.</span></p>
           </div>
@@ -536,6 +624,16 @@ function legalTopicName(document: string) {
   if (/lao động|việc làm/.test(value)) return "Lao động";
   if (/giao thông|đường bộ|phương tiện/.test(value)) return "Giao thông";
   return document.replace(/\s*\(.+?\)\s*/g, " ").trim().slice(0, 34) || "Khác";
+}
+
+function discussionTopicName(item: Case) {
+  const value = `${item.claim} ${(item.keywords || []).join(" ")} ${item.document}`.toLocaleLowerCase("vi");
+  if (/vắc.?xin|vaccine|dịch bệnh|y tế|bảo hiểm y tế|bhyt/.test(value)) return "Y tế & vaccine";
+  if (/ngân hàng|tín dụng|lãi suất|tiền gửi/.test(value)) return "Ngân hàng & tín dụng";
+  if (/sáp nhập|đơn vị hành chính|tỉnh thành/.test(value)) return "Sáp nhập hành chính";
+  if (/tin giả|sai sự thật|mạng xã hội|mxh|tin đồn/.test(value)) return "Tin giả trên mạng xã hội";
+  if (/xử phạt|mức phạt|phạt hành chính/.test(value)) return "Xử phạt hành chính";
+  return item.keywords?.find((keyword) => keyword.trim().length > 3)?.trim() || legalTopicName(item.document);
 }
 
 function platformGradient(counts: Array<{ platform: Case["platform"]; count: number }>, total: number) {
@@ -820,7 +918,7 @@ function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () =
 
           <section className="detail-card source-card">
             <div className="card-heading"><div><span>03</span><div><small>KIỂM CHỨNG NGUỒN</small><h2>Đối chiếu nguồn chính thức</h2></div></div><span className={`source-result ${item.verdict === "Đúng" ? "confirmed" : item.verdict === "Hiểu lầm" ? "conflict" : "pending"}`}>{item.verdict === "Đúng" ? "✓" : item.verdict === "Hiểu lầm" ? "↯" : "?"} {item.sourceResult}</span></div>
-            <div className="official-source"><div className="agency-mark">CQ</div><div><small>NGUỒN CHÍNH THỨC</small><h3>{item.sourceTitle}</h3><p>{item.sourceAgency}</p></div><a href={item.sourceUrl} target="_blank" rel="noreferrer">Mở nguồn ↗</a></div>
+            <div className="official-source"><div className="agency-mark">CQ</div><div><small>NGUỒN CHÍNH THỨC</small><h3>{item.sourceTitle}</h3><p>{item.sourceAgency}</p></div>{item.sourceUrl && item.sourceUrl !== "#" ? <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Mở nguồn ↗</a> : <span className="source-unavailable" aria-disabled="true">Chưa có URL nguồn</span>}</div>
           </section>
         </div>
 
@@ -912,10 +1010,11 @@ function mapApiCase(item: ApiQueueItem): Case {
     penalty: item.penalty || "Cần xác định chủ thể",
     sourceTitle: item.source_title || sourceResult,
     sourceAgency: item.source_agency || "",
-    sourceUrl: item.source_url || item.url || "#",
+    sourceUrl: item.source_url || "",
     sourceResult,
     reach: `${item.reach.toLocaleString("vi-VN")} lượt tương tác`,
     contentType: "comment",
+    keywords: item.keywords || [],
   };
 }
 

@@ -30,9 +30,9 @@ test("server-renders the Địa chứng strategic market dashboard", async () =>
 
   const html = await response.text();
   assert.match(html, /<title>Địa chứng — Giám sát nội dung mạng xã hội<\/title>/i);
-  assert.match(html, /Toàn cảnh thị trường thông tin/);
-  assert.match(html, /Xung nhịp rủi ro thị trường/);
-  assert.match(html, /Top chủ đề pháp lý nóng/);
+  assert.match(html, /Toàn cảnh thảo luận thị trường/);
+  assert.match(html, /Xu hướng thảo luận theo thời gian/);
+  assert.match(html, /Top chủ đề được bàn luận nhiều nhất/);
   assert.match(html, /Heatmap điểm nóng/);
   assert.match(html, /Nhận định điều hành/);
   assert.match(html, /Hàng đợi giám sát/);

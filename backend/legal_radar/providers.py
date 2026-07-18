@@ -54,17 +54,26 @@ class GeminiProvider:
 
     Attributes:
         api_key (str | None): Gemini API key.
+        google_api_key (str | None): Alternative Google API key.
+        google_api_key_1 (str | None): Alternative Google API key variant.
         model (str): Ten model Gemini su dung.
         timeout_s (int): Timeout HTTP moi request, tinh bang giay.
     """
 
     def __init__(
-        self, api_key: str | None = None, model: str = "gemini-2.0-flash-lite", timeout_s: int = 30
+        self,
+        api_key: str | None = None,
+        google_api_key: str | None = None,
+        google_api_key_1: str | None = None,
+        model: str = "gemini-2.5-flash-lite",
+        timeout_s: int = 30,
     ) -> None:
         """Khoi tao provider voi model va timeout.
 
         Args:
             api_key (str | None): Gemini API key.
+            google_api_key (str | None): Alternative Google API key.
+            google_api_key_1 (str | None): Alternative Google API key variant.
             model (str): Ten model Gemini.
             timeout_s (int): Timeout HTTP (giay).
 
@@ -72,6 +81,8 @@ class GeminiProvider:
             None
         """
         self.api_key = api_key
+        self.google_api_key = google_api_key
+        self.google_api_key_1 = google_api_key_1
         self.model = model
         self.timeout_s = timeout_s
 
@@ -87,11 +98,12 @@ class GeminiProvider:
         Raises:
             RuntimeError: Khi thieu GEMINI_API_KEY hoac HTTP status != 200.
         """
-        if not self.api_key:
-            raise RuntimeError("Thieu bien moi truong GEMINI_API_KEY")
+        api_key = self.api_key or self.google_api_key or self.google_api_key_1
+        if not api_key:
+            raise RuntimeError("Thieu bien moi truong GEMINI_API_KEY hoac GOOGLE_API_KEY")
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
-            params={"key": self.api_key},
+            params={"key": api_key},
             json={"contents": [{"parts": [{"text": prompt}]}]},
             timeout=self.timeout_s,
         )

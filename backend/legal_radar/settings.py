@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     )
 
     gemini_api_key: str | None = Field(default=None, alias="GEMINI_API_KEY")
+    google_api_key: str | None = Field(default=None, alias="GOOGLE_API_KEY")
+    google_api_key_1: str | None = Field(default=None, alias="GOOGLE_API_KEY_1")
     groq_api_key: str | None = Field(default=None, alias="GROQ_API_KEY")
     openrouter_api_key: str | None = Field(default=None, alias="OPENROUTER_API_KEY")
     tokenrouter_api_key: str | None = Field(default=None, alias="TOKENROUTER_API_KEY")
