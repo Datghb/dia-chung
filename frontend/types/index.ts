@@ -29,6 +29,7 @@ export type Case = {
   parentContent?: string;
   keywords?: string[];
   postComments?: Array<{ text: string; author: string; timestamp: string }>;
+  comments?: Array<{ text: string; author: string; timestamp: string }>;
 };
 
 export type ApiQueueItem = {
@@ -56,6 +57,7 @@ export type ApiQueueItem = {
   score?: number;
   confidence?: number;
   comments?: Array<{ text: string; author: string; timestamp: string }>;
+  post_comments?: Array<{ text: string; author: string; timestamp: string }>;
 };
 
 export type StudyCase = {

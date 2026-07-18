@@ -218,20 +218,20 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
               {item.original}
               {"\u201D"}
             </blockquote>
-            {item.postComments && item.postComments.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 12,
-                  }}
-                >
-                  <small style={{ color: "#94a3b8", fontSize: 12, letterSpacing: "0.05em" }}>
-                    BÌNH LUẬN BÀI VIẾT ({item.postComments.length})
-                  </small>
-                </div>
+            <div style={{ marginTop: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 12,
+                }}
+              >
+                <small style={{ color: "#94a3b8", fontSize: 12, letterSpacing: "0.05em" }}>
+                  BÌNH LUẬN BÀI VIẾT ({(item.postComments || item.comments || []).length})
+                </small>
+              </div>
+              {((item.postComments?.length ?? 0) + (item.comments?.length ?? 0)) > 0 ? (
                 <div
                   style={{
                     display: "flex",
@@ -242,7 +242,7 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
                     paddingRight: 4,
                   }}
                 >
-                  {item.postComments.map((comment, idx) => (
+                  {(item.postComments || item.comments || []).map((comment, idx) => (
                     <div
                       key={idx}
                       style={{
@@ -262,8 +262,12 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p style={{ color: "#94a3b8", fontSize: 12, margin: 0 }}>
+                  Chưa có bình luận
+                </p>
+              )}
+            </div>
           </section>
 
           <section className={detailCard}>

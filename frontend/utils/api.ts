@@ -59,7 +59,7 @@ export function mapApiCase(item: ApiQueueItem): Case {
     reach: `${item.reach.toLocaleString("vi-VN")} lượt tương tác`,
     contentType: "post",
     keywords: item.keywords || [],
-    postComments: item.comments || [],
+    comments: item.comments || item.post_comments || [],
   };
 }
 
