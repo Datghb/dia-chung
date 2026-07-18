@@ -18,22 +18,41 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             set -e
+            mkdir -p /home/khuong/vaic
             cd /home/khuong/vaic
 
             if [ ! -d .git ]; then
-              git clone https://github.com/Datghb/Parasitic-.git .
+              git init
+              git remote add origin https://github.com/Datghb/Parasitic-.git || true
             fi
 
             git fetch origin
+            git checkout -B main origin/main
             git reset --hard origin/main
 
+            # Create default env files if they do not exist to prevent docker compose failure
+            if [ ! -f backend/.env ]; then
+              cp backend/.env.example backend/.env
+            fi
+            if [ ! -f frontend/.env ]; then
+              cp frontend/.env.example frontend/.env
+            fi
+
+            # Clean and parse NEXT_PUBLIC_API_URL (removes carriage returns, double/single quotes)
             if [ -f frontend/.env ]; then
-              export NEXT_PUBLIC_API_URL=$(grep -m1 '^NEXT_PUBLIC_API_URL=' frontend/.env | cut -d= -f2-)
+              RAW_API_URL=$(grep -m1 '^NEXT_PUBLIC_API_URL=' frontend/.env | cut -d= -f2- | tr -d '\r"' | tr -d "'")
+              # Avoid using localhost in production; fallback to production URL if dev URL detected
+              if [[ "$RAW_API_URL" == *"localhost"* || -z "$RAW_API_URL" ]]; then
+                export NEXT_PUBLIC_API_URL=https://api.theoria-lab.io.vn
+              else
+                export NEXT_PUBLIC_API_URL="$RAW_API_URL"
+              fi
             else
               export NEXT_PUBLIC_API_URL=https://api.theoria-lab.io.vn
             fi
 
-            docker compose -f deploy/compose.yaml down
-            docker compose -f deploy/compose.yaml up -d --build
+            # Zero-downtime deployment: build first, then restart
+            docker compose -f deploy/compose.yaml build
+            docker compose -f deploy/compose.yaml up -d
             docker image prune -f
             docker compose -f deploy/compose.yaml ps
