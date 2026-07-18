@@ -27,6 +27,7 @@ type Case = {
   sourceAgency: string;
   sourceUrl: string;
   sourceResult: string;
+  postUrl: string;
   reach: string;
   contentType?: "post" | "comment";
   parentContent?: string;
@@ -159,6 +160,10 @@ export function DiaChungApp() {
             const msg = JSON.parse(line);
             if (msg.type === "start") {
               setCrawlMessage(`${msg.message} — đang phân tích...`);
+            } else if (msg.type === "error") {
+              setCrawlMessage(msg.message);
+              setCrawlState("error");
+              return;
             } else if (msg.type === "item") {
               itemCount = msg.count;
               setCrawlMessage(`Đã phân tích ${itemCount} nội dung: ${msg.claim}...`);
@@ -908,9 +913,9 @@ function CaseDetail({ item, onBack, onStatusChange }: { item: Case; onBack: () =
           <section className="detail-card original-card">
             <div className="card-heading"><div><span>01</span><div><small>NỘI DUNG GỐC</small><h2>Bài viết được giám sát</h2></div></div><em>{item.reach}</em></div>
             <div className="post-author"><span className={`platform-logo ${item.platform.toLowerCase()}`}>{platformIcon(item.platform)}</span><div><strong>{item.account}</strong><small>{item.platform} · {item.publishedAt}</small></div></div>
-            {item.url && item.url !== "#" && (
+            {item.postUrl && item.postUrl !== "#" && (
               <div className="post-link" style={{ marginBottom: 12 }}>
-                <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", fontSize: 13, textDecoration: "none" }}>
+                <a href={item.postUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", fontSize: 13, textDecoration: "none" }}>
                   🔗 Xem bài viết gốc trên {item.platform} ↗
                 </a>
               </div>
@@ -1038,6 +1043,7 @@ function mapApiCase(item: ApiQueueItem): Case {
     sourceAgency: item.source_agency || "",
     sourceUrl: item.source_url || "",
     sourceResult,
+    postUrl: item.url || "",
     reach: `${item.reach.toLocaleString("vi-VN")} lượt tương tác`,
     contentType: "post",
     keywords: item.keywords || [],

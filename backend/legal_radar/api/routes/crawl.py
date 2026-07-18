@@ -12,7 +12,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from backend.legal_radar.pipeline import _build_crawled_ingestor, _queue_path
-from backend.legal_radar.api.dependencies import data_dir, runs_dir
+from backend.legal_radar.api.dependencies import runs_dir
 from backend.legal_radar.api.schemas import CrawlRequest
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,9 @@ def _try_live_crawl(keywords, max_posts, output_path):
     """Try Bright Data crawl in a background thread with timeout."""
     from backend.legal_radar.crawlers.scheduler import crawl_and_process
     result = {"items": [], "crawled": 0, "relevant": 0}
+    error = None
     def _run():
+        nonlocal error
         try:
             result.update(crawl_and_process(
                 keywords=keywords or None,
@@ -32,40 +34,37 @@ def _try_live_crawl(keywords, max_posts, output_path):
                 output_path=output_path,
             ))
         except Exception as exc:
+            error = str(exc)
             logger.warning("Live crawl failed: %s", exc)
     thread = threading.Thread(target=_run, daemon=True)
     thread.start()
     thread.join(timeout=45)
-    return result
-
-
-def _load_sample_items():
-    sample_path = data_dir() / "fixtures" / "crawled_sample.json"
-    if sample_path.exists():
-        return json.loads(sample_path.read_text(encoding="utf-8"))
-    return []
+    if thread.is_alive():
+        error = "Crawl timeout (45s)"
+    return result, error
 
 
 @router.post("/crawl")
 def trigger_crawl(request: CrawlRequest):
     output_path = runs_dir() / "crawled_raw.jsonl"
 
-    live = _try_live_crawl(request.keywords, request.max_posts_per_platform, output_path)
+    live, error = _try_live_crawl(request.keywords, request.max_posts_per_platform, output_path)
     items = live["items"]
-    mode = "live"
-
-    if not items:
-        items = _load_sample_items()[:request.max_posts_per_platform]
-        mode = "fallback"
-
-    message = (
-        f"Đã thu thập {live['crawled']} nội dung, {live['relevant']} liên quan."
-        if mode == "live"
-        else f"Đã nạp {len(items)} nội dung dự phòng."
-    )
 
     def stream():
-        yield json.dumps({"type": "start", "message": message, "mode": mode, "total": len(items)}, ensure_ascii=False) + "\n"
+        if not items:
+            reason = error or "Không tìm thấy nội dung liên quan trên mạng xã hội"
+            yield json.dumps({
+                "type": "error",
+                "message": f"Quét MXH thất bại: {reason}",
+                "crawled": live["crawled"],
+                "relevant": live["relevant"],
+            }, ensure_ascii=False) + "\n"
+            return
+
+        message = f"Đã thu thập {live['crawled']} nội dung, {live['relevant']} liên quan."
+
+        yield json.dumps({"type": "start", "message": message, "mode": "live", "total": len(items)}, ensure_ascii=False) + "\n"
 
         queue_path = _queue_path()
         ingestor = _build_crawled_ingestor(queue_path)
