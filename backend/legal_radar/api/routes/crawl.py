@@ -20,6 +20,74 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["crawl"])
 
 
+@router.get("/crawl/debug")
+def debug_crawl():
+    """Debug endpoint — test Bright Data Discover API and return raw result."""
+    import time
+    import requests as http_requests
+    from backend.legal_radar.settings import get_settings
+
+    settings = get_settings()
+    key = settings.brightdata_api_key or ""
+    result = {
+        "api_key_set": bool(key),
+        "api_key_prefix": key[:8] + "..." if len(key) > 8 else key,
+    }
+
+    if not key:
+        result["error"] = "BRIGHTDATA_API_KEY is empty"
+        return result
+
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    query = "sáp nhập tỉnh site:facebook.com"
+
+    try:
+        resp = http_requests.post(
+            "https://api.brightdata.com/discover",
+            headers=headers,
+            json={"query": query, "num_results": 3, "format": "json", "language": "vi", "country": "VN"},
+            timeout=15,
+        )
+        result["post_status"] = resp.status_code
+        result["post_response"] = resp.text[:500]
+    except Exception as exc:
+        result["post_error"] = str(exc)
+        return result
+
+    if resp.status_code != 200:
+        return result
+
+    task_id = resp.json().get("task_id")
+    if not task_id:
+        result["error"] = "No task_id in response"
+        return result
+
+    result["task_id"] = task_id
+
+    for i in range(10):
+        time.sleep(3)
+        try:
+            r = http_requests.get(
+                f"https://api.brightdata.com/discover?task_id={task_id}",
+                headers=headers,
+                timeout=15,
+            )
+            data = r.json()
+            result[f"poll_{i}_status"] = r.status_code
+            result[f"poll_{i}_body_status"] = data.get("status")
+            if data.get("status") == "done":
+                results = data.get("results", [])
+                result["done"] = True
+                result["results_count"] = len(results)
+                result["results"] = results[:3]
+                return result
+        except Exception as exc:
+            result[f"poll_{i}_error"] = str(exc)
+
+    result["error"] = "Timed out after 10 polls (30s)"
+    return result
+
+
 def _try_live_crawl(keywords, max_posts, output_path):
     """Try Bright Data crawl in a background thread with timeout."""
     from backend.legal_radar.crawlers.scheduler import crawl_and_process
