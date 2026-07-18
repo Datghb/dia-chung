@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -44,36 +43,20 @@ def _platform(source: str) -> str:
         return "YouTube"
     return "Forum"
 
-def _normalise_crawled(raw: dict[str, Any]) -> dict[str, Any]:
-    analysed = analyze_comment(str(raw.get("text", "")))
-    engagement = raw.get("engagement") or {}
-    reach = sum(int(value or 0) for value in engagement.values() if isinstance(value, (int, float)))
-    platform_name = str(raw.get("platform", "Forum")).title()
-    if platform_name == "Youtube":
-        platform_name = "YouTube"
-    source_key = str(raw.get("id") or raw.get("url") or analysed["id"])
-    return {
-        "id": str(raw.get("id") or f"CRAWL-{hashlib.sha1(source_key.encode()).hexdigest()[:12]}"),
-        "comment_id": "",
-        "text": str(raw.get("text", "")),
-        "claim": analysed["claim"],
-        "keywords": analysed.get("keywords", []),
-        "label": getattr(analysed["label"], "value", analysed["label"]),
-        "source_label": getattr(analysed["source_label"], "value", analysed["source_label"]),
-        "reason": analysed["reason"],
-        "priority": int(analysed.get("priority", 0)),
-        "platform": platform_name,
-        "account": str(raw.get("author", "Nguồn chưa xác định")),
-        "published_at": str(raw.get("timestamp", "")),
-        "reach": reach,
-        "status": "new",
-    }
-
 
 def _normalise(raw: dict[str, Any], fixture: dict[str, Any] | None = None) -> dict[str, Any]:
     fixture = fixture or {}
+
+    inline_meta = raw.get("_crawled_meta", {})
+
     label = raw.get("nhan") or raw.get("label") or "can_kiem_chung"
     source_label = raw.get("nhan_nguon") or raw.get("source_label") or "chua_tim_thay_nguon"
+
+    platform = inline_meta.get("platform") or _platform(str(fixture.get("nguon_mo_ta", "forum")))
+    account = inline_meta.get("account") or str(fixture.get("nguon_mo_ta", "Nguồn chưa xác định"))
+    published_at = inline_meta.get("published_at") or str(fixture.get("thoi_gian", ""))
+    reach = inline_meta.get("reach") or int(fixture.get("do_lan_truyen", raw.get("reach", 0)) or 0)
+
     return {
         "id": str(raw.get("id") or fixture.get("id")),
         "comment_id": str(raw.get("comment_id") or fixture.get("id", "")),
@@ -84,10 +67,10 @@ def _normalise(raw: dict[str, Any], fixture: dict[str, Any] | None = None) -> di
         "source_label": getattr(source_label, "value", source_label),
         "reason": str(raw.get("ly_do") or raw.get("reason") or "Cần cán bộ đối chiếu."),
         "priority": int(raw.get("priority", 0)),
-        "platform": _platform(str(fixture.get("nguon_mo_ta", "forum"))),
-        "account": str(fixture.get("nguon_mo_ta", "Nguồn chưa xác định")),
-        "published_at": str(fixture.get("thoi_gian", "")),
-        "reach": int(fixture.get("do_lan_truyen", raw.get("reach", 0)) or 0),
+        "platform": platform,
+        "account": account,
+        "published_at": published_at,
+        "reach": int(reach),
         "status": "new",
     }
 
@@ -96,6 +79,7 @@ def list_queue_items() -> list[dict[str, Any]]:
     fixtures = _fixture_rows()
     fixture_by_id = {str(item["id"]): item for item in fixtures}
     raw_rows = _queue_from_jsonl(runs_dir() / "queue.jsonl")
+
     if raw_rows:
         items = [_normalise(row, fixture_by_id.get(str(row.get("id")))) for row in raw_rows]
     else:
@@ -104,13 +88,6 @@ def list_queue_items() -> list[dict[str, Any]]:
             analysed = analyze_comment(str(fixture["text"]))
             analysed["id"] = fixture["id"]
             items.append(_normalise(analysed, fixture))
-    crawled_rows = _queue_from_jsonl(runs_dir() / "crawled_raw.jsonl")
-    if crawled_rows:
-        known_ids = {item["id"] for item in items}
-        items.extend(
-            row for row in (_normalise_crawled(raw) for raw in crawled_rows)
-            if row["id"] not in known_ids
-        )
     return sorted(items, key=lambda row: (row["priority"], row["reach"]), reverse=True)
 
 

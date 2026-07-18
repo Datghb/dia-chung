@@ -22,15 +22,18 @@ class QueueItemResponse(BaseModel):
     status: str = "new"
 
 
-class QuestionRequest(BaseModel):
-    question: str
-
 class CrawlRequest(BaseModel):
     keywords: list[str] = Field(default_factory=list)
-    max_posts_per_platform: int = Field(default=10, ge=1, le=50)
+    max_posts_per_platform: int = Field(default=20, ge=1, le=50)
+
 
 class CrawlResponse(BaseModel):
-    collected: int
-    added: int
-    mode: str
-    message: str
+    crawled: int
+    comments_found: int
+    processed: int
+    items: list[QueueItemResponse] = Field(default_factory=list)
+    error: str = ""
+
+
+class QuestionRequest(BaseModel):
+    question: str

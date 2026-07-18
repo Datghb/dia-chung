@@ -1,40 +1,69 @@
-"""On-demand social crawl endpoint used by the operations dashboard."""
+"""POST /api/crawl — trigger crawl + pipeline integration."""
 
 from __future__ import annotations
 
-import json
+import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
-from ...crawlers.scheduler import _append_results, _load_seen_urls, crawl_now
-from ..dependencies import data_dir, runs_dir
-from ..schemas import CrawlRequest, CrawlResponse
+from ..schemas import CrawlRequest, CrawlResponse, QueueItemResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["crawl"])
 
 
 @router.post("/crawl", response_model=CrawlResponse)
 def trigger_crawl(request: CrawlRequest) -> CrawlResponse:
-    output_path = runs_dir() / "crawled_raw.jsonl"
-    before = len(_load_seen_urls(output_path))
-    items = crawl_now(
-        keywords=request.keywords or None,
-        max_posts_per_platform=request.max_posts_per_platform,
-        output_path=output_path,
-    )
-    mode = "live"
+    """Trigger crawl -> pipeline -> queue.jsonl. Returns processed items."""
+    try:
+        from ...crawlers.scheduler import crawl_and_process
+    except ImportError as exc:
+        raise HTTPException(status_code=500, detail=f"Crawler unavailable: {exc}")
 
-    if not items:
-        sample_path = data_dir() / "fixtures" / "crawled_sample.json"
-        items = json.loads(sample_path.read_text(encoding="utf-8")) if sample_path.exists() else []
-        mode = "fallback"
+    try:
+        result = crawl_and_process(
+            keywords=request.keywords or None,
+            max_posts_per_platform=request.max_posts_per_platform,
+            min_articles=40,
+        )
+    except Exception as exc:
+        logger.error("Crawl+process failed: %s", exc)
+        return CrawlResponse(
+            crawled=0, comments_found=0, processed=0,
+            error=f"Failed: {str(exc)[:200]}",
+        )
 
-    _append_results(output_path, items, _load_seen_urls(output_path))
-    after = len(_load_seen_urls(output_path))
-    added = max(0, after - before)
-    message = (
-        f"Đã thu thập {len(items)} nội dung trực tiếp."
-        if mode == "live"
-        else f"Nguồn trực tiếp chưa sẵn sàng; đã nạp {len(items)} nội dung dự phòng để demo."
+    if result.get("error"):
+        return CrawlResponse(
+            crawled=result["crawled"],
+            comments_found=result["comments_found"],
+            processed=result["processed"],
+            error=result["error"],
+        )
+
+    items_resp = []
+    for row in result.get("items", []):
+        meta = row.pop("_crawled_meta", {})
+        items_resp.append(QueueItemResponse(
+            id=row["id"],
+            comment_id=row.get("comment_id", ""),
+            text=row.get("text", ""),
+            claim=row.get("claim", ""),
+            keywords=row.get("keywords", []),
+            label=row["nhan"],
+            source_label=row["nhan_nguon"],
+            reason=row.get("ly_do", ""),
+            priority=row.get("priority", 0),
+            platform=meta.get("platform", "Forum"),
+            account=meta.get("account", ""),
+            published_at=meta.get("published_at", ""),
+            reach=meta.get("reach", 0),
+        ))
+
+    return CrawlResponse(
+        crawled=result["crawled"],
+        comments_found=result["comments_found"],
+        processed=result["processed"],
+        items=items_resp,
     )
-    return CrawlResponse(collected=len(items), added=added, mode=mode, message=message)

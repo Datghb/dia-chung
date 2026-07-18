@@ -249,6 +249,79 @@ class TestScheduler:
             crawl_now(keywords=["test"], max_posts_per_platform=1, output_path=nested)
             assert os.path.exists(os.path.dirname(nested))
 
+    def test_crawl_now_returns_only_new_items(self):
+        from legal_radar.crawlers.scheduler import crawl_now
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "output.jsonl"
+            items_a = [
+                {"url": "https://a.com/1", "platform": "test", "text": "a"},
+                {"url": "https://a.com/2", "platform": "test", "text": "b"},
+            ]
+            items_b = [
+                {"url": "https://a.com/1", "platform": "test", "text": "a"},
+                {"url": "https://a.com/3", "platform": "test", "text": "c"},
+            ]
+            env = {"FB_USERNAME": "test", "FB_PASSWORD": "test", "BRIGHTDATA_API_KEY": "fake"}
+            with patch.dict(os.environ, env), \
+                 patch("legal_radar.crawlers.scheduler.crawl_facebook", return_value=items_a), \
+                 patch("legal_radar.crawlers.scheduler.crawl_youtube", return_value=[]):
+                first = crawl_now(keywords=["test"], output_path=out)
+            assert len(first) == 2
+
+            with patch.dict(os.environ, env), \
+                 patch("legal_radar.crawlers.scheduler.crawl_facebook", return_value=items_b), \
+                 patch("legal_radar.crawlers.scheduler.crawl_youtube", return_value=[]):
+                second = crawl_now(keywords=["test"], output_path=out)
+            assert len(second) == 1
+            assert second[0]["url"] == "https://a.com/3"
+
+    def test_crawl_and_process_dedup_by_text(self):
+        from legal_radar.crawlers.scheduler import crawl_and_process
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "crawled.jsonl"
+            qpath = Path(tmpdir) / "queue.jsonl"
+            items = [
+                {"url": "https://a.com/1", "platform": "facebook", "author": "User1",
+                 "timestamp": "2026-07-17", "engagement": {"likes": 10},
+                 "comments": [
+                     {"text": "This is a unique comment for testing A", "author": "C1", "timestamp": "2026-07-17"},
+                     {"text": "This is a unique comment for testing B", "author": "C2", "timestamp": "2026-07-17"},
+                 ]},
+            ]
+            env = {"FB_USERNAME": "test", "FB_PASSWORD": "test", "BRIGHTDATA_API_KEY": "fake"}
+            with patch.dict(os.environ, env), \
+                 patch("legal_radar.crawlers.scheduler.crawl_facebook", return_value=items), \
+                 patch("legal_radar.crawlers.scheduler.crawl_youtube", return_value=[]):
+                result1 = crawl_and_process(output_path=out, queue_path=str(qpath))
+            assert result1["processed"] == 2
+
+            items_dup = [
+                {"url": "https://a.com/2", "platform": "facebook", "author": "User2",
+                 "timestamp": "2026-07-18", "engagement": {"likes": 5},
+                 "comments": [
+                     {"text": "This is a unique comment for testing A", "author": "C1", "timestamp": "2026-07-17"},
+                     {"text": "This is a brand new comment here", "author": "C3", "timestamp": "2026-07-18"},
+                 ]},
+            ]
+            with patch.dict(os.environ, env), \
+                 patch("legal_radar.crawlers.scheduler.crawl_facebook", return_value=items_dup), \
+                 patch("legal_radar.crawlers.scheduler.crawl_youtube", return_value=[]):
+                result2 = crawl_and_process(output_path=out, queue_path=str(qpath))
+            assert result2["processed"] == 1
+            assert result2["items"][0]["text"] == "This is a brand new comment here"
+
+    def test_crawl_and_process_empty_crawl(self):
+        from legal_radar.crawlers.scheduler import crawl_and_process
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "crawled.jsonl"
+            qpath = Path(tmpdir) / "queue.jsonl"
+            with patch("legal_radar.crawlers.scheduler.crawl_facebook", return_value=[]), \
+                 patch("legal_radar.crawlers.scheduler.crawl_youtube", return_value=[]):
+                result = crawl_and_process(output_path=out, queue_path=str(qpath))
+            assert result["crawled"] == 0
+            assert result["processed"] == 0
+            assert "No items crawled" in result["error"]
+
 
 # ── Fixture data tests ──
 

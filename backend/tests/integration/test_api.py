@@ -46,12 +46,14 @@ def test_qa_returns_supported_schema() -> None:
     assert response.status_code == 200
     assert response.json()["label"] in {"dung", "hieu_lam", "can_kiem_chung"}
 
-def test_crawl_returns_supported_schema(monkeypatch, tmp_path) -> None:
-    from legal_radar.api.routes import crawl
+def test_crawl_returns_supported_schema(monkeypatch) -> None:
+    from legal_radar.crawlers import scheduler
 
-    monkeypatch.setattr(crawl, "crawl_now", lambda **_: [])
-    monkeypatch.setattr(crawl, "runs_dir", lambda: tmp_path)
+    def _fake_crawl_and_process(**_kwargs):
+        return {"crawled": 0, "comments_found": 0, "processed": 0, "items": [], "error": "No items crawled"}
+
+    monkeypatch.setattr(scheduler, "crawl_and_process", _fake_crawl_and_process)
     response = client.post("/api/crawl", json={"keywords": ["tin giả"], "max_posts_per_platform": 2})
     assert response.status_code == 200
-    assert {"collected", "added", "mode", "message"} <= response.json().keys()
-    assert response.json()["mode"] == "fallback"
+    assert {"crawled", "comments_found", "processed", "error"} <= response.json().keys()
+    assert response.json()["error"] == "No items crawled"
