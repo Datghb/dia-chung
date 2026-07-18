@@ -9,6 +9,7 @@ class QueueItemResponse(BaseModel):
     id: str
     comment_id: str = ""
     text: str = ""
+    url: str = ""
     claim: str
     keywords: list[str] = Field(default_factory=list)
     label: ClaimLabel
@@ -20,6 +21,13 @@ class QueueItemResponse(BaseModel):
     published_at: str = ""
     reach: int = 0
     status: str = "new"
+    document: str = "Nghị định 174/2026/NĐ-CP"
+    provision: str = ""
+    penalty: str = ""
+    source_title: str = ""
+    source_url: str = ""
+    source_agency: str = ""
+    score: int = 50
 
 
 class QuestionRequest(BaseModel):
