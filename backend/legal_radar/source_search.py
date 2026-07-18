@@ -63,12 +63,16 @@ def _infer_nguon(url: str) -> str:
 def _build_source_query(keywords: list[str]) -> list[str]:
     """Build 2 site-restricted sub-queries from keywords.
 
-    Sub-query 1: TIER_0 domains (.gov.vn and specific agencies)
-    Sub-query 2: TIER_1 + TIER_2 press domains
+    Always includes ĐVHC (administrative unit merger) context terms
+    to keep search results on-topic. Sub-query 1 targets TIER_0,
+    sub-query 2 targets TIER_1 + TIER_2.
     """
     kw = " ".join(keywords[:6])
     if not kw.strip():
-        return []
+        kw = "sáp nhập đơn vị hành chính"
+
+    merger_context = "sáp nhập đơn vị hành chính tỉnh"
+    combined = f"{merger_context} {kw}"
 
     tier0_sites = " OR ".join(f"site:{d}" for d in [".gov.vn", "chinhphu.vn", "bocongan.gov.vn", "sbv.gov.vn"])
     tier12_sites = " OR ".join(
@@ -77,8 +81,8 @@ def _build_source_query(keywords: list[str]) -> list[str]:
     )
 
     return [
-        f"{kw} {tier0_sites}",
-        f"{kw} {tier12_sites}",
+        f"{combined} {tier0_sites}",
+        f"{combined} {tier12_sites}",
     ]
 
 
