@@ -103,7 +103,12 @@ def _poll_discover(task_id: str) -> list[dict]:
 
 
 def _map_bd_result(item: dict) -> dict:
-    """Map a Bright Data Discover result to the xac_thuc_nguon input format."""
+    """Map a Bright Data Discover result to the xac_thuc_nguon input format.
+
+    Results that pass _is_trusted_domain() are real search results from
+    government/news sites — mark as confirmed so apply_fusion_rules()
+    can classify them properly.
+    """
     url = item.get("link", "")
     return {
         "tieu_de": item.get("title", ""),
@@ -112,7 +117,7 @@ def _map_bd_result(item: dict) -> dict:
         "ngay_dang": "",
         "noi_dung_tom_tat": item.get("description", ""),
         "la_bac_bo": False,
-        "la_xac_nhan": False,
+        "la_xac_nhan": True,
     }
 
 
