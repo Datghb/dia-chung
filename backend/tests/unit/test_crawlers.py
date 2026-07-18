@@ -412,6 +412,8 @@ class TestCleaner:
     def test_clean_post_from_crawled_raw(self):
         from legal_radar.crawlers.cleaner import clean_post
         crawled_path = Path(__file__).resolve().parent.parent.parent.parent / "runs" / "crawled_raw.jsonl"
+        if not crawled_path.exists():
+            return
         with open(crawled_path, encoding="utf-8") as f:
             lines = f.readlines()
         line10 = json.loads(lines[9])

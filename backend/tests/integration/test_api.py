@@ -49,7 +49,7 @@ def test_qa_returns_supported_schema() -> None:
 def test_crawl_returns_supported_schema(monkeypatch, tmp_path) -> None:
     from legal_radar.api.routes import crawl
 
-    monkeypatch.setattr(crawl, "crawl_now", lambda **_: [])
+    monkeypatch.setattr(crawl, "crawl_and_process", lambda **_: {"crawled": 0, "relevant": 0, "items": []})
     monkeypatch.setattr(crawl, "runs_dir", lambda: tmp_path)
     response = client.post("/api/crawl", json={"keywords": ["tin giả"], "max_posts_per_platform": 2})
     assert response.status_code == 200
