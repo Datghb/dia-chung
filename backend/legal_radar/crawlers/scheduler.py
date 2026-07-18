@@ -12,13 +12,16 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from .facebook import crawl_facebook, SEARCH_PHRASE
-from .youtube import crawl_youtube, DEFAULT_KEYWORDS as YT_KEYWORDS
+from .facebook import crawl_facebook
+from .youtube import crawl_youtube
 
 logger = logging.getLogger(__name__)
 
 CRAWL_INTERVAL_MINUTES = 15
-CRAWL_KEYWORDS: list[str] = [SEARCH_PHRASE]
+CRAWL_KEYWORDS: list[str] = [
+    "tin giả", "phạt MXH", "xử phạt mạng xã hội",
+    "nghị định 174", "fake news", "tin sai sự thật",
+]
 YOUTUBE_MAX_RESULTS = 10
 
 _DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent.parent.parent.parent / "runs"
