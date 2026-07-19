@@ -27,6 +27,7 @@ export function mapApiCase(item: ApiQueueItem): Case {
     platform,
     account: item.account,
     publishedAt: item.published_at || "Chưa xác định",
+    createdAt: item.created_at || item.published_at || "",
     priority:
       item.priority >= 2
         ? "Khẩn cấp"

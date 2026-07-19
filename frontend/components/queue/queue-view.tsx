@@ -12,7 +12,7 @@ import { ManualInputDrawer } from "./manual-input-drawer";
 import { CaseDetail } from "../cases/case-detail";
 import { Case, Verdict, Status, Priority } from "../../types";
 import {
-  TrendingUp, FilePlus, AlertTriangle, Search, Clock,
+  FilePlus, AlertTriangle, Search, Clock,
   ArrowUpDown, Plus, X, ExternalLink, ArrowRight
 } from "lucide-react";
 
@@ -185,20 +185,6 @@ export function QueueView() {
           <p className="m-0 text-[12px] text-[#738195]">
             Nhập thủ công nội dung cần theo dõi, sau đó rà soát kết quả phân tích của AI.
           </p>
-        </div>
-        <div className="w-[260px] rounded-[15px] border border-[#e8eaf1] bg-white px-[15px] py-[13px] shadow-[0_7px_24px_#242d4b0b] max-[1200px]:hidden">
-          <div className="flex justify-between">
-            <small className="text-[9px] text-[#65738a]">Xu hướng rủi ro 7 ngày</small>
-            <strong className="text-[13px] text-[#d40ca0]">
-              {allItems.length > 0 ? <><TrendingUp size={12} className="inline align-[-1px]" /> {Math.min(99, allItems.length * 3)}%</> : "Chưa có dữ liệu"}
-            </strong>
-          </div>
-          <svg viewBox="0 0 250 55" aria-hidden="true" className="mt-[5px] block h-12 w-full">
-            <path
-              className="fill-none stroke-[#dd15aa] stroke-2"
-              d="M3 48 L25 23 L47 30 L69 17 L91 19 L113 8 L135 12 L157 4 L179 33 L201 42 L224 18 L247 25"
-            />
-          </svg>
         </div>
       </div>
 
