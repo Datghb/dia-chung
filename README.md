@@ -215,7 +215,7 @@ graph LR
 
 | Layer | Tech | Mô tả |
 |---|---|---|
-| Frontend | Next.js, TypeScript | Dashboard giám sát, hồ sơ đối tượng, tầng kiểm chứng |
+| Frontend | Vinext, React, TypeScript | Dashboard giám sát, hồ sơ đối tượng, tầng kiểm chứng |
 | Backend API | FastAPI, Python 3.11+ | REST API: queue, cases, verify, crawl, qa |
 | Engine | Python (pure functions) | Rule-based classification + FactRef matching + BM25 |
 | Pipeline | Python | LLM extract → engine → source verification → queue |
@@ -330,4 +330,9 @@ pytest tests/ -v
 GitHub Actions chạy trên mỗi push:
 - `ruff check` — lint
 - `pytest` — unit tests
-- Type checking (nếu có)
+- business evaluation 14 ca kiểm thử
+- frontend TypeScript, ESLint, production build và server-render tests
+
+## Vận hành an toàn
+
+Production phải đặt `APP_ENV=production`, `ADMIN_API_KEY` và giới hạn `FRONTEND_ORIGIN`. Các API thay đổi dữ liệu quản trị dùng header `X-Admin-Key`; nếu production thiếu key, hệ thống từ chối thao tác. Xem [SECURITY.md](SECURITY.md) và [kế hoạch đánh giá/pilot](docs/EVALUATION_AND_PILOT.md).

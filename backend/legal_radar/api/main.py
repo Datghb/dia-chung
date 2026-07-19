@@ -1,6 +1,7 @@
 """HTTP API for the Legal-KG backend."""
 
 from fastapi import FastAPI
+from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.legal_radar.settings import get_settings
@@ -22,6 +23,16 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=False,
 )
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
 app.include_router(queue.router, prefix="/api")
 app.include_router(cases.router, prefix="/api")
 app.include_router(verify.router, prefix="/api")

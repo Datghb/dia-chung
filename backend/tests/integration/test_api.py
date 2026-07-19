@@ -15,6 +15,12 @@ def test_health() -> None:
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
+def test_api_responses_include_security_headers() -> None:
+    response = client.get("/health")
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "no-referrer"
+
 
 def test_cors_preflight_allows_production_frontend() -> None:
     response = client.options(
