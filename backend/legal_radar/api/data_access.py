@@ -48,9 +48,11 @@ def _compute_ai_accuracy_fallback(score: int, confidence: int, label: str, citat
 
 
 def _compute_source_reliability_fallback(source_label: str, citations: list) -> int:
-    denial_sc = 20 if source_label == "co_bac_bo_chinh_thuc" else 10 if source_label == "co_nguon_xac_nhan" else 0
-    cite_sc = 5 if citations else 0
-    return min(100, denial_sc + cite_sc)
+    if source_label == "co_bac_bo_chinh_thuc":
+        return 90
+    if source_label == "co_nguon_xac_nhan":
+        return 70 if citations else 55
+    return 5 if citations else 0
 
 
 def _normalise(raw: dict[str, Any]) -> dict[str, Any]:

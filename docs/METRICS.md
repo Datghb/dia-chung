@@ -91,20 +91,32 @@ accuracy = min(100, accuracy)
 
 **Question:** How trustworthy is the evidence supporting this claim?
 
+The system typically provides only 1 source per claim, so source count is not used as a signal.
+Instead, we weight what we can actually measure.
+
 ### Signals
 
 | Signal | Source | Weight | Range |
 |--------|--------|--------|-------|
-| Best source tier | `classify_tier()` | Tier 0 (gov)=35, Tier 1 (state)=25, Tier 2 (news)=15, none=0 | 0–35 |
-| Source count | `matched_docs` | `min(25, count*5)` | 0–25 |
-| Source recency | `_parse_date()` comparison | 20 if any source within 30 days of claim | 0–20 |
-| Denial status | `nhan_nguon` | CO_BAC_BO=20, CO_XAC_NHAN=10, CHUA_TIM_THAY=0 | 0–20 |
+| Best source tier | `classify_tier()` | Tier 0 (gov)=45, Tier 1 (state)=35, Tier 2 (news)=20, none=0 | 0–45 |
+| Source recency | `_parse_date()` comparison | 15 if source within 30 days of claim | 0–15 |
+| Confirmation status | `nhan_nguon` | CO_BAC_BO=30, CO_XAC_NHAN=15, CHUA_TIM_THAY=0 | 0–30 |
 | Has citations | `citations` | 5 if has any | 0–5 |
 
-### Formula
+### When no search results available (fallback source)
+
+| Status | Score | Meaning |
+|--------|-------|---------|
+| CO_BAC_BO_CHINH_THUC | 90 | Official denial = strongest signal |
+| CO_NGUON_XAC_NHAN + citations | 70 | Confirmed by source + legal backing |
+| CO_NGUON_XAC_NHAN (no citations) | 55 | Confirmed by source, no legal backing |
+| CHUA_TIM_THAY + citations | 5 | Only legal citations, no source |
+| CHUA_TIM_THAY (no citations) | 0 | No evidence at all |
+
+### Formula (with search results)
 
 ```
-reliability = tier + count + recency + denial + citations
+reliability = tier + recency + denial + citations
 reliability = min(100, reliability)
 ```
 
@@ -119,12 +131,15 @@ reliability = min(100, reliability)
 
 ### Example Calculations
 
-| Scenario | tier | count | recency | denial | cite | Total |
-|----------|------|-------|---------|--------|------|-------|
-| Tier 0 gov source, recent, confirmed | 35 | 5 | 20 | 10 | 5 | **75** |
-| Two Tier 1 sources, recent | 25 | 10 | 20 | 0 | 0 | **55** |
-| Single Tier 2 source, old | 15 | 5 | 0 | 0 | 0 | **20** |
-| No source found | 0 | 0 | 0 | 0 | 0 | **0** |
+| Scenario | tier | recency | denial | cite | Total |
+|----------|------|---------|--------|------|-------|
+| Tier 0 gov source, recent, confirmed | 45 | 15 | 15 | 5 | **80** |
+| Tier 1 state media, recent, confirmed | 35 | 15 | 15 | 0 | **65** |
+| Tier 2 news source, old, confirmed | 20 | 0 | 15 | 5 | **40** |
+| No search, but official denial | — | — | — | — | **90** |
+| No search, confirmed by source + citations | — | — | — | — | **70** |
+| No search, confirmed by source only | — | — | — | — | **55** |
+| No source found, no citations | 0 | 0 | 0 | 0 | **0** |
 
 ---
 

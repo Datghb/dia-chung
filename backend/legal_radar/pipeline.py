@@ -198,12 +198,15 @@ def _compute_reliability(
     has_citations: bool,
 ) -> int:
     if not matched_docs:
-        denial_sc = 20 if nhan_nguon == NhanNguon.CO_BAC_BO_CHINH_THUC else 10 if nhan_nguon == NhanNguon.CO_NGUON_XAC_NHAN else 0
+        if nhan_nguon == NhanNguon.CO_BAC_BO_CHINH_THUC:
+            return 90
+        if nhan_nguon == NhanNguon.CO_NGUON_XAC_NHAN:
+            return 70 if has_citations else 55
         cite_sc = 5 if has_citations else 0
-        return min(100, denial_sc + cite_sc)
+        return cite_sc
+
     best_tier = min(d.get("tier", 2) for d in matched_docs)
-    tier_sc = 35 if best_tier == 0 else 25 if best_tier == 1 else 15
-    count_sc = min(25, len(matched_docs) * 5)
+    tier_sc = 45 if best_tier == 0 else 35 if best_tier == 1 else 20
     from backend.legal_radar.source_classifier import _parse_date
     claim_date = _parse_date(thoi_gian_claim)
     recency_sc = 0
@@ -211,11 +214,11 @@ def _compute_reliability(
         for d in matched_docs:
             src_date = _parse_date(d.get("ngay_dang", ""))
             if src_date and abs((src_date - claim_date).days) <= 30:
-                recency_sc = 20
+                recency_sc = 15
                 break
-    denial_sc = 20 if nhan_nguon == NhanNguon.CO_BAC_BO_CHINH_THUC else 10 if nhan_nguon == NhanNguon.CO_NGUON_XAC_NHAN else 0
+    denial_sc = 30 if nhan_nguon == NhanNguon.CO_BAC_BO_CHINH_THUC else 15 if nhan_nguon == NhanNguon.CO_NGUON_XAC_NHAN else 0
     cite_sc = 5 if has_citations else 0
-    return min(100, tier_sc + count_sc + recency_sc + denial_sc + cite_sc)
+    return min(100, tier_sc + recency_sc + denial_sc + cite_sc)
 
 
 def _classify_comments(comments: list[dict], kg) -> list[dict]:
