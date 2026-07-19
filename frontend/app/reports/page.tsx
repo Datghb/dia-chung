@@ -45,7 +45,6 @@ export default function ReportsPage() {
         <div>
           <span className="text-[10px] font-extrabold tracking-[1.5px] text-[#c01cad]">BÁO CÁO</span>
           <h1 className="my-[6px] text-[38px] font-[760] tracking-[-1.6px] text-[#202944] max-[480px]:text-[31px]">Báo cáo tổng hợp</h1>
-          <p className="m-0 text-[12px] text-[#738195]">Tổng hợp kết quả phân tích AI trên tất cả hồ sơ giám sát.</p>
         </div>
       </div>
 

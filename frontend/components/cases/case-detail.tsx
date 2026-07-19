@@ -178,9 +178,6 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
           <h1 className="my-[9px] text-[19px] font-[760] leading-[1.35] tracking-[-.4px] text-[#202944]">
             {item.claim}
           </h1>
-          <p className="m-0 text-[10px] text-[#738195]">
-            {item.platform} · Công khai · {item.publishedAt}
-          </p>
         </div>
         <label className="mt-[15px] flex items-center gap-3 text-[10px] font-bold tracking-[.7px] text-[#728194]">
           Trạng thái xử lý

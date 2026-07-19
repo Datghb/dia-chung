@@ -27,9 +27,6 @@ export default function VerifyPage() {
           <h1 className="my-[6px] text-[38px] font-[760] tracking-[-1.6px] text-[#202944] max-[480px]:text-[31px]">
             Tầng kiểm chứng
           </h1>
-          <p className="m-0 text-[12px] text-[#738195]">
-            So sánh kết quả hệ thống với các quyết định xử phạt đã được công bố.
-          </p>
         </div>
         <div
           className={`inline-flex items-center gap-[7px] rounded-[11px] px-[13px] py-2.5 text-[11px] font-bold ${

@@ -201,7 +201,6 @@ export function KnowledgeGraphView() {
           <div>
             <span className="text-[10px] font-extrabold tracking-[1.5px] text-[#c01cad]">KNOWLEDGE GRAPH</span>
             <h1 className="my-[6px] text-[38px] font-[760] tracking-[-1.6px] text-[#202944] max-[480px]:text-[31px]">Đồ thị tri thức</h1>
-            <p className="m-0 text-[12px] text-[#738195]">Chưa có dữ liệu. Quét MXH hoặc nhập nội dung để xem đồ thị quan hệ.</p>
           </div>
         </div>
       </div>
@@ -218,7 +217,6 @@ export function KnowledgeGraphView() {
         <div>
           <span className="text-[10px] font-extrabold tracking-[1.5px] text-[#c01cad]">KNOWLEDGE GRAPH</span>
           <h1 className="my-[6px] text-[38px] font-[760] tracking-[-1.6px] text-[#202944] max-[480px]:text-[31px]">Đồ thị tri thức</h1>
-          <p className="m-0 text-[12px] text-[#738195]">Quan hệ giữa Claim <ArrowRight size={14} className="inline align-[-2px]" /> Chủ thể <ArrowRight size={14} className="inline align-[-2px]" /> Điều luật <ArrowRight size={14} className="inline align-[-2px]" /> Nguồn kiểm chứng.</p>
         </div>
         <div className="flex items-center gap-2 max-[700px]:w-full">
           <select
