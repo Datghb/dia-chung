@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   AreaChart,
@@ -117,6 +117,9 @@ const periodActive =
 
 export function MarketOverview({ allItems }: { allItems: Case[] }) {
   const [period, setPeriod] = useState<1 | 7 | 30>(7);
+  const [rangeOffset, setRangeOffset] = useState(0);
+  const [isDraggingChart, setIsDraggingChart] = useState(false);
+  const chartDragStart = useRef<{ x: number; offset: number } | null>(null);
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("q") || "";
 
@@ -140,7 +143,26 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
     return rows.filter((row): row is { item: Case; date: Date } => Boolean(row.date));
   }, [rows]);
 
-  const latest = useMemo(() => new Date(), []);
+  const latestBase = useMemo(() => new Date(), []);
+  const chartDays = period === 30 ? 30 : period === 1 ? 1 : 7;
+  const earliestDate = useMemo(
+    () => dated.reduce<Date | null>((earliest, row) => (!earliest || row.date < earliest ? row.date : earliest), null),
+    [dated],
+  );
+  const maxRangeOffset = useMemo(() => {
+    if (!earliestDate) return 0;
+    const elapsedDays = Math.ceil((latestBase.getTime() - earliestDate.getTime()) / 86_400_000);
+    return Math.max(0, elapsedDays - chartDays + 1);
+  }, [chartDays, earliestDate, latestBase]);
+  const latest = useMemo(() => {
+    const date = new Date(latestBase);
+    date.setDate(date.getDate() - Math.min(rangeOffset, maxRangeOffset));
+    return date;
+  }, [latestBase, maxRangeOffset, rangeOffset]);
+  const selectPeriod = (nextPeriod: 1 | 7 | 30) => {
+    setPeriod(nextPeriod);
+    setRangeOffset(0);
+  };
 
   const start = useMemo(() => {
     const d = new Date(latest);
@@ -212,8 +234,6 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
     );
   }, [topics, current, platforms]);
 
-  const chartDays = period === 30 ? 30 : period === 1 ? 1 : 7;
-
   const daysData = useMemo(() => {
     return Array.from({ length: chartDays }, (_, index) => {
       const date = new Date(latest);
@@ -236,6 +256,16 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
       };
     });
   }, [chartDays, latest, current, dated, start]);
+
+  const chartCeiling = useMemo(() => {
+    const maximum = Math.max(1, ...daysData.map((day) => day["Lượt đề cập"]));
+    const target = maximum * 1.2;
+    const magnitude = 10 ** Math.floor(Math.log10(target));
+    const fraction = target / magnitude;
+    const niceFractions = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+    const niceFraction = niceFractions.find((value) => value >= fraction) ?? 10;
+    return Math.max(4, niceFraction * magnitude);
+  }, [daysData]);
 
   const peak = useMemo(() => {
     return daysData.reduce<{ label: string; value: number }>(
@@ -314,19 +344,19 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
         >
           <button
             className={`${periodButton} ${period === 1 ? periodActive : "bg-transparent text-[#68758b]"}`}
-            onClick={() => setPeriod(1)}
+            onClick={() => selectPeriod(1)}
           >
             24 giờ
           </button>
           <button
             className={`${periodButton} ${period === 7 ? periodActive : "bg-transparent text-[#68758b]"}`}
-            onClick={() => setPeriod(7)}
+            onClick={() => selectPeriod(7)}
           >
             7 ngày
           </button>
           <button
             className={`${periodButton} ${period === 30 ? periodActive : "bg-transparent text-[#68758b]"}`}
-            onClick={() => setPeriod(30)}
+            onClick={() => selectPeriod(30)}
           >
             30 ngày
           </button>
@@ -419,7 +449,43 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
               <i className="h-1 w-[21px]" style={{ background: "#ed198b" }} /> Lượt đề cập
             </span>
           </div>
-          <div className="pr-[18px] pb-7 pl-[38px]" style={{ height: 230, position: "relative", overflow: "visible" }}>
+          <div
+            className="pr-[18px] pb-7 pl-[38px]"
+            style={{
+              height: 230,
+              position: "relative",
+              overflow: "visible",
+              cursor: isDraggingChart ? "grabbing" : "grab",
+              touchAction: "none",
+              userSelect: "none",
+            }}
+            onPointerDown={(event) => {
+              chartDragStart.current = { x: event.clientX, offset: rangeOffset };
+              setIsDraggingChart(true);
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerUp={(event) => {
+              const drag = chartDragStart.current;
+              if (drag) {
+                const bounds = event.currentTarget.getBoundingClientRect();
+                const distance = event.clientX - drag.x;
+                const pixelsPerDay = Math.max(24, bounds.width / Math.max(1, chartDays));
+                const dayShift = Math.round(distance / pixelsPerDay);
+                if (Math.abs(distance) >= 12 && dayShift !== 0) {
+                  setRangeOffset(Math.min(maxRangeOffset, Math.max(0, drag.offset + dayShift)));
+                }
+              }
+              chartDragStart.current = null;
+              setIsDraggingChart(false);
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
+            }}
+            onPointerCancel={() => {
+              chartDragStart.current = null;
+              setIsDraggingChart(false);
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={daysData} margin={{ top: 15, right: 15, left: -20, bottom: 0 }}>
                 <defs>
@@ -430,7 +496,12 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e8ed" />
                 <XAxis dataKey="label" tickLine={false} tick={{ fill: "#64748b", fontSize: 10 }} />
-                <YAxis tickLine={false} tick={{ fill: "#64748b", fontSize: 10 }} />
+                <YAxis
+                  domain={[0, chartCeiling]}
+                  allowDecimals={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 10 }}
+                />
                 <Tooltip content={<CustomTooltip />} />
                 <Area
                   type="monotone"
@@ -453,6 +524,9 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
               }}
             >
               Cao điểm: <strong style={{ color: "#475569" }}>{peak.label || "chưa có dữ liệu"}</strong> · <strong style={{ color: "#ed198b" }}>{Math.max(0, peak.value)}</strong> lượt đề cập
+            </div>
+            <div className="absolute right-[18px] bottom-1 text-[9px] text-[#94a3b8]">
+              Giữ và kéo ngang để xem lịch sử
             </div>
           </div>
         </section>

@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQueueQuery } from "@/hooks/use-queries";
 import { API_URL } from "@/utils/api";
-import { Search, Zap, Bell, ChevronDown, Check, AlertTriangle, X } from "lucide-react";
+import type { Case } from "@/types";
+import { Search, Zap, Bell, ChevronDown, Check, AlertTriangle, X, CheckCheck, ExternalLink } from "lucide-react";
+
+const NOTIFICATION_STORAGE_KEY = "legal-radar-read-notifications";
 
 export function Topbar() {
   const router = useRouter();
@@ -16,6 +19,12 @@ export function Topbar() {
   const { data: caseItems = [], isError } = useQueueQuery();
   const [crawlState, setCrawlState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [crawlMessage, setCrawlMessage] = useState("");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
+  const [notificationToast, setNotificationToast] = useState<Case | null>(null);
+  const knownNotificationIds = useRef<Set<string>>(new Set());
+  const notificationsInitialized = useRef(false);
+  const notificationToastTimer = useRef<number | null>(null);
   const [, startTransition] = useTransition();
 
   const searchQuery = searchParams.get("q") || "";
@@ -78,7 +87,77 @@ export function Topbar() {
     }
   }
 
-  const urgentCount = caseItems.filter((x) => x.priority === "Khẩn cấp").length;
+  const notifications = useMemo(
+    () =>
+      caseItems
+        .filter(
+          (item) =>
+            item.status === "Mới" ||
+            item.priority === "Khẩn cấp" ||
+            item.verdict === "Cần kiểm chứng",
+        )
+        .sort((a, b) => {
+          const priority = { "Khẩn cấp": 4, Cao: 3, "Trung bình": 2, Thấp: 1 };
+          return priority[b.priority] - priority[a.priority] || b.score - a.score;
+        })
+        .slice(0, 10),
+    [caseItems],
+  );
+  const unreadCount = notifications.filter((item) => !readNotificationIds.includes(item.id)).length;
+
+  useEffect(() => {
+    if (!notificationsInitialized.current) {
+      knownNotificationIds.current = new Set(notifications.map((item) => item.id));
+      notificationsInitialized.current = true;
+      return;
+    }
+
+    const newItems = notifications.filter((item) => !knownNotificationIds.current.has(item.id));
+    notifications.forEach((item) => knownNotificationIds.current.add(item.id));
+    if (!newItems.length) return;
+
+    const showTimer = window.setTimeout(() => {
+      if (notificationToastTimer.current) window.clearTimeout(notificationToastTimer.current);
+      setNotificationToast(newItems[0]);
+      notificationToastTimer.current = window.setTimeout(() => {
+        setNotificationToast(null);
+        notificationToastTimer.current = null;
+      }, 5000);
+    }, 0);
+
+    return () => window.clearTimeout(showTimer);
+  }, [notifications]);
+
+  useEffect(
+    () => () => {
+      if (notificationToastTimer.current) window.clearTimeout(notificationToastTimer.current);
+    },
+    [],
+  );
+
+  const saveReadNotifications = (ids: string[]) => {
+    const uniqueIds = Array.from(new Set(ids));
+    setReadNotificationIds(uniqueIds);
+    window.localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(uniqueIds));
+  };
+
+  const toggleNotifications = () => {
+    if (!notificationsOpen) {
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(NOTIFICATION_STORAGE_KEY) || "[]");
+        setReadNotificationIds(Array.isArray(saved) ? saved : []);
+      } catch {
+        setReadNotificationIds([]);
+      }
+    }
+    setNotificationsOpen((open) => !open);
+  };
+
+  const openNotification = (id: string) => {
+    saveReadNotifications([...readNotificationIds, id]);
+    setNotificationsOpen(false);
+    router.push(`/cases/${encodeURIComponent(id)}`);
+  };
 
   return (
     <>
@@ -121,15 +200,106 @@ export function Topbar() {
           />{" "}
           {isError || caseItems.length === 0 ? "Dữ liệu mẫu dự phòng" : "Dữ liệu API trực tiếp"}
         </div>
-        <button
-          className="relative h-9 w-9 border-0 bg-transparent text-[20px] text-[#65738a] max-[700px]:hidden"
-          aria-label="Thông báo"
-        >
-          <Bell size={20} />
-          <b className="absolute top-0 right-0 grid h-4 w-4 place-items-center rounded-full bg-[#df0c9e] text-[9px] text-white">
-            {urgentCount || ""}
-          </b>
-        </button>
+        <div className="relative max-[700px]:hidden">
+          <button
+            className={`relative grid h-9 w-9 place-items-center rounded-full border-0 text-[20px] transition-colors ${
+              notificationsOpen ? "bg-[#fff0f8] text-[#d40c91]" : "bg-transparent text-[#65738a] hover:bg-[#f5f6f9]"
+            }`}
+            aria-label={`Thông báo${unreadCount ? `, ${unreadCount} chưa đọc` : ""}`}
+            aria-expanded={notificationsOpen}
+            onClick={toggleNotifications}
+          >
+            <Bell size={20} />
+            {unreadCount > 0 && (
+              <b className="absolute -top-0.5 -right-0.5 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#df0c9e] px-1 text-[9px] text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </b>
+            )}
+          </button>
+
+          {notificationsOpen && (
+            <section className="absolute top-[46px] right-0 z-[150] w-[380px] overflow-hidden rounded-[15px] border border-[#e6e9ef] bg-white shadow-[0_18px_50px_#1f2b4426]">
+              <header className="flex items-center justify-between border-b border-[#edf0f4] px-4 py-3.5">
+                <div>
+                  <h2 className="m-0 text-[14px] font-[780] text-[#17243d]">Thông báo</h2>
+                  <p className="mt-1 text-[9px] text-[#8a96a8]">{unreadCount} thông báo chưa đọc</p>
+                </div>
+                {unreadCount > 0 && (
+                  <button
+                    className="inline-flex items-center gap-1 border-0 bg-transparent text-[9px] font-[700] text-[#c51991]"
+                    onClick={() => saveReadNotifications([...readNotificationIds, ...notifications.map((item) => item.id)])}
+                  >
+                    <CheckCheck size={13} /> Đánh dấu tất cả đã đọc
+                  </button>
+                )}
+              </header>
+
+              <div className="max-h-[390px] overflow-y-auto">
+                {notifications.length ? (
+                  notifications.map((item) => {
+                    const unread = !readNotificationIds.includes(item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        className={`flex w-full items-start gap-3 border-0 border-b border-[#f0f2f5] px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-[#faf7fc] ${
+                          unread ? "bg-[#fff8fc]" : "bg-white"
+                        }`}
+                        onClick={() => openNotification(item.id)}
+                      >
+                        <span
+                          className={`mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-full ${
+                            item.priority === "Khẩn cấp"
+                              ? "bg-[#fff0f3] text-[#dc3558]"
+                              : item.verdict === "Cần kiểm chứng"
+                                ? "bg-[#fff7e4] text-[#b97813]"
+                                : "bg-[#edf8f3] text-[#23865c]"
+                          }`}
+                        >
+                          {item.priority === "Khẩn cấp" ? <AlertTriangle size={15} /> : <Bell size={14} />}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <strong className="line-clamp-2 block text-[10px] leading-[1.45] text-[#26354b]">
+                            {item.claim}
+                          </strong>
+                          <small className="mt-1 block text-[9px] text-[#8692a4]">
+                            {item.platform === "Web" ? "Báo chí" : item.platform === "Forum" ? "Khác" : item.platform}
+                            {" · "}
+                            {item.priority}
+                            {" · "}
+                            {item.verdict}
+                          </small>
+                        </span>
+                        {unread ? (
+                          <i className="mt-2 h-2 w-2 flex-none rounded-full bg-[#df0c9e]" />
+                        ) : (
+                          <ExternalLink size={12} className="mt-2 flex-none text-[#a0aaba]" />
+                        )}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="px-6 py-10 text-center">
+                    <CheckCheck size={24} className="mx-auto text-[#50ad83]" />
+                    <strong className="mt-3 block text-[11px] text-[#344158]">Chưa có thông báo mới</strong>
+                    <p className="mt-1 text-[9px] text-[#929cad]">Hồ sơ mới từ API sẽ tự động xuất hiện tại đây.</p>
+                  </div>
+                )}
+              </div>
+
+              <footer className="border-t border-[#edf0f4] bg-[#fafbfc] p-2.5 text-center">
+                <button
+                  className="border-0 bg-transparent text-[9px] font-[750] text-[#b9149b]"
+                  onClick={() => {
+                    setNotificationsOpen(false);
+                    router.push("/queue");
+                  }}
+                >
+                  Xem toàn bộ hàng đợi
+                </button>
+              </footer>
+            </section>
+          )}
+        </div>
         <button
           className="ml-1 h-[35px] w-[35px] rounded-full bg-linear-145 from-[#ff3aac] to-[#ad19d5] text-[10px] font-extrabold text-white shadow-[0_6px_14px_#d12aa13b]"
           aria-label="Tài khoản Minh Anh"
@@ -158,6 +328,51 @@ export function Topbar() {
           <p className="mt-[2px] flex-1 text-[11px] leading-[1.45]">{crawlMessage}</p>
           <button className="border-0 bg-transparent leading-none text-inherit" onClick={() => setCrawlMessage("")}>
             <X size={18} />
+          </button>
+        </div>
+      )}
+
+      {notificationToast && (
+        <div
+          className="fixed right-[22px] z-[125] flex w-[min(390px,calc(100vw-32px))] items-start gap-3 rounded-xl border border-[#ead5e4] bg-white p-[14px] text-left shadow-[0_16px_42px_#25324a2b] transition-all"
+          style={{ bottom: crawlMessage ? 112 : 22 }}
+          onClick={() => openNotification(notificationToast.id)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") openNotification(notificationToast.id);
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label={`Mở thông báo: ${notificationToast.claim}`}
+        >
+          <span
+            className={`grid h-9 w-9 flex-none place-items-center rounded-full ${
+              notificationToast.priority === "Khẩn cấp"
+                ? "bg-[#fff0f3] text-[#dc3558]"
+                : "bg-[#fff0f8] text-[#d40c91]"
+            }`}
+          >
+            {notificationToast.priority === "Khẩn cấp" ? <AlertTriangle size={17} /> : <Bell size={17} />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <strong className="block text-[11px] font-[780] text-[#1e2b43]">
+              Có hồ sơ mới từ {notificationToast.platform === "Web" ? "Báo chí" : notificationToast.platform === "Forum" ? "Khác" : notificationToast.platform}
+            </strong>
+            <span className="mt-1 line-clamp-2 block text-[10px] leading-[1.45] text-[#58667b]">
+              {notificationToast.claim}
+            </span>
+            <small className="mt-1.5 block text-[9px] font-[700] text-[#c51991]">Bấm để xem chi tiết · tự đóng sau 5 giây</small>
+          </span>
+          <button
+            className="grid h-6 w-6 flex-none place-items-center rounded-full text-[#8793a5] hover:bg-[#f4f5f8]"
+            onClick={(event) => {
+              event.stopPropagation();
+              if (notificationToastTimer.current) window.clearTimeout(notificationToastTimer.current);
+              notificationToastTimer.current = null;
+              setNotificationToast(null);
+            }}
+            aria-label="Đóng thông báo"
+          >
+            <X size={15} />
           </button>
         </div>
       )}
