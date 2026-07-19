@@ -1,12 +1,11 @@
 import pytest
 import json
-from pathlib import Path
 
 from backend.legal_radar.model import (
     VanBan, DieuKhoan, HanhVi, ChuThe, MucPhat, BienPhapKhacPhuc,
     NguonTin, Edge, KnowledgeGraph, QueueItem,
     NhomHanhVi, LoaiChuThe, NhanNguon, NhanPhanLoai,
-    load_kg, load_queue, validate_kg,
+    load_kg, validate_kg,
 )
 
 

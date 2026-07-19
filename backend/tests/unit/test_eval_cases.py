@@ -20,7 +20,7 @@ class TestEvalCases:
 
     def test_required_fields(self):
         for case in self.cases:
-            assert "id" in case, f"Missing 'id'"
+            assert "id" in case, "Missing 'id'"
             assert "group" in case, f"Missing 'group' in {case['id']}"
             assert "comment" in case, f"Missing 'comment' in {case['id']}"
             assert "expected_label" in case or "expected_refuse" in case or "expected_anonymized" in case, \

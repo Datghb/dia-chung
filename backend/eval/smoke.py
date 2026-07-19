@@ -1,7 +1,6 @@
 """Minimal evaluation gate; populate cases.json as the engine is implemented."""
 
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -51,9 +50,9 @@ def main() -> int:
         
         # 3. Refusal / OOD check
         if case.get("expected_refuse"):
-            nhan, _, matched_dks = phan_loai_claim(anonymized, None, kg)
-            if len(matched_dks) > 0 or nhan != NhanPhanLoai.CAN_KIEM_CHUNG:
-                print(f"FAIL: Case {case_id} failed: Expected OOD to be refused/unmatched, but got citations or label {nhan}.")
+            result = phan_loai_claim(anonymized, None, kg)
+            if result.citations or result.nhan != NhanPhanLoai.CAN_KIEM_CHUNG:
+                print(f"FAIL: Case {case_id} failed: Expected OOD to be refused/unmatched, but got citations or label {result.nhan}.")
                 failed += 1
                 continue
             passed += 1
@@ -61,8 +60,10 @@ def main() -> int:
             continue
             
         # 4. Engine Classification
-        nhan, ly_do, citations = phan_loai_claim(anonymized, None, kg)
-        actual_label = nhan.value if hasattr(nhan, "value") else nhan
+        result = phan_loai_claim(anonymized, None, kg)
+        actual_label = result.nhan.value
+        ly_do = result.ly_do
+        citations = result.citations
         
         # Validate label against guardrails
         try:
@@ -111,4 +112,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

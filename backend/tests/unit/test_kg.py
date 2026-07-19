@@ -1,9 +1,7 @@
-import json
 from pathlib import Path
 
 from backend.legal_radar.model import (
-    load_kg, validate_kg, KnowledgeGraph,
-    VanBan, DieuKhoan, HanhVi, MucPhat, BienPhapKhacPhuc,
+    load_kg, validate_kg, VanBan, DieuKhoan, HanhVi, MucPhat, BienPhapKhacPhuc,
     NhomHanhVi, LoaiChuThe,
 )
 

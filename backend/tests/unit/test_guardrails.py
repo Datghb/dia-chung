@@ -10,8 +10,6 @@ from backend.legal_radar.guardrails import (
     anonymize_pii,
     sanitize_injection,
     validate_source_label,
-    LABEL_ENUM,
-    NHAN_NGUON_ENUM,
 )
 
 

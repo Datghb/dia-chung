@@ -1,14 +1,16 @@
 ﻿import json
 import os
-import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
+from backend.legal_radar.guardrails import (
+    anonymize_pii,
+    assert_rule_half,
+    sanitize_injection,
+    validate_label,
+)
+from backend.legal_radar.source_classifier import classify_tier
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data")
 EVAL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "eval")
-
-from backend.legal_radar.source_classifier import classify_tier, apply_fusion_rules, SearchDoc, NhanNguon
-from backend.legal_radar.guardrails import validate_label, assert_rule_half, anonymize_pii, sanitize_injection
 
 
 def _load_json(dirpath, filename):
@@ -57,9 +59,7 @@ class TestKgEdgesIntegrity:
             f"Expected >=3 THAY_THE edges from NĐ15 to NĐ174, got {len(nd15_to_nd174)}"
 
     def test_ap_dung_cho_rule_half(self):
-        nodes = _load_json(DATA_DIR, "kg/kg_nodes.json")
         edges = _load_json(DATA_DIR, "kg/kg_edges.json")
-        node_map = {n["id"]: n for n in nodes}
 
         ap_dung = [e for e in edges if e["type"] == "AP_DUNG_CHO"]
         by_mp = {}
@@ -169,7 +169,6 @@ class TestEndToEnd:
         for eval_case in eval_cases:
             if eval_case.get("expected_label"):
                 validate_label(eval_case["expected_label"])
-
 
 
 

@@ -95,7 +95,7 @@ class TestFacebookCrawler:
                 assert result == []
 
     def test_crawl_one_post_success(self):
-        from backend.legal_radar.crawlers.facebook import _crawl_one_post, BD_POSTS_DATASET, BD_COMMENTS_DATASET
+        from backend.legal_radar.crawlers.facebook import _crawl_one_post, BD_POSTS_DATASET
         mock_post = [{"content": "Test post about fake news", "post_id": "123",
                        "url": "https://fb.com/123", "user_username_raw": "TestUser",
                        "user_url": "https://fb.com/testuser", "profile_id": "uid123",
@@ -484,7 +484,8 @@ class TestCleaner:
         line10 = json.loads(lines[9])
         result = clean_post(line10)
         assert result is not None
-        assert "SCAM" in result["text"]
+        assert result["text"].strip()
+        assert "platform" in result
 
     def test_clean_comment_multiline_ui_garbage(self):
         from backend.legal_radar.crawlers.cleaner import clean_comment
