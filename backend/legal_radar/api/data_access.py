@@ -110,6 +110,7 @@ def _normalise(raw: dict[str, Any]) -> dict[str, Any]:
         "platform": platform,
         "account": account,
         "published_at": str(raw.get("published_at", "")),
+        "created_at": str(raw.get("created_at") or raw.get("published_at", "")),
         "reach": reach,
         "status": str(raw.get("status", "new")),
         "document": str(raw.get("document", "Nghị định 174/2026/NĐ-CP")),

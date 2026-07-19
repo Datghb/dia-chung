@@ -1,7 +1,8 @@
 ﻿from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -164,6 +165,7 @@ class QueueItem:
     platform: str = "Forum"
     account: str = ""
     published_at: str = ""
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     reach: int = 0
     status: str = "new"
     score: int = 30
@@ -300,4 +302,3 @@ def validate_kg(kg: KnowledgeGraph) -> list[str]:
             errors.append(f"Edge target '{e.target}' not found")
 
     return errors
-
