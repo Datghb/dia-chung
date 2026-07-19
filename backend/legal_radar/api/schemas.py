@@ -12,6 +12,7 @@ class QueueItemResponse(BaseModel):
     url: str = ""
     claim: str
     keywords: list[str] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
     label: ClaimLabel
     source_label: SourceLabel
     reason: str

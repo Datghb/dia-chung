@@ -146,10 +146,158 @@ class TestFacebookCrawler:
 
 # ── YouTube crawler tests ──
 
+class TestYouTubeCrawler:
+    def test_no_api_key(self):
+        from legal_radar.crawlers.youtube import crawl_youtube
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("YOUTUBE_API_KEY", None)
+            assert crawl_youtube(max_posts=1) == []
+
+    def test_normalizes_video_and_comments(self):
+        from legal_radar.crawlers.youtube import crawl_youtube
+
+        def fake_get(path, **params):
+            if path == "search":
+                return {"items": [{"id": {"videoId": "vid1"}, "snippet": {}}]}
+            if path == "videos":
+                return {"items": [{
+                    "id": "vid1",
+                    "snippet": {
+                        "title": "Tin sáp nhập tỉnh",
+                        "description": "Nội dung mô tả",
+                        "channelTitle": "Kênh tin",
+                        "channelId": "channel1",
+                        "publishedAt": "2026-07-18T00:00:00Z",
+                    },
+                    "statistics": {"viewCount": "10", "likeCount": "2", "commentCount": "1"},
+                }]}
+            return {"items": [{
+                "snippet": {
+                    "topLevelComment": {"snippet": {
+                        "textDisplay": "Bình luận",
+                        "authorDisplayName": "Người xem",
+                        "publishedAt": "2026-07-18T01:00:00Z",
+                        "likeCount": 1,
+                    }},
+                    "totalReplyCount": 0,
+                }
+            }]}
+
+        with patch.dict(os.environ, {"YOUTUBE_API_KEY": "fake"}):
+            with patch("legal_radar.crawlers.youtube._get", side_effect=fake_get):
+                result = crawl_youtube(["sáp nhập tỉnh"], max_posts=1)
+        assert result[0]["platform"] == "youtube"
+        assert result[0]["engagement"]["views"] == 10
+        assert result[0]["comments"][0]["text"] == "Bình luận"
+
+
+class TestNewsCrawler:
+    def test_parses_relevant_rss_item(self):
+        from legal_radar.crawlers.news import _fetch_feed
+        response = MagicMock()
+        response.content = """<?xml version="1.0" encoding="UTF-8"?>
+        <rss><channel><item>
+          <title>Sáp nhập tỉnh và sắp xếp đơn vị hành chính</title>
+          <description>Bộ Nội vụ thông tin về tỉnh mới</description>
+          <link>https://example.vn/bai-viet</link>
+          <pubDate>Sun, 19 Jul 2026 08:00:00 +0700</pubDate>
+        </item></channel></rss>""".encode()
+        response.raise_for_status.return_value = None
+        with patch("legal_radar.crawlers.news.requests.get", return_value=response):
+            items = _fetch_feed("Báo thử nghiệm", "https://example.vn/rss")
+        assert len(items) == 1
+        assert items[0]["platform"] == "web"
+        assert items[0]["source_name"] == "Báo thử nghiệm"
+        assert items[0]["url"] == "https://example.vn/bai-viet"
+
+    def test_ignores_irrelevant_rss_item(self):
+        from legal_radar.crawlers.news import _fetch_feed
+        response = MagicMock()
+        response.content = b"""<rss><channel><item>
+          <title>Ket qua bong da hom nay</title>
+          <description>Lich thi dau moi nhat</description>
+          <link>https://example.vn/the-thao</link>
+        </item></channel></rss>"""
+        response.raise_for_status.return_value = None
+        with patch("legal_radar.crawlers.news.requests.get", return_value=response):
+            assert _fetch_feed("Báo thử nghiệm", "https://example.vn/rss") == []
+
+
 # ── Scheduler tests ──
 
 class TestScheduler:
     """Tests for scheduler.py"""
+
+    def test_crawl_now_collects_facebook_and_youtube(self):
+        from legal_radar.crawlers.scheduler import crawl_now
+        facebook = [{"url": "https://facebook.com/posts/1", "platform": "facebook"}]
+        youtube = [{"url": "https://youtube.com/watch?v=1", "platform": "youtube"}]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "crawled.jsonl"
+            with patch("legal_radar.crawlers.scheduler.crawl_facebook", return_value=facebook):
+                with patch("legal_radar.crawlers.scheduler.crawl_youtube", return_value=youtube):
+                    with patch("legal_radar.crawlers.scheduler.crawl_news", return_value=[]):
+                        result = crawl_now(["test"], 5, output)
+        assert {item["platform"] for item in result} == {"facebook", "youtube"}
+
+    def test_crawl_now_can_disable_facebook(self):
+        from legal_radar.crawlers.scheduler import crawl_now
+        youtube = [{"url": "https://youtube.com/watch?v=1", "platform": "youtube"}]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "crawled.jsonl"
+            with patch.dict(os.environ, {"CRAWL_FACEBOOK_ENABLED": "false"}):
+                with patch("legal_radar.crawlers.scheduler.crawl_facebook") as facebook:
+                    with patch(
+                        "legal_radar.crawlers.scheduler.crawl_youtube", return_value=youtube
+                    ) as youtube_crawler:
+                        with patch("legal_radar.crawlers.scheduler.crawl_news", return_value=[]):
+                            result = crawl_now(["test"], 5, output)
+        facebook.assert_not_called()
+        youtube_crawler.assert_called_once_with(keywords=["test"], max_posts=15)
+        assert [item["platform"] for item in result] == ["youtube"]
+
+    def test_crawl_now_can_run_news_only(self):
+        from legal_radar.crawlers.scheduler import crawl_now
+        news = [{"url": "https://example.vn/article", "platform": "web"}]
+        env = {
+            "CRAWL_FACEBOOK_ENABLED": "false",
+            "CRAWL_YOUTUBE_ENABLED": "false",
+            "CRAWL_NEWS_ENABLED": "true",
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "crawled.jsonl"
+            with patch.dict(os.environ, env):
+                with patch("legal_radar.crawlers.scheduler.crawl_facebook") as facebook:
+                    with patch("legal_radar.crawlers.scheduler.crawl_youtube") as youtube:
+                        with patch(
+                            "legal_radar.crawlers.scheduler.crawl_news", return_value=news
+                        ) as news_crawler:
+                            result = crawl_now(["test"], 5, output)
+        facebook.assert_not_called()
+        youtube.assert_not_called()
+        news_crawler.assert_called_once_with(keywords=["test"], max_posts=50)
+        assert result == news
+
+    def test_crawl_and_process_caps_relevant_items(self):
+        from legal_radar.crawlers.scheduler import crawl_and_process
+        raw = [
+            {
+                "url": f"https://youtube.com/watch?v={index}",
+                "platform": "youtube",
+                "content_type": "video",
+                "text": "sáp nhập tỉnh và sắp xếp đơn vị hành chính",
+                "author": "Kênh tin",
+                "timestamp": "2026-07-19",
+                "engagement": {},
+                "comments": [],
+            }
+            for index in range(8)
+        ]
+        with patch("legal_radar.crawlers.scheduler.crawl_now", return_value=raw):
+            result = crawl_and_process(["test"], max_posts=5)
+        assert result["crawled"] == 8
+        assert result["relevant"] == 5
+        assert len(result["items"]) == 5
 
     def test_crawl_now_returns_list(self):
         from backend.legal_radar.crawlers.scheduler import crawl_now

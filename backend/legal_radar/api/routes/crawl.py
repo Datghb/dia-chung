@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import threading
 from dataclasses import asdict
 from hashlib import sha1
@@ -146,7 +147,9 @@ def _try_live_crawl(keywords, max_posts, output_path):
 def trigger_crawl(request: CrawlRequest):
     from backend.legal_radar.settings import get_settings
     settings = get_settings()
-    if not settings.brightdata_api_key:
+    youtube_enabled = os.environ.get("CRAWL_YOUTUBE_ENABLED", "true").lower() in {"1", "true", "yes", "on"}
+    news_enabled = os.environ.get("CRAWL_NEWS_ENABLED", "true").lower() in {"1", "true", "yes", "on"}
+    if not settings.brightdata_api_key and not youtube_enabled and not news_enabled:
         def stream_no_key():
             yield json.dumps({
                 "type": "error",

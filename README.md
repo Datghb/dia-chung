@@ -298,6 +298,9 @@ $env:BRIGHTDATA_API_KEY = "your-key"
 # Crawl 20 posts về ĐVHC
 python run_facebook_crawler.py
 
+Thiết lập crawler Facebook và YouTube: xem
+[`docs/CRAWLERS_SETUP.md`](docs/CRAWLERS_SETUP.md).
+
 # Output: runs/crawled_raw.jsonl
 ```
 

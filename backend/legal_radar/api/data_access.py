@@ -100,6 +100,7 @@ def _normalise(raw: dict[str, Any]) -> dict[str, Any]:
         "url": str(raw.get("url", "")),
         "claim": str(raw.get("claim") or raw.get("text", "")),
         "keywords": list(raw.get("keywords") or []),
+        "citations": list(raw.get("citations") or []),
         "label": label_val,
         "source_label": source_val,
         "reason": reason,
