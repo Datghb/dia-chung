@@ -1,4 +1,4 @@
-![CI](https://github.com/Datghb/Parasitic-/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Datghb/Parasitic-/actions/workflows/ci.yml/badge.svg) ![CD](https://github.com/Datghb/Parasitic-/actions/workflows/cd.yml/badge.svg)
 
 # Địa Chứng
 

@@ -18,13 +18,17 @@ settings = get_settings()
 
 _origins = [origin.strip() for origin in settings.frontend_origin.split(",") if origin.strip()]
 
+_allow_origin_regex = (
+    r"https://(?:.*\.chatgpt\.site|diachung\.dpdns\.org)"
+    if settings.app_env.lower() == "production"
+    else r"https://(?:.*\.chatgpt\.site|diachung\.dpdns\.org)|http://(?:localhost|127\.0\.0\.1)(?::\d+)?"
+)
+
 app = FastAPI(title="Địa Chứng API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
-    # Keep local development usable even when FRONTEND_ORIGIN is overridden
-    # with only production domains in the process environment.
-    allow_origin_regex=r"https://(?:.*\.chatgpt\.site|diachung\.dpdns\.org)|http://(?:localhost|127\.0\.0\.1)(?::\d+)?",
+    allow_origin_regex=_allow_origin_regex,
     allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
     allow_credentials=True,

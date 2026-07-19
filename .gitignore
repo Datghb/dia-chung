@@ -68,3 +68,7 @@ runs/reports/*
 BUG-ANALYSIS.md
 docs/pitch/PRE_PRODUCTION_CHECKLIST.md
 docs/pitch/PRODUCT_BRIEF.md
+
+# build artifacts
+*.tsbuildinfo
+
