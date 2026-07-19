@@ -77,6 +77,7 @@ def _discover_urls(queries: list[str], needed: int) -> list[dict]:
         for item in results:
             link = item.get("link", "")
             if "facebook.com" not in link:
+                logger.debug("Skip non-facebook: %s", link[:80])
                 continue
             dedup = re.sub(r"[?&].*", "", link)
             if dedup in seen:
@@ -263,6 +264,10 @@ def crawl_facebook(
         url = item.get("link", "")
         title = item.get("title", "")
         description = item.get("description", "")
+
+        if "facebook.com" not in url.lower():
+            logger.debug("Skip non-facebook URL: %s", url[:80])
+            continue
 
         scraped = _crawl_one_post(url)
         if scraped:
