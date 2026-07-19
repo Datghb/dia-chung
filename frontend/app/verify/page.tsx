@@ -83,10 +83,12 @@ export default function VerifyPage() {
                   </dl>
                 </div>
                 <div className="border-l border-[#eff1f5] bg-[#fcf9fd] px-[23px] py-[21px] max-[760px]:border-t max-[760px]:border-l-0">
-                  <small className={colLabel}>KỲ VỌNG HỆ THỐNG</small>
-                  <p className="inline-block rounded-lg bg-[#e9f8f2] px-[9px] py-1.5 text-[12px] font-extrabold text-[#287d61]">
-                    <Check size={14} className="mr-1 inline align-[-1px]" /> {item.expected_he_thong.nhan}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <small className={colLabel}>KỲ VỌNG HỆ THỐNG</small>
+                    <span className="inline-flex items-center justify-center rounded-lg bg-[#e9f8f2] p-1.5 text-[#287d61]">
+                      <Check size={14} className="align-[-1px]" />
+                    </span>
+                  </div>
                   <strong className="block text-[13px] leading-[1.45] text-[#a925a6]">
                     {item.expected_he_thong.dieu_khoan_moi}
                   </strong>
