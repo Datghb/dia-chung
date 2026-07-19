@@ -25,7 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.engine import Engine
 
 
-class CaseVersionConflict(RuntimeError):
+class CaseVersionConflictError(RuntimeError):
     """The case changed after the reviewer loaded it."""
 
 
@@ -78,13 +78,16 @@ class SqlStore:
         )
 
     def initialize(self) -> None:
+        """Create database tables if they do not exist."""
         metadata.create_all(self.engine)
 
     def ping(self) -> None:
+        """Check database connection availability."""
         with self.engine.connect() as connection:
             connection.execute(select(1))
 
     def upsert_case(self, raw: dict[str, Any]) -> dict[str, Any]:
+        """Insert or update a case in the database."""
         case_id = str(raw.get("id", "")).strip()
         if not case_id:
             raise ValueError("Case id is required")
@@ -92,9 +95,7 @@ class SqlStore:
         payload = dict(raw)
         status_value = str(payload.get("status", "new"))
         with self.engine.begin() as connection:
-            existing = connection.execute(
-                select(cases.c.version).where(cases.c.id == case_id)
-            ).first()
+            existing = connection.execute(select(cases.c.version).where(cases.c.id == case_id)).first()
             if existing is None:
                 version = 1
                 connection.execute(
@@ -121,8 +122,9 @@ class SqlStore:
         return {**payload, "version": version}
 
     def list_cases(self) -> list[dict[str, Any]]:
+        """Retrieve all cases sorted by updated_at descending."""
         with self.engine.connect() as connection:
-            rows = connection.execute(select(cases).order_by(cases.c.updated_at.desc())).all()
+            rows = connection.execute(select(cases.order_by(cases.c.updated_at.desc()))).all()
         return [
             {
                 **dict(row.payload),
@@ -142,13 +144,14 @@ class SqlStore:
         corrected_label: str | None,
         actor: str,
     ) -> dict[str, Any]:
+        """Process a reviewer's decision on a case."""
         now = datetime.now(UTC)
         with self.engine.begin() as connection:
             row = connection.execute(select(cases).where(cases.c.id == case_id)).first()
             if row is None:
                 raise KeyError(case_id)
             if int(row.version) != expected_version:
-                raise CaseVersionConflict(case_id)
+                raise CaseVersionConflictError(case_id)
 
             old_payload = dict(row.payload)
             new_payload = dict(old_payload)
@@ -167,7 +170,7 @@ class SqlStore:
                 )
             )
             if updated.rowcount != 1:
-                raise CaseVersionConflict(case_id)
+                raise CaseVersionConflictError(case_id)
 
             connection.execute(
                 insert(reviews).values(
@@ -204,13 +207,14 @@ class SqlStore:
         reviewer_reason: str = "",
         reviewer_note: str = "",
     ) -> dict[str, Any]:
+        """Update case status and log the change."""
         now = datetime.now(UTC)
         with self.engine.begin() as connection:
             row = connection.execute(select(cases).where(cases.c.id == case_id)).first()
             if row is None:
                 raise KeyError(case_id)
             if expected_version is not None and int(row.version) != expected_version:
-                raise CaseVersionConflict(case_id)
+                raise CaseVersionConflictError(case_id)
             payload = dict(row.payload)
             old_status = str(row.status)
             if reviewer_label:
@@ -232,7 +236,7 @@ class SqlStore:
                 )
             )
             if updated.rowcount != 1:
-                raise CaseVersionConflict(case_id)
+                raise CaseVersionConflictError(case_id)
             connection.execute(
                 insert(audit_events).values(
                     case_id=case_id,
@@ -247,11 +251,10 @@ class SqlStore:
         return {**payload, "version": new_version}
 
     def list_audit(self, case_id: str) -> list[dict[str, Any]]:
+        """Retrieve audit history for a given case."""
         with self.engine.connect() as connection:
             rows = connection.execute(
-                select(audit_events)
-                .where(audit_events.c.case_id == case_id)
-                .order_by(audit_events.c.id)
+                select(audit_events).where(audit_events.c.case_id == case_id).order_by(audit_events.c.id)
             ).all()
         return [
             {
@@ -267,11 +270,13 @@ class SqlStore:
         ]
 
     def clear_cases(self) -> int:
+        """Clear all cases and historical data."""
         with self.engine.begin() as connection:
             result = connection.execute(delete(cases))
         return int(result.rowcount or 0)
 
     def import_jsonl(self, path: Path) -> int:
+        """Import cases from a JSONL file."""
         imported = 0
         if not path.exists():
             return imported

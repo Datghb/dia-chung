@@ -10,6 +10,7 @@ from backend.legal_radar.storage import SqlStore
 
 
 def main() -> int:
+    """Migrate queue items from JSONL to SQL storage."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--database-url", default=os.getenv("DATABASE_URL", ""))
     parser.add_argument("--queue", type=Path, default=Path("runs/queue.jsonl"))

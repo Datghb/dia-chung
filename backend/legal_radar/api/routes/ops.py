@@ -10,4 +10,5 @@ router = APIRouter(tags=["operations"])
 
 @router.get("/metrics", dependencies=[Depends(require_admin)])
 def get_metrics() -> dict[str, object]:
+    """Retrieve application performance metrics snapshot (admin only)."""
     return metrics.snapshot()

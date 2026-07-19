@@ -13,7 +13,7 @@ from dataclasses import dataclass
 ALLOWED_ROLES = frozenset({"viewer", "reviewer", "admin"})
 
 
-class InvalidSession(ValueError):
+class InvalidSessionError(ValueError):
     """Raised when a session cannot be trusted."""
 
 
@@ -49,6 +49,7 @@ class SessionManager:
         *,
         now: int | None = None,
     ) -> tuple[str, Principal]:
+        """Issue a new session token and principal."""
         clean_subject = subject.strip()
         if not clean_subject or len(clean_subject) > 100:
             raise ValueError("Invalid session subject")
@@ -73,19 +74,16 @@ class SessionManager:
                 sort_keys=True,
             ).encode("utf-8")
         )
-        signature = _encode(
-            hmac.new(self._secret, payload.encode("ascii"), hashlib.sha256).digest()
-        )
+        signature = _encode(hmac.new(self._secret, payload.encode("ascii"), hashlib.sha256).digest())
         return f"{payload}.{signature}", principal
 
     def verify(self, token: str, *, now: int | None = None) -> Principal:
+        """Verify a session token and return its principal."""
         try:
             payload, supplied_signature = token.split(".", 1)
-            expected_signature = _encode(
-                hmac.new(self._secret, payload.encode("ascii"), hashlib.sha256).digest()
-            )
+            expected_signature = _encode(hmac.new(self._secret, payload.encode("ascii"), hashlib.sha256).digest())
             if not hmac.compare_digest(supplied_signature, expected_signature):
-                raise InvalidSession("Invalid session signature")
+                raise InvalidSessionError("Invalid session signature")
             data = json.loads(_decode(payload))
             principal = Principal(
                 subject=str(data["sub"]),
@@ -93,19 +91,19 @@ class SessionManager:
                 csrf_token=str(data["csrf"]),
                 expires_at=int(data["exp"]),
             )
-        except InvalidSession:
+        except InvalidSessionError:
             raise
         except (KeyError, TypeError, ValueError, UnicodeError, json.JSONDecodeError) as error:
-            raise InvalidSession("Malformed session") from error
+            raise InvalidSessionError("Malformed session") from error
 
         current_time = int(time.time()) if now is None else now
         if principal.expires_at <= current_time:
-            raise InvalidSession("Session expired")
+            raise InvalidSessionError("Session expired")
         if (
             not principal.subject
             or len(principal.subject) > 100
             or principal.role not in ALLOWED_ROLES
             or not principal.csrf_token
         ):
-            raise InvalidSession("Invalid session claims")
+            raise InvalidSessionError("Invalid session claims")
         return principal

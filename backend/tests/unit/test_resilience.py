@@ -1,6 +1,6 @@
 import pytest
 
-from backend.legal_radar.resilience import CircuitBreaker, CircuitOpen, call_with_retry
+from backend.legal_radar.resilience import CircuitBreaker, CircuitOpenError, call_with_retry
 
 
 def test_retry_opens_circuit_after_repeated_provider_failures() -> None:
@@ -20,7 +20,7 @@ def test_retry_opens_circuit_after_repeated_provider_failures() -> None:
             retry_on=(TimeoutError,),
             sleep=lambda _: None,
         )
-    with pytest.raises(CircuitOpen):
+    with pytest.raises(CircuitOpenError):
         call_with_retry(
             fail,
             breaker=breaker,

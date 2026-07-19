@@ -1,6 +1,6 @@
 import pytest
 
-from backend.legal_radar.storage import CaseVersionConflict, SqlStore
+from backend.legal_radar.storage import CaseVersionConflictError, SqlStore
 
 
 def test_sql_store_persists_cases_and_reviews_atomically(tmp_path) -> None:
@@ -46,7 +46,7 @@ def test_sql_store_rejects_stale_case_version(tmp_path) -> None:
         actor="reviewer-1",
     )
 
-    with pytest.raises(CaseVersionConflict):
+    with pytest.raises(CaseVersionConflictError):
         store.review_case(
             "case-1",
             expected_version=1,
@@ -70,7 +70,7 @@ def test_stale_status_update_does_not_append_audit(tmp_path) -> None:
         actor="reviewer-a",
     )
 
-    with pytest.raises(CaseVersionConflict):
+    with pytest.raises(CaseVersionConflictError):
         store.update_case_status(
             "case-status",
             status="resolved",

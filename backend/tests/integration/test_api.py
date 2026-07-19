@@ -166,9 +166,9 @@ def test_production_write_route_fails_closed_without_config(monkeypatch) -> None
 
 
 def test_reviewer_session_requires_csrf_and_cannot_clear_queue(monkeypatch) -> None:
+    import backend.legal_radar.settings as settings_mod
     from backend.legal_radar.api import dependencies
     from backend.legal_radar.api.routes import auth
-    import backend.legal_radar.settings as settings_mod
 
     fake = settings_mod.Settings(
         APP_ENV="production",
@@ -272,12 +272,13 @@ def test_reviewer_must_explain_correction_or_rejection(monkeypatch, tmp_path) ->
     assert response.status_code == 400
     assert not (tmp_path / "audit.jsonl").exists()
 
+
 def test_sql_review_is_transactional_and_rejects_stale_version(
     monkeypatch,
     tmp_path,
 ) -> None:
-    from backend.legal_radar.api import data_access
     import backend.legal_radar.settings as settings_mod
+    from backend.legal_radar.api import data_access
 
     fake = settings_mod.Settings(
         APP_ENV="development",

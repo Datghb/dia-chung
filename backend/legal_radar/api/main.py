@@ -5,16 +5,14 @@ import re
 import time
 import uuid
 
-from fastapi import FastAPI
-from fastapi import HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.legal_radar.settings import get_settings
-from backend.legal_radar.paths import data_dir, runs_dir
-
-from backend.legal_radar.api.routes import auth, cases, crawl, ops, qa, queue, verify
 from backend.legal_radar.api.data_access import check_persistence
+from backend.legal_radar.api.routes import auth, cases, crawl, ops, qa, queue, verify
 from backend.legal_radar.observability import log_request, metrics
+from backend.legal_radar.paths import data_dir, runs_dir
+from backend.legal_radar.settings import get_settings
 
 settings = get_settings()
 
@@ -32,14 +30,14 @@ app.add_middleware(
     allow_credentials=True,
 )
 
+
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
+    """Add standard security headers and record request metrics."""
     started_at = time.perf_counter()
     supplied_request_id = request.headers.get("X-Request-ID", "")
     request_id = (
-        supplied_request_id
-        if re.fullmatch(r"[A-Za-z0-9._-]{8,64}", supplied_request_id)
-        else str(uuid.uuid4())
+        supplied_request_id if re.fullmatch(r"[A-Za-z0-9._-]{8,64}", supplied_request_id) else str(uuid.uuid4())
     )
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -48,9 +46,7 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
     if settings.app_env.lower() == "production":
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-Request-ID"] = request_id
     duration = time.perf_counter() - started_at
     route = getattr(request.scope.get("route"), "path", "unmatched")
@@ -64,6 +60,7 @@ async def add_security_headers(request: Request, call_next):
     )
     return response
 
+
 app.include_router(queue.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(ops.router, prefix="/api")
@@ -75,10 +72,13 @@ app.include_router(crawl.router, prefix="/api")
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    """Return the health status of the application."""
     return {"status": "ok"}
+
 
 @app.get("/ready")
 def readiness() -> dict[str, str]:
+    """Check readiness of data files and persistence backend."""
     required_kg = data_dir() / "kg" / "kg_nodes.json"
     runtime_dir = runs_dir()
     if not required_kg.is_file() or not runtime_dir.is_dir() or not os.access(runtime_dir, os.W_OK):

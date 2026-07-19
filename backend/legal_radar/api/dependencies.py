@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from hmac import compare_digest
 from pathlib import Path
 from time import time
-from typing import Callable
 
 from fastapi import Header, HTTPException, Request, status
 
-from backend.legal_radar.auth import InvalidSession, Principal, SessionManager
+from backend.legal_radar.auth import InvalidSessionError, Principal, SessionManager
 from backend.legal_radar.paths import data_dir as project_data_dir
 from backend.legal_radar.paths import repo_root as project_repo_root
 from backend.legal_radar.paths import runs_dir as project_runs_dir
@@ -69,7 +69,7 @@ def get_principal(
             configured_key,
             ttl_seconds=settings.session_ttl_seconds,
         ).verify(token)
-    except InvalidSession as error:
+    except InvalidSessionError as error:
         raise _credentials_error() from error
 
 
@@ -90,10 +90,7 @@ def require_roles(*allowed_roles: str) -> Callable[..., Principal]:
         if (
             request.method not in {"GET", "HEAD", "OPTIONS"}
             and principal.csrf_token
-            and (
-                not x_csrf_token
-                or not compare_digest(x_csrf_token, principal.csrf_token)
-            )
+            and (not x_csrf_token or not compare_digest(x_csrf_token, principal.csrf_token))
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

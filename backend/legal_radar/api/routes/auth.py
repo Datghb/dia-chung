@@ -7,9 +7,9 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from backend.legal_radar.api.dependencies import SESSION_COOKIE, get_principal
+from backend.legal_radar.api.rate_limit import SlidingWindowRateLimiter
 from backend.legal_radar.auth import Principal, SessionManager
 from backend.legal_radar.settings import get_settings
-from backend.legal_radar.api.rate_limit import SlidingWindowRateLimiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 login_rate_limiter = SlidingWindowRateLimiter(
@@ -47,6 +47,7 @@ def create_session(
     response: Response,
     x_admin_key: str | None = Header(default=None),
 ) -> SessionResponse:
+    """Create a new operator session and set cookie."""
     client_key = request.client.host if request.client else "unknown"
     retry_after = login_rate_limiter.check(client_key)
     if retry_after is not None:
@@ -89,10 +90,12 @@ def create_session(
 
 @router.get("/me", response_model=SessionResponse)
 def current_session(principal: Principal = Depends(get_principal)) -> SessionResponse:
+    """Return current session principal details."""
     return _response(principal)
 
 
 @router.delete("/session", status_code=status.HTTP_204_NO_CONTENT)
 def delete_session(response: Response) -> None:
+    """Delete the operator session by clearing cookie."""
     response.delete_cookie(SESSION_COOKIE, path="/api", samesite="strict")
     response.headers["Cache-Control"] = "no-store"

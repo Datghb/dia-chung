@@ -26,6 +26,7 @@ class MetricsRegistry:
         status_code: int,
         duration_seconds: float,
     ) -> None:
+        """Record a single HTTP request's details and duration."""
         status_family = status_code // 100
         with self._lock:
             self._requests += 1
@@ -40,6 +41,7 @@ class MetricsRegistry:
             )
 
     def snapshot(self) -> dict[str, Any]:
+        """Return a snapshot dictionary of collected metrics."""
         with self._lock:
             routes = [
                 {
@@ -66,4 +68,5 @@ metrics = MetricsRegistry()
 
 
 def log_request(**fields: object) -> None:
+    """Log a structured request event as a JSON string."""
     logger.info(json.dumps({"event": "http_request", **fields}, separators=(",", ":")))

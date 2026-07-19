@@ -10,7 +10,7 @@ from typing import TypeVar
 T = TypeVar("T")
 
 
-class CircuitOpen(RuntimeError):
+class CircuitOpenError(RuntimeError):
     """The provider is temporarily isolated after repeated failures."""
 
 
@@ -23,6 +23,7 @@ class CircuitBreaker:
         self._lock = Lock()
 
     def before_call(self, *, now: float | None = None) -> None:
+        """Verify if the circuit is closed before making a call."""
         current = time.monotonic() if now is None else now
         with self._lock:
             if self._opened_at is None:
@@ -31,14 +32,16 @@ class CircuitBreaker:
                 self._opened_at = None
                 self._failures = 0
                 return
-            raise CircuitOpen("Provider circuit is open")
+            raise CircuitOpenError("Provider circuit is open")
 
     def succeed(self) -> None:
+        """Record a successful call to close/reset the circuit breaker."""
         with self._lock:
             self._failures = 0
             self._opened_at = None
 
     def fail(self, *, now: float | None = None) -> None:
+        """Record a failed call to trip the circuit breaker if threshold is exceeded."""
         current = time.monotonic() if now is None else now
         with self._lock:
             self._failures += 1
