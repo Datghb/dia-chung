@@ -67,6 +67,10 @@ export function mapApiCase(item: ApiQueueItem): Case {
     humanLabel: item.human_label || undefined,
     humanSourceLabel: item.human_source_label || undefined,
     reviewerNotes: item.reviewer_notes || undefined,
+    reviewerLabel: item.reviewer_label || "",
+    reviewerReason: item.reviewer_reason || "",
+    reviewerNote: item.reviewer_note || "",
+    reviewedAt: item.reviewed_at || "",
   };
 }
 

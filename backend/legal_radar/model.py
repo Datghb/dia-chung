@@ -174,6 +174,10 @@ class QueueItem:
     ai_accuracy: int = 0
     source_reliability: int = 0
     comments: list[dict] = None
+    reviewer_label: str = ""
+    reviewer_reason: str = ""
+    reviewer_note: str = ""
+    reviewed_at: str = ""
 
     def __post_init__(self):
         if isinstance(self.nhan, str):
@@ -184,6 +188,19 @@ class QueueItem:
             self.citations = []
         if self.comments is None:
             self.comments = []
+
+
+# ── AuditEntry ──
+
+@dataclass
+class AuditEntry:
+    case_id: str
+    action: str
+    actor: str = "operator"
+    old_value: str = ""
+    new_value: str = ""
+    note: str = ""
+    timestamp: str = ""
 
 
 # ── KnowledgeGraph container ──

@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useUpdateStatusMutation } from "../../hooks/use-queries";
+import { useUpdateStatusMutation, useAuditQuery } from "../../hooks/use-queries";
 import { API_URL, reviewCase } from "../../utils/api";
 import { VerdictBadge } from "../common/badge";
-import { Case, Status } from "../../types";
+import { Case, Status, AuditEntry } from "../../types";
 import {
-  ExternalLink, Check, HelpCircle, Scale, ArrowRight, ArrowLeft, X, AlertTriangle, ThumbsUp, ThumbsDown, Flag
+  ExternalLink, Check, HelpCircle, Scale, ArrowRight, ArrowLeft, X, AlertTriangle, ClipboardCheck, Clock, ThumbsUp, ThumbsDown, Flag
 } from "lucide-react";
 
 const statuses: Status[] = ["Mới", "Đang xử lý", "Đã xử lý"];
@@ -52,6 +52,13 @@ const platformBg: Record<Case["platform"], string> = {
   Forum: "bg-[#e8f0f8] text-[#286298]",
 };
 
+function statusLabel(s: string): string {
+  return s === "new" ? "Mới" : s === "reviewing" ? "Đang xử lý" : s === "resolved" ? "Đã xử lý" : s;
+}
+function labelLabel(l: string): string {
+  return l === "dung" ? "Đúng" : l === "hieu_lam" ? "Hiểu lầm" : l === "can_kiem_chung" ? "Cần kiểm chứng" : l || "—";
+}
+
 const detailCard = "rounded-[13px] border border-[#e8eaf1] bg-white p-4";
 const cardLabel = "block text-[10px] tracking-[.9px] text-[#8090a0]";
 const cardHeading = "flex items-center justify-between border-b border-[#eff0f5] pb-[11px]";
@@ -69,6 +76,12 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState("");
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(true);
+  const [reviewerLabel, setReviewerLabel] = useState(item.reviewerLabel || "");
+  const [reviewerReason, setReviewerReason] = useState(item.reviewerReason || "");
+  const [reviewerNote, setReviewerNote] = useState(item.reviewerNote || "");
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewSaved, setReviewSaved] = useState(false);
+  const auditQuery = useAuditQuery(item.id);
 
   useEffect(() => {
     setCurrentStatus(item.status);
@@ -154,6 +167,28 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
       setReviewLoading(false);
     }
   }, [item.id, handleStatusChange]);
+
+  async function handleSaveReview(andResolve: boolean) {
+    setReviewSaving(true);
+    try {
+      const targetStatus: Status = andResolve ? "Đã xử lý" : currentStatus;
+      await updateStatusMutation.mutateAsync({
+        id: item.id,
+        status: targetStatus,
+        reviewerLabel,
+        reviewerReason,
+        reviewerNote,
+      });
+      if (andResolve) setCurrentStatus("Đã xử lý");
+      setReviewSaved(true);
+      setTimeout(() => setReviewSaved(false), 2000);
+      void auditQuery.refetch();
+    } catch {
+      // ignore
+    } finally {
+      setReviewSaving(false);
+    }
+  }
 
   return (
     <>
@@ -454,6 +489,98 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
             </p>
           </section>
           <section className={detailCard}>
+            <div className={cardHeading}>
+              <div className="flex items-center gap-[11px]">
+                <span className={cardHeadingIcon}>04</span>
+                <div>
+                  <small className={cardLabel}>ĐÁNH GIÁ CÁN BỘ</small>
+                  <h2 className={cardHeadingTitle}>Nhận xét &amp; ghi chú</h2>
+                </div>
+              </div>
+              {reviewSaved && (
+                <span className="text-[11px] font-bold text-[#16a34a]">Đã lưu</span>
+              )}
+            </div>
+            <div className="pt-3">
+              <small className={cardLabel}>NHÃN CÁN BỘ (GHI ĐÈ NHÃN AI)</small>
+              <div className="mt-2 flex gap-2 flex-wrap">
+                {(["dung", "hieu_lam", "can_kiem_chung"] as const).map((lbl) => {
+                  const display = lbl === "dung" ? "Đúng" : lbl === "hieu_lam" ? "Hiểu lầm" : "Cần kiểm chứng";
+                  const active = reviewerLabel === lbl;
+                  return (
+                    <button
+                      key={lbl}
+                      onClick={() => setReviewerLabel(active ? "" : lbl)}
+                      className={`rounded-[9px] px-3 py-2 text-[12px] font-bold border-0 cursor-pointer transition-colors ${
+                        active
+                          ? lbl === "dung"
+                            ? "bg-[#16a34a] text-white"
+                            : lbl === "hieu_lam"
+                            ? "bg-[#dc2626] text-white"
+                            : "bg-[#d97706] text-white"
+                          : "bg-[#f1f5f9] text-[#64748b]"
+                      }`}
+                    >
+                      {display}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mt-3">
+              <small className={cardLabel}>LÝ DO OVERRIDE</small>
+              <textarea
+                className="mt-1 w-full rounded-[9px] border border-[#e7e9f0] bg-[#fafbfe] px-3 py-2 text-[13px] text-[#35495e] outline-none focus:border-[#d638b5] resize-y min-h-[60px]"
+                placeholder="Lý do cán bộ ghi đè nhãn AI..."
+                value={reviewerReason}
+                onChange={(e) => setReviewerReason(e.target.value)}
+              />
+            </div>
+            <div className="mt-3">
+              <small className={cardLabel}>GHI CHÚ</small>
+              <textarea
+                className="mt-1 w-full rounded-[9px] border border-[#e7e9f0] bg-[#fafbfe] px-3 py-2 text-[13px] text-[#35495e] outline-none focus:border-[#d638b5] resize-y min-h-[60px]"
+                placeholder="Ghi chú thêm (không bắt buộc)..."
+                value={reviewerNote}
+                onChange={(e) => setReviewerNote(e.target.value)}
+              />
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                className="rounded-[9px] border border-[#dfe2e9] bg-white px-3 py-2 text-[11px] font-bold text-[#5c687c] cursor-pointer disabled:opacity-50"
+                onClick={() => handleSaveReview(false)}
+                disabled={reviewSaving || (!reviewerLabel && !reviewerReason && !reviewerNote)}
+              >
+                <ClipboardCheck size={14} className="mr-1 inline align-[-2px]" /> Lưu đánh giá
+              </button>
+              <button
+                className="rounded-[9px] border-0 bg-linear-90 from-[#16a34a] to-[#15803d] px-3 py-2 text-[11px] font-bold text-white cursor-pointer disabled:opacity-50"
+                onClick={() => handleSaveReview(true)}
+                disabled={reviewSaving || currentStatus === "Đã xử lý"}
+              >
+                <Check size={14} className="mr-1 inline align-[-2px]" /> Đánh dấu đã xử lý
+              </button>
+            </div>
+            {(item.reviewerLabel || item.reviewedAt) && (
+              <div className="mt-3 rounded-[9px] bg-[#f0fdf4] p-3 border border-[#bbf7d0]">
+                <small className={cardLabel}>ĐÃ REVIEW</small>
+                {item.reviewerLabel && (
+                  <p className="m-0 mt-1 text-[12px] text-[#166534]">
+                    Nhãn override: <strong>{item.reviewerLabel === "dung" ? "Đúng" : item.reviewerLabel === "hieu_lam" ? "Hiểu lầm" : "Cần kiểm chứng"}</strong>
+                  </p>
+                )}
+                {item.reviewerReason && (
+                  <p className="m-0 mt-1 text-[11px] text-[#166534]">Lý do: {item.reviewerReason}</p>
+                )}
+                {item.reviewedAt && (
+                  <p className="m-0 mt-1 text-[10px] text-[#4ade80]">
+                    <Clock size={10} className="inline align-[-1px]" /> {new Date(item.reviewedAt).toLocaleString("vi-VN")}
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+          <section className={detailCard}>
             <div className="flex gap-2.5 border-b border-[#e7ebef] pb-[14px]">
               <Scale size={20} className="text-[#c524ad]" />
               <div>
@@ -491,6 +618,37 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
               <span className={`${flowStep} bg-[#edf4fc] text-[#3970ad]`}>Nguồn</span>
             </div>
           </section>
+          {auditQuery.data && auditQuery.data.length > 0 && (
+            <section className={detailCard}>
+              <small className="text-[9px] font-extrabold text-[#65738a]">LỊCH SỬ THAY ĐỔI</small>
+              <div className="mt-3 flex flex-col gap-2">
+                {auditQuery.data.map((entry: AuditEntry, idx: number) => {
+                  const time = entry.timestamp
+                    ? new Date(entry.timestamp).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                    : "";
+                  const actionLabel =
+                    entry.action === "status_change"
+                      ? `${statusLabel(entry.old_value)} → ${statusLabel(entry.new_value)}`
+                      : entry.action === "label_override"
+                      ? `Override nhãn: ${labelLabel(entry.old_value)} → ${labelLabel(entry.new_value)}`
+                      : entry.action === "note_added"
+                      ? "Thêm ghi chú"
+                      : entry.action;
+                  return (
+                    <div key={idx} className="flex items-start gap-2 text-[11px] text-[#586a7c]">
+                      <span className="mt-[3px] block h-[6px] w-[6px] flex-shrink-0 rounded-full bg-[#c524ad]" />
+                      <div>
+                        <span className="text-[#94a3b8]">{time}</span>
+                        {" — "}
+                        <span>{actionLabel}</span>
+                        {entry.note && <span className="text-[#94a3b8]"> ({entry.note})</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </aside>
       </div>
       <div className="fixed right-0 bottom-0 z-[82] grid w-[min(590px,100vw)] grid-cols-3 gap-2.5 border-t border-[#e8eaf1] bg-white px-[26px] py-[14px] max-[700px]:px-4 max-[700px]:py-3">

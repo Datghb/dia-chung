@@ -1,14 +1,18 @@
 from fastapi import APIRouter, HTTPException, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from backend.legal_radar.api.data_access import list_queue_items, update_queue_item_status, update_queue_item_review
-from backend.legal_radar.api.schemas import QueueItemResponse, ReviewRequest
+from backend.legal_radar.api.data_access import list_queue_items, update_queue_item_status, update_queue_item_review, get_audit_log
+from backend.legal_radar.api.schemas import QueueItemResponse, ReviewRequest, AuditEntryResponse
+from backend.legal_radar.guardrails import validate_reviewer_label
 
 router = APIRouter(tags=["queue"])
 
 
 class StatusUpdate(BaseModel):
     status: str
+    reviewer_label: str = Field(default="")
+    reviewer_reason: str = Field(default="")
+    reviewer_note: str = Field(default="")
 
 
 @router.get("/queue", response_model=list[QueueItemResponse])
@@ -22,7 +26,19 @@ def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
     allowed = {"new", "reviewing", "resolved"}
     if body.status not in allowed:
         raise HTTPException(status_code=400, detail=f"Status phải là một trong: {allowed}")
-    item = update_queue_item_status(case_id, body.status)
+    if body.reviewer_label:
+        try:
+            validate_reviewer_label(body.reviewer_label)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    effective_status = "resolved" if body.reviewer_label and body.status != "resolved" else body.status
+    item = update_queue_item_status(
+        case_id,
+        effective_status,
+        reviewer_label=body.reviewer_label,
+        reviewer_reason=body.reviewer_reason,
+        reviewer_note=body.reviewer_note,
+    )
     if item is None:
         raise HTTPException(status_code=404, detail=f"Case {case_id} không tồn tại")
     return QueueItemResponse.model_validate(item)
@@ -49,6 +65,11 @@ def review_case(case_id: str, body: ReviewRequest) -> QueueItemResponse:
     if item is None:
         raise HTTPException(status_code=404, detail=f"Case {case_id} không tồn tại")
     return QueueItemResponse.model_validate(item)
+
+
+@router.get("/cases/{case_id}/audit", response_model=list[AuditEntryResponse])
+def get_case_audit(case_id: str) -> list[AuditEntryResponse]:
+    return [AuditEntryResponse.model_validate(e) for e in get_audit_log(case_id)]
 
 
 @router.delete("/queue")

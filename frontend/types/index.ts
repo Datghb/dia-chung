@@ -37,6 +37,10 @@ export type Case = {
   humanLabel?: string;
   humanSourceLabel?: string;
   reviewerNotes?: string;
+  reviewerLabel?: string;
+  reviewerReason?: string;
+  reviewerNote?: string;
+  reviewedAt?: string;
 };
 
 export type ApiQueueItem = {
@@ -72,6 +76,20 @@ export type ApiQueueItem = {
   reviewer_notes?: string;
   comments?: Array<{ text: string; author: string; timestamp: string; label?: string | null; label_reason?: string }>;
   post_comments?: Array<{ text: string; author: string; timestamp: string; label?: string | null; label_reason?: string }>;
+  reviewer_label?: string;
+  reviewer_reason?: string;
+  reviewer_note?: string;
+  reviewed_at?: string;
+};
+
+export type AuditEntry = {
+  case_id: string;
+  action: string;
+  actor: string;
+  old_value: string;
+  new_value: string;
+  note: string;
+  timestamp: string;
 };
 
 export type StudyCase = {

@@ -129,6 +129,10 @@ def _normalise(raw: dict[str, Any]) -> dict[str, Any]:
         "human_source_label": str(raw.get("human_source_label", "")),
         "reviewer_notes": str(raw.get("reviewer_notes", "")),
         "comments": list(raw.get("comments") or []),
+        "reviewer_label": str(raw.get("reviewer_label", "")),
+        "reviewer_reason": str(raw.get("reviewer_reason", "")),
+        "reviewer_note": str(raw.get("reviewer_note", "")),
+        "reviewed_at": str(raw.get("reviewed_at", "")),
     }
 
 
@@ -148,7 +152,15 @@ def get_queue_item(case_id: str) -> dict[str, Any] | None:
     return next((item for item in list_queue_items() if item["id"] == case_id), None)
 
 
-def update_queue_item_status(case_id: str, new_status: str) -> dict[str, Any] | None:
+def update_queue_item_status(
+    case_id: str,
+    new_status: str,
+    reviewer_label: str = "",
+    reviewer_reason: str = "",
+    reviewer_note: str = "",
+) -> dict[str, Any] | None:
+    from datetime import datetime, timezone
+
     queue_path = runs_dir() / "queue.jsonl"
     if not queue_path.exists():
         return None
@@ -156,7 +168,20 @@ def update_queue_item_status(case_id: str, new_status: str) -> dict[str, Any] | 
     updated = None
     for row in rows:
         if str(row.get("id", "")) == case_id:
+            old_status = row.get("status", "new")
             row["status"] = new_status
+            now_iso = datetime.now(timezone.utc).isoformat()
+            if reviewer_label:
+                row["reviewer_label"] = reviewer_label
+                row["reviewed_at"] = now_iso
+                _append_audit(case_id, "label_override", row.get("label", ""), reviewer_label, reviewer_reason)
+            if reviewer_reason:
+                row["reviewer_reason"] = reviewer_reason
+            if reviewer_note:
+                row["reviewer_note"] = reviewer_note
+                _append_audit(case_id, "note_added", "", "", reviewer_note)
+            if old_status != new_status:
+                _append_audit(case_id, "status_change", old_status, new_status, "")
             updated = _normalise(row)
             break
     if updated is None:
@@ -165,6 +190,40 @@ def update_queue_item_status(case_id: str, new_status: str) -> dict[str, Any] | 
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
     return updated
+
+
+def _append_audit(case_id: str, action: str, old_value: str, new_value: str, note: str) -> None:
+    from datetime import datetime, timezone
+
+    audit_path = runs_dir() / "audit.jsonl"
+    entry = {
+        "case_id": case_id,
+        "action": action,
+        "actor": "operator",
+        "old_value": old_value,
+        "new_value": new_value,
+        "note": note,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    with audit_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def get_audit_log(case_id: str) -> list[dict[str, Any]]:
+    audit_path = runs_dir() / "audit.jsonl"
+    if not audit_path.exists():
+        return []
+    entries: list[dict[str, Any]] = []
+    for line in audit_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+            if str(entry.get("case_id", "")) == case_id:
+                entries.append(entry)
+        except json.JSONDecodeError:
+            continue
+    return entries
 
 
 def list_study_cases() -> list[dict[str, Any]]:

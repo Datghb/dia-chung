@@ -39,6 +39,20 @@ class QueueItemResponse(BaseModel):
     human_source_label: str = ""
     reviewer_notes: str = ""
     comments: list[dict] = Field(default_factory=list)
+    reviewer_label: str = ""
+    reviewer_reason: str = ""
+    reviewer_note: str = ""
+    reviewed_at: str = ""
+
+
+class AuditEntryResponse(BaseModel):
+    case_id: str
+    action: str
+    actor: str = "operator"
+    old_value: str = ""
+    new_value: str = ""
+    note: str = ""
+    timestamp: str = ""
 
 
 class ReviewRequest(BaseModel):
