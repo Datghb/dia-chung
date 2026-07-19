@@ -31,7 +31,7 @@ export function ManualInputDrawer({
     const rawContent = (row.content || row.comment || row.text || content).trim().replace(/\s+/g, " ");
     const claim = rawContent.split(/[.!?]/)[0].slice(0, 150) || rawContent.slice(0, 150);
     const rowType = row.type === "comment" || contentType === "comment" ? "comment" : "post";
-    const allowedPlatforms: Case["platform"][] = ["Facebook", "TikTok", "YouTube", "X"];
+    const allowedPlatforms: Case["platform"][] = ["Facebook", "TikTok", "YouTube", "Web"];
     const rowPlatform =
       allowedPlatforms.find((value) => value.toLowerCase() === (row.platform || platform).toLowerCase()) ||
       platform;

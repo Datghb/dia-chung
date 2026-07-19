@@ -6,7 +6,7 @@ export type Case = {
   id: string;
   claim: string;
   original: string;
-  platform: "Facebook" | "TikTok" | "YouTube" | "X" | "Forum";
+  platform: "Facebook" | "TikTok" | "YouTube" | "Web" | "Forum";
   account: string;
   publishedAt: string;
   priority: Priority;

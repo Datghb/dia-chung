@@ -9,7 +9,7 @@ export function mapApiCase(item: ApiQueueItem): Case {
     hieu_lam: "Hiểu lầm",
     can_kiem_chung: "Cần kiểm chứng",
   };
-  const platform = (["Facebook", "TikTok", "YouTube", "X", "Forum"].includes(
+  const platform = (["Facebook", "TikTok", "YouTube", "Web", "Forum"].includes(
     item.platform,
   )
     ? item.platform

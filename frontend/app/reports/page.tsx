@@ -33,7 +33,7 @@ export default function ReportsPage() {
   ]);
   const otherHieuLam = Math.max(0, hieuLam - nhầmChủThể - nhầmNĐ15 - nhầmKhoản);
 
-  const platforms = ["Facebook", "TikTok", "YouTube", "X", "Forum"] as const;
+  const platforms = ["Facebook", "TikTok", "YouTube", "Web", "Forum"] as const;
   const platformCounts = platforms.map((p) => ({
     platform: p,
     count: allItems.filter((i) => i.platform === p).length,
@@ -126,7 +126,7 @@ export default function ReportsPage() {
                 .sort((a, b) => b.count - a.count)
                 .map((p) => (
                   <tr key={p.platform}>
-                    <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">{p.platform}</td>
+                    <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">{p.platform === "Web" ? "Báo chí" : p.platform === "Forum" ? "Khác" : p.platform}</td>
                     <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">{p.count}</td>
                     <td className="border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px] text-[#445468]">{total ? Math.round((p.count / total) * 100) : 0}%</td>
                   </tr>

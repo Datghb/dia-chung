@@ -15,8 +15,8 @@ import { Case } from "../../types";
 import { parseCaseDate } from "../../utils/date";
 import { legalTopicName, discussionTopicName } from "../../utils/topic";
 import {
-  TrendingUp, TrendingDown, Circle, Square, Star, MoreVertical, Target,
-  Info, Calendar, AlertTriangle
+  TrendingUp, TrendingDown, Circle, Square, MoreVertical,
+  Info, Calendar
 } from "lucide-react";
 
 // Re-use same icon paths from original
@@ -71,7 +71,7 @@ function platformIcon(platform: Case["platform"]) {
       "M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z",
     YouTube:
       "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z",
-    X: "M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z",
+    Web: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.92 6h-3.03a15.7 15.7 0 0 0-1.38-3.56A8.06 8.06 0 0 1 18.92 8ZM12 4c.83 1.2 1.47 2.53 1.82 4h-3.64C10.53 6.53 11.17 5.2 12 4ZM4.26 14a7.8 7.8 0 0 1 0-4h3.39a16.5 16.5 0 0 0 0 4H4.26Zm.82 2h3.03c.3 1.26.77 2.45 1.38 3.56A8.06 8.06 0 0 1 5.08 16ZM12 20c-.83-1.2-1.47-2.53-1.82-4h3.64c-.35 1.47-.99 2.8-1.82 4Zm2.21-6H9.79a14.3 14.3 0 0 1 0-4h4.42a14.3 14.3 0 0 1 0 4Zm.3 5.56A15.7 15.7 0 0 0 15.89 16h3.03a8.06 8.06 0 0 1-4.41 3.56ZM16.35 14a16.5 16.5 0 0 0 0-4h3.39a7.8 7.8 0 0 1 0 4h-3.39Z",
     Forum:
       "M12.103 0C18.666 0 24 5.485 24 11.997c0 6.51-5.33 11.99-11.9 11.99L0 24V11.79C0 5.28 5.532 0 12.103 0zm.116 4.563c-2.593-.003-4.996 1.352-6.337 3.57-1.33 2.208-1.387 4.957-.148 7.22L4.4 19.61l4.794-1.074c2.745 1.225 5.965.676 8.136-1.39 2.17-2.054 2.86-5.228 1.737-7.997-1.135-2.778-3.84-4.59-6.84-4.585h-.008z",
   };
@@ -79,7 +79,7 @@ function platformIcon(platform: Case["platform"]) {
     Facebook: "text-[#1877f2]",
     TikTok: "text-[#111]",
     YouTube: "text-[#ff0033]",
-    X: "text-[#050505]",
+    Web: "text-[#16a36a]",
     Forum: "text-[#aeb6c2]",
   };
   return (
@@ -198,7 +198,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
   const [topTopicName, topTopicCount] = topics[0] || ["Chưa có dữ liệu", 0];
   const topTopicShare = current.length ? Math.round((topTopicCount / current.length) * 100) : 0;
 
-  const platforms = ["Facebook", "TikTok", "YouTube", "X", "Forum"] as Case["platform"][];
+  const platforms = ["Facebook", "TikTok", "YouTube", "Web", "Forum"] as Case["platform"][];
 
   const heatMax = useMemo(() => {
     return Math.max(
@@ -211,17 +211,6 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
       )
     );
   }, [topics, current, platforms]);
-
-  const topPlatform = useMemo(() => {
-    return (
-      platforms
-        .map((platform) => ({
-          platform,
-          count: current.filter((item) => item.platform === platform).length,
-        }))
-        .sort((a, b) => b.count - a.count)[0]?.platform || "Facebook"
-    );
-  }, [current, platforms]);
 
   const chartDays = period === 30 ? 30 : period === 1 ? 1 : 7;
 
@@ -506,7 +495,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
           </footer>
         </section>
 
-        <section className={`${chartPanel} min-h-[278px] max-[720px]:overflow-x-auto`}>
+        <section className={`${chartPanel} col-span-2 min-h-[278px] max-[1250px]:col-span-1 max-[720px]:overflow-x-auto`}>
           <header className={chartHeader}>
             <h2 className={chartTitle}>
               Heatmap điểm nóng <Info size={14} className="inline align-[-2px] text-[#8995a8]" />
@@ -517,7 +506,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
             <span>Chủ đề</span>
             {platforms.map((platform) => (
               <span key={platform} className="flex items-center justify-center gap-[5px] whitespace-nowrap">
-                {platformIcon(platform)} {platform === "Forum" ? "Khác" : platform}
+                {platformIcon(platform)} {platform === "Forum" ? "Khác" : platform === "Web" ? "Báo chí" : platform}
               </span>
             ))}
           </div>
@@ -550,43 +539,6 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
           </div>
         </section>
 
-        <section className={`${chartPanel} min-h-[278px]`}>
-          <header className={chartHeader}>
-            <h2 className={chartTitle}>
-              <span className="mr-2 inline-grid h-[23px] w-[23px] place-items-center rounded-full bg-[#ffe7f3] text-[#e9177d]">
-                <Star size={14} fill="currentColor" />
-              </span>{" "}
-              Nhận định điều hành
-            </h2>
-            <MoreVertical size={18} className={chartMenu} />
-          </header>
-          <div className="mx-3.5 mb-3.5 overflow-hidden rounded-xl border border-[#e6e8ee]">
-            <p className="m-0 flex min-h-[64px] items-center gap-[17px] border-b border-[#e7e9ef] px-3 py-[9px] text-[11px] text-[#2a374d]">
-              <i className="grid h-[45px] w-[45px] flex-none place-items-center rounded-xl bg-[#fde9f5] text-[#e6167c]">
-                <Target size={25} />
-              </i>
-              <span>
-                Thảo luận đang tập trung vào chủ đề <b className="font-[750]">{topics[0]?.[0] || "chưa xác định"}</b>.
-              </span>
-            </p>
-            <p className="m-0 flex min-h-[64px] items-center gap-[17px] border-b border-[#e7e9ef] px-3 py-[9px] text-[11px] text-[#2a374d]">
-              <i className="grid h-[45px] w-[45px] flex-none place-items-center rounded-xl bg-[#fde9f5] text-[25px] not-italic text-[#e6167c]">
-                {platformIcon(topPlatform)}
-              </i>
-              <span>
-                <b className="font-[750]">{topPlatform}</b> là nền tảng ghi nhận nhiều tín hiệu nhất trong kỳ.
-              </span>
-            </p>
-            <p className="m-0 flex min-h-[64px] items-center gap-[17px] px-3 py-[9px] text-[11px] text-[#2a374d]">
-              <i className="grid h-[45px] w-[45px] flex-none place-items-center rounded-xl bg-[#fde9f5] text-[#e6167c]">
-                <AlertTriangle size={25} />
-              </i>
-              <span>
-                <b className="font-[750]">{urgent || 0} claim</b> ở mức khẩn cấp cần được ưu tiên xử lý.
-              </span>
-            </p>
-          </div>
-        </section>
       </div>
     </div>
   );
