@@ -1,4 +1,4 @@
-# Mô tả dự án Địa chứng phục vụ nghiên cứu đối thủ
+# Mô tả dự án Địa Chứng phục vụ nghiên cứu đối thủ
 
 > Bản khảo sát ngày 19/07/2026. Tài liệu được tổng hợp từ mã nguồn, dữ liệu, test,
 > README, product brief và các plan trong repo. Những nội dung chỉ xuất hiện trong
@@ -8,7 +8,7 @@
 
 ## 1. Tóm tắt dự án (Executive Summary)
 
-Địa chứng, còn được gọi là Legal-KG Dashboard hoặc Legal Radar trong một số phần
+Địa Chứng, trước đây còn được gọi là Legal-KG Dashboard hoặc Legal Radar trong một số phần
 giao diện, là nguyên mẫu hackathon của một hệ thống hỗ trợ giám sát thông tin mạng
 xã hội cho cơ quan quản lý nhà nước tại Việt Nam. Phạm vi MVP hiện hành tập trung
 vào tin đồn về sáp nhập đơn vị hành chính. Sản phẩm thu thập hoặc tiếp nhận nội
@@ -61,7 +61,7 @@ Người sử dụng trong giao diện gồm:
 - lãnh đạo hoặc điều phối viên xem KPI, xu hướng và hồ sơ ưu tiên.
 
 Người dân và doanh nghiệp chỉ được mô tả là bên hưởng lợi gián tiếp. Repo không
-định vị Địa chứng là một dịch vụ fact-checking công khai cho người dân.
+định vị Địa Chứng là một dịch vụ fact-checking công khai cho người dân.
 
 ## 4. Giá trị cốt lõi (Value Proposition)
 
@@ -134,17 +134,17 @@ thành giả định rằng sản phẩm đã có mô hình B2G SaaS.
 
 ## 9. Điểm khác biệt so với giải pháp truyền thống
 
-| Cách tiếp cận | Điểm mạnh | Khoảng trống so với Địa chứng |
+| Cách tiếp cận | Điểm mạnh | Khoảng trống so với Địa Chứng |
 |---|---|---|
 | Theo dõi và tra cứu hoàn toàn thủ công | Linh hoạt, con người hiểu ngữ cảnh | Chậm, khó ưu tiên và phải ghép nhiều nguồn |
 | Cơ sở dữ liệu pháp luật | Nguồn văn bản và tra cứu chuyên sâu | Không chủ động thu thập thảo luận hoặc tạo queue |
 | Social listening phổ thông | Thu thập rộng, dashboard và cảnh báo tốt | Thường tập trung mentions/sentiment, không mặc định gắn điều khoản Việt Nam |
 | Fact-checking thủ công | Có biên tập và đánh giá ngữ cảnh | Khó mở rộng liên tục thành luồng hồ sơ pháp lý |
-| Địa chứng | Ghép monitoring, kiểm chứng nguồn, legal KG và human review trong một luồng | Phạm vi hẹp, dữ liệu đánh giá nhỏ và chưa chứng minh vận hành quy mô lớn |
+| Địa Chứng | Ghép monitoring, kiểm chứng nguồn, legal KG và human review trong một luồng | Phạm vi hẹp, dữ liệu đánh giá nhỏ và chưa chứng minh vận hành quy mô lớn |
 
 ## 10. Từ khóa mô tả dự án
 
-Địa chứng, Legal-KG Dashboard, Legal Radar, GovTech, LegalTech, RegTech,
+Địa Chứng, Legal-KG Dashboard, Legal Radar, GovTech, LegalTech, RegTech,
 social monitoring, social listening, misinformation monitoring, fact-checking,
 claim extraction, legal knowledge graph, RAG, Knowledge Graph, BM25,
 Nghị định 174/2026/NĐ-CP, đơn vị hành chính, sáp nhập tỉnh, tin đồn,
@@ -165,7 +165,7 @@ FastAPI, Next.js, explainable AI, guardrails, OSINT.
 
 ## 12. Mô tả ngắn khoảng 200 từ
 
-Địa chứng là một nguyên mẫu dashboard nội bộ hỗ trợ cơ quan quản lý nhà nước tại
+Địa Chứng là một nguyên mẫu dashboard nội bộ hỗ trợ cơ quan quản lý nhà nước tại
 Việt Nam rà soát thông tin sai lệch trên mạng xã hội. MVP tập trung vào tin đồn
 sáp nhập đơn vị hành chính và Nghị định 174/2026/NĐ-CP. Hệ thống thu thập hoặc
 tiếp nhận nội dung công khai, dùng mô hình ngôn ngữ để tách claim, từ khóa và chủ
@@ -185,12 +185,12 @@ RBAC, audit log hoặc bằng chứng vận hành production.
 
 ## 13. Mô tả chi tiết khoảng 800–1500 từ
 
-Địa chứng được xây dựng từ một bài toán kết hợp giữa theo dõi thảo luận trực
+Địa Chứng được xây dựng từ một bài toán kết hợp giữa theo dõi thảo luận trực
 tuyến và tra cứu pháp lý. Trong quy trình thủ công được mô tả bởi team, một
 chuyên viên phải chuyển qua nhiều công cụ: tìm bài viết, đọc và tách phát ngôn,
 kiểm tra xem thông tin đã được cơ quan nào xác nhận hoặc bác bỏ, xác định văn bản
 đang có hiệu lực, tìm đúng điều khoản và kiểm tra mức phạt áp dụng cho cá nhân
-hay tổ chức. Địa chứng cố gắng đưa các bước này vào một luồng dữ liệu duy nhất,
+hay tổ chức. Địa Chứng cố gắng đưa các bước này vào một luồng dữ liệu duy nhất,
 với mục tiêu tạo hồ sơ để người có thẩm quyền rà soát thay vì để AI tự ra quyết
 định.
 
@@ -273,11 +273,11 @@ Repo cũng chưa có confusion matrix được duy trì như chỉ số sản ph
 precision/recall/F1 trên tập độc lập, đánh giá sai dương tính theo nhóm nội dung
 hoặc thử nghiệm với chuyên viên thật.
 
-Về cạnh tranh, Địa chứng nằm giữa social listening, misinformation intelligence
+Về cạnh tranh, Địa Chứng nằm giữa social listening, misinformation intelligence
 và legal AI. Các nền tảng social listening có lợi thế về độ phủ dữ liệu, cảnh
 báo và vận hành enterprise; các nền tảng legal research có lợi thế về kho nội
 dung và quy trình chuyên môn; các sản phẩm narrative intelligence mạnh về phát
-hiện chiến dịch thông tin. Giả thuyết khác biệt của Địa chứng là lớp nối riêng
+hiện chiến dịch thông tin. Giả thuyết khác biệt của Địa Chứng là lớp nối riêng
 cho pháp luật Việt Nam: từ tín hiệu mạng xã hội đến claim, điều khoản, nguồn và
 hàng đợi human review. Giả thuyết này hợp lý về mặt kiến trúc nhưng chưa được
 chứng minh bằng win/loss analysis, pilot hoặc benchmark với sản phẩm hiện hữu.
@@ -315,7 +315,7 @@ Các tên dưới đây là ứng viên so sánh theo năng lực chồng lấn:
 
 | Nhóm | Sản phẩm/công ty | Lý do cần nghiên cứu | Khoảng cách đã thấy |
 |---|---|---|---|
-| Gần nhất tại Việt Nam | [VnSocial — VNPT](https://vnpt.com.vn/tu-van/vnsocial-giai-phap-lang-nghe-va-giam-sat-mang-xa-hoi-cua-tuong-lai.html) | Thu thập, phân tích, cảnh báo và phân loại nội dung nhạy cảm; VNPT công bố triển khai cho nhiều cơ quan chính quyền | Chưa thấy nguồn công khai chứng minh workflow legal KG cấp điều khoản giống Địa chứng |
+| Gần nhất tại Việt Nam | [VnSocial — VNPT](https://vnpt.com.vn/tu-van/vnsocial-giai-phap-lang-nghe-va-giam-sat-mang-xa-hoi-cua-tuong-lai.html) | Thu thập, phân tích, cảnh báo và phân loại nội dung nhạy cảm; VNPT công bố triển khai cho nhiều cơ quan chính quyền | Chưa thấy nguồn công khai chứng minh workflow legal KG cấp điều khoản giống Địa Chứng |
 | Gần nhất tại Việt Nam | [Reputa — Viettel](https://solutions.viettel.vn/vi/vi/cong-nghe-thong-tin/he-thong-giam-sat-danh-tieng-va-thong-tin-truc-tuyen-reputa.html) | Giám sát và phân tích báo chí, diễn đàn, blog, Facebook, YouTube; có use case cho chính quyền | Định vị rộng về danh tiếng/thông tin, chưa thấy lớp reasoning NĐ 174 công khai |
 | Social listening Việt Nam | [SocialHeat — Buzzmetrics/YouNet](https://www.buzzmetrics.com/social-listening) | Thu thập, phân loại và phân tích thảo luận đa nền tảng | Trọng tâm công khai là market/consumer insight, không phải hồ sơ pháp lý |
 | Social listening Việt Nam | [Kompa](https://kompa.ai/) | Monitoring đa kênh, cảnh báo, sentiment, topic, trend và crisis management | Trọng tâm thương hiệu/truyền thông; legal grounding không phải năng lực công khai chính |

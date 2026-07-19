@@ -23,13 +23,13 @@ async function render(pathname = "/") {
   );
 }
 
-test("server-renders the Địa chứng strategic market dashboard", async () => {
+test("server-renders the Địa Chứng strategic market dashboard", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Địa chứng — Giám sát nội dung mạng xã hội<\/title>/i);
+  assert.match(html, /<title>Địa Chứng — Giám sát nội dung mạng xã hội<\/title>/i);
   assert.match(html, /Toàn cảnh thảo luận thị trường/);
   assert.match(html, /Xu hướng thảo luận theo thời gian/);
   assert.match(html, /Top chủ đề được bàn luận nhiều nhất/);
@@ -49,7 +49,7 @@ test("production UI no longer contains starter preview artifacts", async () => {
   const html = await htmlResponse.text();
 
   assert.match(page, /<MarketOverview/);
-  assert.match(layout, /Địa chứng/);
+  assert.match(layout, /Địa Chứng/);
   assert.doesNotMatch(html, /Your site is taking shape|Codex is working|codex-preview/i);
   assert.doesNotMatch(page, /_sites-preview|SkeletonPreview/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -59,6 +59,8 @@ test("catch-all routes render the same dashboard shell", async () => {
   const response = await render("/verify");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /Địa chứng/);
+  assert.match(html, /Địa Chứng/);
+  assert.match(html, /src="\/dia-chung-logo\.png"/);
+  assert.doesNotMatch(html, /_vinext\/image\?url=%2Fdia-chung-logo\.png/);
   assert.match(html, /Hàng đợi giám sát/);
 });

@@ -20,7 +20,7 @@ settings = get_settings()
 
 _origins = [origin.strip() for origin in settings.frontend_origin.split(",") if origin.strip()]
 
-app = FastAPI(title="Legal-KG API", version="0.1.0")
+app = FastAPI(title="Địa Chứng API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,

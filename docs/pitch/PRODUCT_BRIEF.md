@@ -10,11 +10,11 @@
 
 **Đề bài:** "Legal knowledge graph — Tracking new regulations & public discourse"
 
-**Giải pháp:** Địa chứng là dashboard giám sát nội bộ, giúp cán bộ quản lý nhà nước phát hiện và đánh giá tin đồn về sáp nhập đơn vị hành chính trên mạng xã hội — tự động, có trích dẫn pháp lý và nguồn tin đi kèm.
+**Giải pháp:** Địa Chứng là dashboard giám sát nội bộ, giúp cán bộ quản lý nhà nước phát hiện và đánh giá tin đồn về sáp nhập đơn vị hành chính trên mạng xã hội — tự động, có trích dẫn pháp lý và nguồn tin đi kèm.
 
 Hệ thống tự động thu thập bài viết công khai từ Facebook, trích xuất phát ngôn chính (claim), đối chiếu với cơ sở dữ liệu pháp luật và nguồn tin chính thức, rồi xếp vào hàng đợi với nhãn rõ ràng: **Đúng** / **Hiểu lầm** / **Cần kiểm chứng**. Cán bộ mở dashboard, thấy ngay tin đồn nào cần xử lý trước, kèm điều khoản, mức phạt và nguồn tham chiếu — không cần tự tra cứu từ đầu.
 
-**Địa chứng không kết luận ai vi phạm, không yêu cầu gỡ bài.** Quyết định cuối cùng luôn thuộc về cán bộ.
+**Địa Chứng không kết luận ai vi phạm, không yêu cầu gỡ bài.** Quyết định cuối cùng luôn thuộc về cán bộ.
 
 ---
 
@@ -37,13 +37,13 @@ Sau sáp nhập còn 34 tỉnh/thành (07/2025) và chuyển sang mô hình chí
 
 **Gián tiếp:** người dân, doanh nghiệp — hưởng lợi khi cán bộ xử lý tin đồn nhanh và chính xác hơn.
 
-Địa chứng **không** phục vụ người dân truy cập trực tiếp. Đây là công cụ nội bộ cho cơ quan quản lý.
+Địa Chứng **không** phục vụ người dân truy cập trực tiếp. Đây là công cụ nội bộ cho cơ quan quản lý.
 
 ---
 
 ## 4. Khác biệt so với giải pháp hiện tại
 
-| | Tra cứu pháp luật | Social listening | **Địa chứng** |
+| | Tra cứu pháp luật | Social listening | **Địa Chứng** |
 |---|---|---|---|
 | Luồng dữ liệu | Cán bộ chủ động tìm | Tự động đếm mentions | **Tự động chảy vào hàng đợi** |
 | Mức phân tích | Văn bản tĩnh | Cảm xúc chung chung | **Đối chiếu đúng điều khoản, mức phạt, chủ thể** |
@@ -165,11 +165,11 @@ Hai loại lỗi phổ biến nhất — nhầm lẫn cá nhân/tổ chức và 
 
 ## 13. Kết luận
 
-Địa chứng giúp cán bộ nhìn thấy tin đồn nào cần xử lý trước, thay vì tự đọc hàng trăm bài đăng thủ công.
+Địa Chứng giúp cán bộ nhìn thấy tin đồn nào cần xử lý trước, thay vì tự đọc hàng trăm bài đăng thủ công.
 
 Phát ngôn được tách ra, đối chiếu đúng điều khoản còn hiệu lực, đúng mức phạt theo chủ thể, và kiểm tra xem đã có nguồn chính thức bác bỏ chưa — tất cả trước khi cán bộ ra quyết định.
 
-**Địa chứng không giám sát người dân. Địa chứng giúp cán bộ xử lý tin đồn nhanh hơn và chính xác hơn.**
+**Địa Chứng không giám sát người dân. Địa Chứng giúp cán bộ xử lý tin đồn nhanh hơn và chính xác hơn.**
 
 ---
 

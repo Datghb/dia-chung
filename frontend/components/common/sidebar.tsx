@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQueueQuery } from "@/hooks/use-queries";
@@ -78,11 +79,19 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r border-[#eef0f5] bg-white px-[13px] pt-[23px] pb-[18px] text-[#526075] transition-[width] max-[980px]:w-[78px] max-[980px]:px-2 max-[700px]:inset-x-0 max-[700px]:top-auto max-[700px]:bottom-0 max-[700px]:h-[64px] max-[700px]:w-full max-[700px]:border-t max-[700px]:border-r-0 max-[700px]:px-1.5 max-[700px]:py-1.5">
       <div className="flex items-center gap-[13px] px-[7px] pb-[27px] max-[980px]:justify-center max-[980px]:px-0 max-[700px]:hidden">
-        <span className="grid h-[47px] w-[47px] place-items-center rounded-[11px] bg-linear-145 from-[#ff3aac] to-[#ad19d5] font-[Georgia] text-[26px] font-bold text-white shadow-[0_8px_18px_#d926a744] max-[980px]:h-[43px] max-[980px]:w-[43px]">
-          L
+        <span className="grid h-[47px] w-[47px] shrink-0 place-items-center rounded-[11px] border border-[#e4e7ec] bg-white shadow-[0_6px_16px_#17203314] max-[980px]:h-[43px] max-[980px]:w-[43px]">
+          <Image
+            src="/dia-chung-logo.png"
+            alt=""
+            aria-hidden="true"
+            width={39}
+            height={39}
+            unoptimized
+            className="h-[39px] w-[39px] object-contain max-[980px]:h-[36px] max-[980px]:w-[36px]"
+          />
         </span>
         <div className="max-[980px]:hidden">
-          <strong className="block text-[19px] font-[750] text-[#131c31]">Legal Radar</strong>
+          <strong className="block text-[19px] font-[750] text-[#131c31]">Địa Chứng</strong>
           <small className="mt-[4px] block text-[10px] text-[#9a9fb0]">TRUNG TÂM GIÁM SÁT</small>
         </div>
       </div>
@@ -134,8 +143,8 @@ export function Sidebar() {
           </div>
         </div>
         <div className="rounded-xl border border-[#e8eaf1] bg-white px-[13px] py-2.5 text-[10px] text-[#66728a] shadow-[0_5px_18px_#24304c08]">
-          <i className="mr-[7px] inline-block h-[7px] w-[7px] rounded-full bg-[#42cf91] shadow-[0_0_0_3px_#42cf9120]" /> Legal
-          Radar v2.4.1
+          <i className="mr-[7px] inline-block h-[7px] w-[7px] rounded-full bg-[#42cf91] shadow-[0_0_0_3px_#42cf9120]" /> Địa
+          Chứng v2.4.1
           <small className="mt-[5px] ml-[14px] block text-[8px] text-[#929aab]">Hệ thống hoạt động ổn định</small>
         </div>
       </div>

@@ -1,4 +1,4 @@
-# Địa chứng — Pitch 5 phút
+# Địa Chứng — Pitch 5 phút
 
 ## Slide 1 — Vấn đề
 
@@ -8,7 +8,7 @@ cứ pháp luật trên nhiều hệ thống rời rạc.
 
 ## Slide 2 — Giải pháp
 
-Địa chứng là trung tâm giám sát nội dung mạng xã hội hỗ trợ:
+Địa Chứng là trung tâm giám sát nội dung mạng xã hội hỗ trợ:
 
 - thu thập bài viết và bình luận từ Facebook, YouTube;
 - trích xuất claim và phân loại `Đúng`, `Hiểu lầm`, `Cần kiểm chứng`;
@@ -63,5 +63,5 @@ Không đọc số cố định trên slide. Trước khi pitch, mở dashboard 
 
 ## Slide 8 — Kết
 
-Địa chứng rút ngắn thời gian từ “phát hiện tín hiệu” đến “hồ sơ có căn cứ”,
+Địa Chứng rút ngắn thời gian từ “phát hiện tín hiệu” đến “hồ sơ có căn cứ”,
 giúp chuyên viên tập trung vào quyết định cần con người thay vì thao tác lặp lại.

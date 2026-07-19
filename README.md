@@ -1,6 +1,6 @@
 ![CI](https://github.com/Datghb/Parasitic-/actions/workflows/ci.yml/badge.svg)
 
-# Địa chứng
+# Địa Chứng
 
 Hệ thống giám sát tin đồn sáp nhập đơn vị hành chính (ĐVHC) trên mạng xã hội. Sử dụng RAG + Knowledge Graph để phân loại phát ngôn thành **đúng** / **hiểu lầm** / **cần kiểm chứng**, phục vụ cán bộ nhà nước ra quyết định xử phạt.
 

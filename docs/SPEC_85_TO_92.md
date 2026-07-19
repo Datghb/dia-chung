@@ -2,7 +2,7 @@
 
 ## Objective
 
-Nâng Legal Radar từ một tiến trình dùng JSONL/API key thành hệ thống có thể vận
+Nâng Địa Chứng từ một tiến trình dùng JSONL/API key thành hệ thống có thể vận
 hành nhiều người dùng: dữ liệu SQL có transaction và khóa phiên bản, phiên đăng
 nhập HttpOnly với RBAC, telemetry có cấu trúc, resilience và quality gates.
 
