@@ -11,7 +11,7 @@ from backend.legal_radar.api.data_access import (
     update_queue_item_review,
     update_queue_item_status,
 )
-from backend.legal_radar.api.dependencies import require_admin
+from backend.legal_radar.api.dependencies import require_admin, require_reviewer
 from backend.legal_radar.api.schemas import (
     AuditEntryResponse,
     QueueItemResponse,
@@ -47,7 +47,7 @@ def list_queue(response: Response) -> list[QueueItemResponse]:
 @router.patch(
     "/cases/{case_id}/status",
     response_model=QueueItemResponse,
-    dependencies=[Depends(require_admin)],
+    dependencies=[Depends(require_reviewer)],
 )
 def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
     allowed = {"new", "reviewing", "resolved"}
@@ -83,7 +83,7 @@ def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
 @router.post(
     "/cases/{case_id}/review",
     response_model=QueueItemResponse,
-    dependencies=[Depends(require_admin)],
+    dependencies=[Depends(require_reviewer)],
 )
 def record_review_decision(
     case_id: str,
@@ -120,7 +120,7 @@ def record_review_decision(
 @router.patch(
     "/cases/{case_id}/review",
     response_model=QueueItemResponse,
-    dependencies=[Depends(require_admin)],
+    dependencies=[Depends(require_reviewer)],
 )
 def update_legacy_review(
     case_id: str,
@@ -163,7 +163,7 @@ def update_legacy_review(
 @router.get(
     "/cases/{case_id}/audit",
     response_model=list[AuditEntryResponse],
-    dependencies=[Depends(require_admin)],
+    dependencies=[Depends(require_reviewer)],
 )
 def get_case_audit(case_id: str) -> list[AuditEntryResponse]:
     return [AuditEntryResponse.model_validate(entry) for entry in get_audit_log(case_id)]

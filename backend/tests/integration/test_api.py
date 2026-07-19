@@ -163,6 +163,48 @@ def test_production_write_route_fails_closed_without_config(monkeypatch) -> None
     assert response.status_code == 503
 
 
+def test_reviewer_session_requires_csrf_and_cannot_clear_queue(monkeypatch) -> None:
+    from backend.legal_radar.api import dependencies
+    from backend.legal_radar.api.routes import auth
+    import backend.legal_radar.settings as settings_mod
+
+    fake = settings_mod.Settings(
+        APP_ENV="production",
+        ADMIN_API_KEY="test-admin-key",
+    )
+    monkeypatch.setattr(dependencies, "get_settings", lambda: fake)
+    monkeypatch.setattr(auth, "get_settings", lambda: fake)
+
+    with TestClient(app, base_url="https://testserver") as session_client:
+        login = session_client.post(
+            "/api/auth/session",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={"actor": "reviewer-1", "role": "reviewer"},
+        )
+        assert login.status_code == 200
+        assert "httponly" in login.headers["set-cookie"].lower()
+        assert "secure" in login.headers["set-cookie"].lower()
+        csrf_token = login.json()["csrf_token"]
+
+        missing_csrf = session_client.patch(
+            "/api/cases/not-found/status",
+            json={"status": "reviewing"},
+        )
+        accepted_csrf = session_client.patch(
+            "/api/cases/not-found/status",
+            headers={"X-CSRF-Token": csrf_token},
+            json={"status": "reviewing"},
+        )
+        forbidden_admin_action = session_client.delete(
+            "/api/queue",
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+    assert missing_csrf.status_code == 403
+    assert accepted_csrf.status_code == 404
+    assert forbidden_admin_action.status_code == 403
+
+
 def test_reviewer_can_reject_result_and_create_audit_event(
     monkeypatch,
     tmp_path,

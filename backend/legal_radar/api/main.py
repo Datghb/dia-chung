@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.legal_radar.settings import get_settings
 from backend.legal_radar.paths import data_dir, runs_dir
 
-from backend.legal_radar.api.routes import cases, crawl, qa, queue, verify
+from backend.legal_radar.api.routes import auth, cases, crawl, qa, queue, verify
 
 settings = get_settings()
 
@@ -24,7 +24,7 @@ app.add_middleware(
     allow_origin_regex=r"https://(?:.*\.chatgpt\.site|diachung\.dpdns\.org)|http://(?:localhost|127\.0\.0\.1)(?::\d+)?",
     allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
-    allow_credentials=False,
+    allow_credentials=True,
 )
 
 @app.middleware("http")
@@ -37,6 +37,7 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 app.include_router(queue.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
 app.include_router(cases.router, prefix="/api")
 app.include_router(verify.router, prefix="/api")
 app.include_router(qa.router, prefix="/api")

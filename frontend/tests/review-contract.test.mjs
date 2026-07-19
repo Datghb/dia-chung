@@ -12,6 +12,8 @@ test("case detail exposes a real human-review workflow", async () => {
   assert.match(detail, /Sửa kết luận/);
   assert.match(detail, /Bác bỏ kết quả/);
   assert.match(queries, /X-Admin-Key/);
+  assert.match(queries, /X-CSRF-Token/);
+  assert.match(queries, /credentials: "include"/);
   assert.match(queries, /cases\/\$\{id\}\/review/);
   assert.match(queries, /invalidateQueries\(\{ queryKey: \["queue"\] \}\)/);
 });

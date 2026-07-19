@@ -35,10 +35,25 @@ test("reviewer rejects an AI result and creates an audited decision", async ({ p
   await page.route("**/api/queue?*", async (route) => {
     await route.fulfill({ json: [queueItem] });
   });
+  await page.route("**/api/auth/session", async (route) => {
+    const request = route.request();
+    expect(request.headers()["x-admin-key"]).toBe("operator-test-key");
+    await route.fulfill({
+      json: {
+        subject: "web-reviewer",
+        role: "reviewer",
+        csrf_token: "csrf-e2e",
+        expires_at: 9999999999,
+      },
+      headers: {
+        "set-cookie": "legal_radar_session=signed; Path=/api; HttpOnly; SameSite=Strict",
+      },
+    });
+  });
   await page.route("**/api/cases/case-review/review", async (route) => {
     const request = route.request();
     expect(request.method()).toBe("POST");
-    expect(request.headers()["x-admin-key"]).toBe("operator-test-key");
+    expect(request.headers()["x-csrf-token"]).toBe("csrf-e2e");
     expect(request.postDataJSON()).toEqual({
       decision: "rejected",
       note: "Citation chưa hỗ trợ trực tiếp cho claim",
@@ -55,7 +70,7 @@ test("reviewer rejects an AI result and creates an audited decision", async ({ p
   await page.getByPlaceholder("Nêu căn cứ chấp nhận, hiệu chỉnh hoặc bác bỏ…").fill(
     "Citation chưa hỗ trợ trực tiếp cho claim",
   );
-  await page.getByPlaceholder("Chỉ giữ trong bộ nhớ của form này").fill("operator-test-key");
+  await page.getByPlaceholder("Không lưu trong trình duyệt").fill("operator-test-key");
   await page.getByRole("button", { name: "Ký và hoàn tất thẩm định" }).click();
 
   await expect(page.getByRole("status")).toContainText("Đã lưu quyết định");
