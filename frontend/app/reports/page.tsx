@@ -50,7 +50,7 @@ export default function ReportsPage() {
       </div>
 
       <section className="overflow-hidden rounded-[17px] bg-white shadow-[0_10px_30px_#28304f0b,0_2px_7px_#28304f08] max-[700px]:rounded-[14px]" style={{ marginBottom: 24 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, padding: 24 }}>
+        <div className="grid grid-cols-4 gap-4 p-6 max-[760px]:grid-cols-2 max-[480px]:gap-2 max-[480px]:p-3">
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 32, fontWeight: 700 }}>{total}</div>
             <small>Tổng hồ sơ</small>
@@ -73,7 +73,7 @@ export default function ReportsPage() {
       <section className="overflow-hidden rounded-[17px] bg-white shadow-[0_10px_30px_#28304f0b,0_2px_7px_#28304f08] max-[700px]:rounded-[14px]" style={{ marginBottom: 24 }}>
         <div style={{ padding: 24 }}>
           <h3 style={{ marginBottom: 12 }}>Top hiểu lầm lặp lại</h3>
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto"><table className="w-full min-w-[520px] border-collapse">
             <thead>
               <tr>
                 <th className="border-b border-[#eff1f5] bg-[#fafbfe] px-3 py-2.5 text-left text-[8px] font-[650] tracking-[.55px] text-[#989dae]">STT</th>
@@ -105,14 +105,14 @@ export default function ReportsPage() {
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </section>
 
       <section className="overflow-hidden rounded-[17px] bg-white shadow-[0_10px_30px_#28304f0b,0_2px_7px_#28304f08] max-[700px]:rounded-[14px]" style={{ marginBottom: 24 }}>
         <div style={{ padding: 24 }}>
           <h3 style={{ marginBottom: 12 }}>Phân bổ theo nền tảng</h3>
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto"><table className="w-full min-w-[430px] border-collapse">
             <thead>
               <tr>
                 <th className="border-b border-[#eff1f5] bg-[#fafbfe] px-3 py-2.5 text-left text-[8px] font-[650] tracking-[.55px] text-[#989dae]">NỀN TẢNG</th>
@@ -132,7 +132,7 @@ export default function ReportsPage() {
                   </tr>
                 ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </section>
 

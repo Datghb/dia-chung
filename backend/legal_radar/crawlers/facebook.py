@@ -171,13 +171,18 @@ def _bd_scrape(dataset_id: str, url: str) -> list[dict]:
 def _crawl_one_post(url: str) -> dict | None:
     """Crawl single post: content + comments scraped in parallel."""
     t0 = time.time()
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        post_future = pool.submit(_bd_scrape, BD_POSTS_DATASET, url)
-        comments_future = pool.submit(_bd_scrape, BD_COMMENTS_DATASET, url)
-        posts = post_future.result()
-        comments = comments_future.result()
+    posts: list[dict] = []
+    comments: list[dict] = []
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            post_future = pool.submit(_bd_scrape, BD_POSTS_DATASET, url)
+            comments_future = pool.submit(_bd_scrape, BD_COMMENTS_DATASET, url)
+            posts = post_future.result(timeout=70)
+            comments = comments_future.result(timeout=70)
+    except Exception as exc:
+        logger.warning("Scraper timeout/error for %s: %s", url[:80], exc)
     elapsed = time.time() - t0
-    logger.info("Scraped %s in %.1fs — %d posts, %d comments", url, elapsed, len(posts), len(comments))
+    logger.info("Scraped %s in %.1fs — %d posts, %d comments", url[:80], elapsed, len(posts), len(comments))
 
     if not posts:
         logger.debug("No post data for %s", url)

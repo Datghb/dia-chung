@@ -57,7 +57,7 @@ export default function SourcesPage() {
 
       {[0, 1, 2].map((tier) => (
         <section key={tier} className="overflow-hidden rounded-[17px] bg-white shadow-[0_10px_30px_#28304f0b,0_2px_7px_#28304f08] max-[700px]:rounded-[14px]" style={{ marginBottom: 24 }}>
-          <div style={{ padding: 24 }}>
+          <div className="p-6 max-[700px]:p-4">
             <h3 style={{ marginBottom: 4 }}>
               Tier {tier}:{" "}
               {tier === 0
@@ -73,7 +73,7 @@ export default function SourcesPage() {
                 ? "Cần ≥2 nguồn Tier 1/2 độc lập xác nhận. Bác bỏ hợp lệ khi dẫn lời Tier 0."
                 : "Chỉ dùng để bổ sung — không đơn phương quyết định."}
             </p>
-            <table className="w-full border-collapse">
+            <div className="overflow-x-auto"><table className="w-full min-w-[620px] border-collapse">
               <thead>
                 <tr>
                   <th className="border-b border-[#eff1f5] bg-[#fafbfe] px-3 py-2.5 text-left text-[8px] font-[650] tracking-[.55px] text-[#989dae]">TÊN</th>
@@ -96,7 +96,7 @@ export default function SourcesPage() {
                     </tr>
                   ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </section>
       ))}

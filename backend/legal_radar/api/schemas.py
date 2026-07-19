@@ -20,6 +20,7 @@ class QueueItemResponse(BaseModel):
     platform: str = "Forum"
     account: str = "Nguồn chưa xác định"
     published_at: str = ""
+    created_at: str = ""
     reach: int = 0
     status: str = "new"
     document: str = "Nghị định 174/2026/NĐ-CP"

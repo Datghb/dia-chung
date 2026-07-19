@@ -35,7 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Providers>
           <div className="flex min-h-screen bg-[#f7f8fc] text-[15px] text-[#19283b]">
             <Sidebar />
-            <div className="ml-[248px] flex h-screen flex-1 flex-col max-[980px]:ml-[78px] max-[700px]:ml-0">
+            <div className="ml-[248px] flex h-screen min-w-0 flex-1 flex-col max-[980px]:ml-[78px] max-[700px]:ml-0 max-[700px]:pb-[64px]">
               <Topbar />
               <main className="min-h-0 flex-1 overflow-y-auto bg-[#f7f8fc]">
                 {children}

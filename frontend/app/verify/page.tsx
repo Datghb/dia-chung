@@ -9,7 +9,7 @@ export default function VerifyPage() {
   const pageShell =
     "mx-auto max-w-[1640px] px-[28px] pt-[25px] pb-8 max-[700px]:px-[15px] max-[700px]:pt-[26px] max-[700px]:pb-6";
   const colLabel = "text-[9px] tracking-[.8px] text-[#9a7b98]";
-  const dlRow = "grid grid-cols-[130px_1fr] border-t border-[#f0f1f5] py-2 text-[11px]";
+  const dlRow = "grid grid-cols-[130px_1fr] gap-2 border-t border-[#f0f1f5] py-2 text-[11px] max-[480px]:grid-cols-1";
 
   if (isLoading) {
     return (

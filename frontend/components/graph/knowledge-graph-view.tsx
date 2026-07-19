@@ -35,6 +35,15 @@ export function KnowledgeGraphView() {
 
   const initialNodes = useMemo(() => {
     if (!graphItem) return [];
+    const rawSubject = graphItem.subject?.trim() || "";
+    const unresolvedSubjects = new Set(["", "chưa xác định", "không xác định", "chưa rõ", "n/a", "unknown"]);
+    const subjectName = unresolvedSubjects.has(rawSubject.toLowerCase())
+      ? graphItem.account?.trim() || "Chưa xác định"
+      : rawSubject;
+    const originalContentUrl =
+      graphItem.postUrl && graphItem.postUrl !== "#" ? graphItem.postUrl : "";
+    const platformName =
+      graphItem.platform === "Web" ? "Báo chí" : graphItem.platform === "Forum" ? "Khác" : graphItem.platform;
     return [
       {
         id: "claim",
@@ -65,11 +74,32 @@ export function KnowledgeGraphView() {
             <div style={{ textAlign: "left" }}>
               <small style={{ color: "#f59e0b", fontSize: 10, fontWeight: 700 }}>CHỦ THỂ</small>
               <p style={{ fontSize: 13, fontWeight: 600, margin: "4px 0 0", color: "#fff" }}>
-                {graphItem.subject || "Chưa xác định"}
+                {subjectName}
               </p>
               <small style={{ color: "#94a3b8", display: "block", marginTop: "2px" }}>
-                {graphItem.platform} · {graphItem.account}
+                {platformName}{graphItem.account && graphItem.account !== subjectName ? ` · ${graphItem.account}` : ""}
               </small>
+              {originalContentUrl && (
+                <a
+                  href={originalContentUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="nodrag nopan"
+                  onClick={(event) => event.stopPropagation()}
+                  style={{
+                    color: "#fbbf24",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    marginTop: 6,
+                    textDecoration: "none",
+                  }}
+                >
+                  Mở nội dung của chủ thể <ExternalLink size={11} />
+                </a>
+              )}
             </div>
           ),
         },
@@ -79,7 +109,7 @@ export function KnowledgeGraphView() {
           border: "2px solid #f59e0b",
           borderRadius: "12px",
           padding: "12px",
-          width: 180,
+          width: 210,
         },
       },
       {
@@ -190,8 +220,9 @@ export function KnowledgeGraphView() {
           <h1 className="my-[6px] text-[38px] font-[760] tracking-[-1.6px] text-[#202944] max-[480px]:text-[31px]">Đồ thị tri thức</h1>
           <p className="m-0 text-[12px] text-[#738195]">Quan hệ giữa Claim <ArrowRight size={14} className="inline align-[-2px]" /> Chủ thể <ArrowRight size={14} className="inline align-[-2px]" /> Điều luật <ArrowRight size={14} className="inline align-[-2px]" /> Nguồn kiểm chứng.</p>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div className="flex items-center gap-2 max-[700px]:w-full">
           <select
+            className="max-[700px]:w-full"
             value={selectedIdx}
             onChange={(e) => setSelectedIdx(Number(e.target.value))}
             style={{
@@ -212,7 +243,7 @@ export function KnowledgeGraphView() {
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-[17px] bg-white shadow-[0_10px_30px_#28304f0b,0_2px_7px_#28304f08] max-[700px]:rounded-[14px]" style={{ marginBottom: 24, height: 350, position: "relative" }}>
+      <section className="h-[350px] overflow-hidden rounded-[17px] bg-white shadow-[0_10px_30px_#28304f0b,0_2px_7px_#28304f08] max-[700px]:h-[430px] max-[700px]:rounded-[14px]" style={{ marginBottom: 24, position: "relative" }}>
         <div style={{ width: "100%", height: "100%", position: "absolute", inset: 0 }}>
           <ReactFlow
             nodes={nodes}
@@ -262,7 +293,7 @@ export function KnowledgeGraphView() {
             <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 16 }}>
               {relatedItems.length} hồ sơ khác cùng viện dẫn {graphItem.document}
             </p>
-            <table className="w-full border-collapse">
+            <div className="overflow-x-auto"><table className="w-full min-w-[650px] border-collapse">
               <thead>
                 <tr>
                   <th className="border-b border-[#eff1f5] bg-[#fafbfe] px-3 py-2.5 text-left text-[8px] font-[650] tracking-[.55px] text-[#989dae]">CLAIM</th>
@@ -285,7 +316,7 @@ export function KnowledgeGraphView() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </section>
       )}

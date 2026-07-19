@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   AreaChart,
@@ -117,6 +117,9 @@ const periodActive =
 
 export function MarketOverview({ allItems }: { allItems: Case[] }) {
   const [period, setPeriod] = useState<1 | 7 | 30>(7);
+  const [rangeOffset, setRangeOffset] = useState(0);
+  const [isDraggingChart, setIsDraggingChart] = useState(false);
+  const chartDragStart = useRef<{ x: number; offset: number } | null>(null);
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("q") || "";
 
@@ -140,7 +143,29 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
     return rows.filter((row): row is { item: Case; date: Date } => Boolean(row.date));
   }, [rows]);
 
-  const latest = useMemo(() => new Date(), []);
+  const latestBase = useMemo(() => new Date(), []);
+  const chartBuckets = period === 1 ? 24 : period;
+  const offsetUnitMs = period === 1 ? 3_600_000 : 86_400_000;
+  const earliestDate = useMemo(
+    () => dated.reduce<Date | null>((earliest, row) => (!earliest || row.date < earliest ? row.date : earliest), null),
+    [dated],
+  );
+  const maxRangeOffset = useMemo(() => {
+    if (!earliestDate) return 0;
+    const elapsedUnits = Math.ceil((latestBase.getTime() - earliestDate.getTime()) / offsetUnitMs);
+    return Math.max(0, elapsedUnits - chartBuckets + 1);
+  }, [chartBuckets, earliestDate, latestBase, offsetUnitMs]);
+  const latest = useMemo(() => {
+    const date = new Date(latestBase);
+    const safeOffset = Math.min(rangeOffset, maxRangeOffset);
+    if (period === 1) date.setTime(date.getTime() - safeOffset * 3_600_000);
+    else date.setDate(date.getDate() - safeOffset);
+    return date;
+  }, [latestBase, maxRangeOffset, period, rangeOffset]);
+  const selectPeriod = (nextPeriod: 1 | 7 | 30) => {
+    setPeriod(nextPeriod);
+    setRangeOffset(0);
+  };
 
   const start = useMemo(() => {
     const d = new Date(latest);
@@ -212,30 +237,54 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
     );
   }, [topics, current, platforms]);
 
-  const chartDays = period === 30 ? 30 : period === 1 ? 1 : 7;
-
   const daysData = useMemo(() => {
-    return Array.from({ length: chartDays }, (_, index) => {
+    return Array.from({ length: chartBuckets }, (_, index) => {
       const date = new Date(latest);
-      date.setDate(date.getDate() - chartDays + 1 + index);
-      const dayItems =
-        chartDays === 1
-          ? current
-          : dated
-              .filter(
-                (row) =>
-                  row.date >= start && row.date <= latest && row.date.toDateString() === date.toDateString()
-              )
-              .map((row) => row.item);
-      const dailyTopics = Array.from(topicMap(dayItems)).sort((a, b) => b[1] - a[1]);
+      let bucketItems: Case[];
+      let label: string;
+      let fullLabel: string;
+
+      if (period === 1) {
+        date.setMinutes(0, 0, 0);
+        date.setHours(date.getHours() - 23 + index);
+        const bucketEnd = new Date(date.getTime() + 3_600_000);
+        bucketItems = dated
+          .filter((row) => row.date >= date && row.date < bucketEnd && row.date <= latest)
+          .map((row) => row.item);
+        label = `${String(date.getHours()).padStart(2, "0")}:00`;
+        fullLabel = `${label} · ${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+      } else {
+        date.setDate(date.getDate() - chartBuckets + 1 + index);
+        bucketItems = dated
+          .filter(
+            (row) =>
+              row.date >= start && row.date <= latest && row.date.toDateString() === date.toDateString()
+          )
+          .map((row) => row.item);
+        label = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+        fullLabel = label;
+      }
+
+      const dailyTopics = Array.from(topicMap(bucketItems)).sort((a, b) => b[1] - a[1]);
       return {
-        label: `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`,
-        "Lượt đề cập": dayItems.length,
+        label,
+        fullLabel,
+        "Lượt đề cập": bucketItems.length,
         topTopic: dailyTopics[0]?.[0] || "Chưa có thảo luận",
         topTopicCount: dailyTopics[0]?.[1] || 0,
       };
     });
-  }, [chartDays, latest, current, dated, start]);
+  }, [chartBuckets, latest, dated, period, start]);
+
+  const chartCeiling = useMemo(() => {
+    const maximum = Math.max(1, ...daysData.map((day) => day["Lượt đề cập"]));
+    const target = maximum * 1.2;
+    const magnitude = 10 ** Math.floor(Math.log10(target));
+    const fraction = target / magnitude;
+    const niceFractions = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+    const niceFraction = niceFractions.find((value) => value >= fraction) ?? 10;
+    return Math.max(4, niceFraction * magnitude);
+  }, [daysData]);
 
   const peak = useMemo(() => {
     return daysData.reduce<{ label: string; value: number }>(
@@ -268,7 +317,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
             boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
           }}
         >
-          <strong style={{ display: "block", marginBottom: "4px" }}>{data.label}</strong>
+          <strong style={{ display: "block", marginBottom: "4px" }}>{data.fullLabel || data.label}</strong>
           <div>
             Lượt đề cập: <span style={{ color: "#e8198b", fontWeight: 700 }}>{data["Lượt đề cập"]}</span>
           </div>
@@ -290,8 +339,8 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
     value >= 0 ? "text-[11px] font-[750] text-[#08a658]" : "text-[11px] font-[750] text-[#ef3540]";
   const headerTrendClass = (value: number) =>
     value >= 0
-      ? "ml-auto mr-4 text-[11px] font-extrabold text-[#07a75b]"
-      : "ml-auto mr-4 text-[11px] font-extrabold text-[#ef3540]";
+      ? "ml-auto mr-4 text-[11px] font-extrabold text-[#07a75b] max-[600px]:hidden"
+      : "ml-auto mr-4 text-[11px] font-extrabold text-[#ef3540] max-[600px]:hidden";
 
   return (
     <div className="mx-auto min-h-[calc(100vh-66px)] max-w-[1640px] bg-[#fbfbfd] px-[26px] pt-[18px] pb-[28px] max-[720px]:p-4">
@@ -314,19 +363,19 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
         >
           <button
             className={`${periodButton} ${period === 1 ? periodActive : "bg-transparent text-[#68758b]"}`}
-            onClick={() => setPeriod(1)}
+            onClick={() => selectPeriod(1)}
           >
             24 giờ
           </button>
           <button
             className={`${periodButton} ${period === 7 ? periodActive : "bg-transparent text-[#68758b]"}`}
-            onClick={() => setPeriod(7)}
+            onClick={() => selectPeriod(7)}
           >
             7 ngày
           </button>
           <button
             className={`${periodButton} ${period === 30 ? periodActive : "bg-transparent text-[#68758b]"}`}
-            onClick={() => setPeriod(30)}
+            onClick={() => selectPeriod(30)}
           >
             30 ngày
           </button>
@@ -341,7 +390,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
           <i className={`${kpiIconBox} bg-linear-145 from-[#ffe5f0] to-[#fff1f7] text-[#ef197b]`}>
             {kpiIcon("search")}
           </i>
-          <div>
+          <div className="min-w-0">
             <small className={kpiLabel}>Chủ đề được bàn luận nhiều nhất</small>
             <strong
               className="my-2.5 mb-3 line-clamp-2 block text-[19px] leading-[1.2] tracking-[-.8px] text-[#101a34]"
@@ -419,7 +468,43 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
               <i className="h-1 w-[21px]" style={{ background: "#ed198b" }} /> Lượt đề cập
             </span>
           </div>
-          <div className="pr-[18px] pb-7 pl-[38px]" style={{ height: 230, position: "relative", overflow: "visible" }}>
+          <div
+            className="pr-[18px] pb-7 pl-[38px]"
+            style={{
+              height: 230,
+              position: "relative",
+              overflow: "visible",
+              cursor: isDraggingChart ? "grabbing" : "grab",
+              touchAction: "none",
+              userSelect: "none",
+            }}
+            onPointerDown={(event) => {
+              chartDragStart.current = { x: event.clientX, offset: rangeOffset };
+              setIsDraggingChart(true);
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerUp={(event) => {
+              const drag = chartDragStart.current;
+              if (drag) {
+                const bounds = event.currentTarget.getBoundingClientRect();
+                const distance = event.clientX - drag.x;
+                const pixelsPerBucket = Math.max(24, bounds.width / Math.max(1, chartBuckets));
+                const bucketShift = Math.round(distance / pixelsPerBucket);
+                if (Math.abs(distance) >= 12 && bucketShift !== 0) {
+                  setRangeOffset(Math.min(maxRangeOffset, Math.max(0, drag.offset + bucketShift)));
+                }
+              }
+              chartDragStart.current = null;
+              setIsDraggingChart(false);
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
+            }}
+            onPointerCancel={() => {
+              chartDragStart.current = null;
+              setIsDraggingChart(false);
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={daysData} margin={{ top: 15, right: 15, left: -20, bottom: 0 }}>
                 <defs>
@@ -430,7 +515,12 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e8ed" />
                 <XAxis dataKey="label" tickLine={false} tick={{ fill: "#64748b", fontSize: 10 }} />
-                <YAxis tickLine={false} tick={{ fill: "#64748b", fontSize: 10 }} />
+                <YAxis
+                  domain={[0, chartCeiling]}
+                  allowDecimals={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 10 }}
+                />
                 <Tooltip content={<CustomTooltip />} />
                 <Area
                   type="monotone"
@@ -453,6 +543,9 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
               }}
             >
               Cao điểm: <strong style={{ color: "#475569" }}>{peak.label || "chưa có dữ liệu"}</strong> · <strong style={{ color: "#ed198b" }}>{Math.max(0, peak.value)}</strong> lượt đề cập
+            </div>
+            <div className="absolute right-[18px] bottom-1 text-[9px] text-[#94a3b8]">
+              Giữ và kéo ngang để xem lịch sử
             </div>
           </div>
         </section>

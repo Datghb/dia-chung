@@ -94,7 +94,7 @@ def crawl_now(
             pool.submit(crawler, keywords=kw, max_posts=raw_limit): platform
             for platform, (crawler, raw_limit) in crawlers.items()
         }
-        done, pending = wait(futures, timeout=40)
+        done, pending = wait(futures, timeout=300)
         for future in done:
             platform = futures[future]
             try:
@@ -102,7 +102,7 @@ def crawl_now(
             except Exception as exc:
                 logger.warning("%s crawler failed: %s", platform, exc)
         for future in pending:
-            logger.warning("%s crawler exceeded the 40-second platform window", futures[future])
+            logger.warning("%s crawler exceeded the 300-second platform window", futures[future])
             future.cancel()
         pool.shutdown(wait=False, cancel_futures=True)
 

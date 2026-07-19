@@ -12,7 +12,7 @@ import { ManualInputDrawer } from "./manual-input-drawer";
 import { CaseDetail } from "../cases/case-detail";
 import { Case, Verdict, Status, Priority } from "../../types";
 import {
-  TrendingUp, FilePlus, AlertTriangle, Search, Clock,
+  FilePlus, AlertTriangle, Search, Clock,
   ArrowUpDown, Plus, X, ExternalLink, ArrowRight
 } from "lucide-react";
 
@@ -186,20 +186,6 @@ export function QueueView() {
             Nhập thủ công nội dung cần theo dõi, sau đó rà soát kết quả phân tích của AI.
           </p>
         </div>
-        <div className="w-[260px] rounded-[15px] border border-[#e8eaf1] bg-white px-[15px] py-[13px] shadow-[0_7px_24px_#242d4b0b] max-[1200px]:hidden">
-          <div className="flex justify-between">
-            <small className="text-[9px] text-[#65738a]">Xu hướng rủi ro 7 ngày</small>
-            <strong className="text-[13px] text-[#d40ca0]">
-              {allItems.length > 0 ? <><TrendingUp size={12} className="inline align-[-1px]" /> {Math.min(99, allItems.length * 3)}%</> : "Chưa có dữ liệu"}
-            </strong>
-          </div>
-          <svg viewBox="0 0 250 55" aria-hidden="true" className="mt-[5px] block h-12 w-full">
-            <path
-              className="fill-none stroke-[#dd15aa] stroke-2"
-              d="M3 48 L25 23 L47 30 L69 17 L91 19 L113 8 L135 12 L157 4 L179 33 L201 42 L224 18 L247 25"
-            />
-          </svg>
-        </div>
       </div>
 
       <section className="mb-[15px] grid grid-cols-4 gap-[14px] max-[1200px]:grid-cols-2 max-[480px]:grid-cols-1">
@@ -320,7 +306,7 @@ export function QueueView() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1120px] border-collapse">
+          <table className="queue-monitor-table w-full min-w-[1120px] border-collapse">
             <thead>
               <tr>
                 <th className={`${thCell} w-[44px] max-w-[44px] min-w-[44px] pr-[6px] pl-2.5 text-center`}>
@@ -333,7 +319,7 @@ export function QueueView() {
                 <th className={thCell}>ĐỘ TIN CẬY</th>
                 <th className={thCell}>CHỦ ĐỀ PHÁP LÝ</th>
                 <th className={thCell}>TRẠNG THÁI</th>
-                <th className={thCell} />
+                <th className={`${thCell} w-[52px] min-w-[52px] text-center`} />
               </tr>
             </thead>
             <tbody>
@@ -435,12 +421,17 @@ export function QueueView() {
                   <td className={tdCell}>
                     <StatusBadge value={item.status} />
                   </td>
-                  <td className={tdCell}>
+                  <td className={`${tdCell} w-[52px] min-w-[52px] text-center`}>
                     <button
-                      className="h-8 w-8 rounded-full border-0 bg-[#f5eff9] text-[14px] text-[#b51aa8] transition-all duration-[180ms] group-hover:translate-x-[2px] group-hover:bg-[#c71bb0] group-hover:text-white"
+                      type="button"
+                      className="inline-grid h-8 w-8 place-items-center rounded-full border-0 bg-[#f5eff9] p-0 align-middle text-[#b51aa8] transition-[transform,background,color] duration-[180ms] group-hover:translate-x-[2px] group-hover:bg-[#c71bb0] group-hover:text-white"
                       aria-label={`Mở hồ sơ ${item.id}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleOpenCase(item.id);
+                      }}
                     >
-                      <ArrowRight size={14} />
+                      <ArrowRight size={15} strokeWidth={2} aria-hidden="true" />
                     </button>
                   </td>
                 </tr>

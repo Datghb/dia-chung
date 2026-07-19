@@ -9,6 +9,7 @@ export type Case = {
   platform: "Facebook" | "TikTok" | "YouTube" | "Web" | "Forum";
   account: string;
   publishedAt: string;
+  createdAt?: string;
   priority: Priority;
   score: number;
   confidence: number;
@@ -51,6 +52,7 @@ export type ApiQueueItem = {
   platform: string;
   account: string;
   published_at: string;
+  created_at?: string;
   reach: number;
   status: string;
   document?: string;
