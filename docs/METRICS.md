@@ -53,12 +53,12 @@ risk = min(100, risk)
 
 | Signal | Source | Weight | Range |
 |--------|--------|--------|-------|
-| BM25 match quality | `match_hanh_vi_with_scores()` | `min(25, max(0, (score-0.5)*6))` | 0–25 |
-| Amount precision | `_classify_ca_nhan/_to_chuc` | exact=25, in_range=15, single=10, none=0 | 0–25 |
-| Subject detection | `_detect_subject_type()` | detected=15, unknown=0 | 0–15 |
-| Citations | `citations` list | `min(15, count*5)` | 0–15 |
-| Study case match | `_match_study_case()` | matched=10, not=0 | 0–10 |
-| Base | — | always 10 | 10 |
+| BM25 match quality | `match_hanh_vi_with_scores()` | `min(30, max(0, (score-0.5)*8))` | 0–30 |
+| Amount precision | `_classify_ca_nhan/_to_chuc` | exact=20, in_range=12, single=8, none=0 | 0–20 |
+| Subject detection | `_detect_subject_type()` | detected=10, unknown=0 | 0–10 |
+| Citations | `citations` list | `min(10, count*5)` | 0–10 |
+| Study case match | `_match_study_case()` | matched=5, not=0 | 0–5 |
+| Base | — | always 25 | 25 |
 
 ### Formula
 

@@ -160,9 +160,6 @@ export function QueueView() {
           <h1 className="my-[6px] text-[38px] font-[760] tracking-[-1.6px] text-[#202944] max-[480px]:text-[31px]">
             Hàng đợi giám sát
           </h1>
-          <p className="m-0 text-[12px] text-[#738195]">
-            Nhập thủ công nội dung cần theo dõi, sau đó rà soát kết quả phân tích của AI.
-          </p>
         </div>
       </div>
 

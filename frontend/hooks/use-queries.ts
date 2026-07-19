@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Case, ApiQueueItem, StudyCase, Status } from "../types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiQueueItem, AuditEntry, Case, Status, StudyCase } from "../types";
 import { API_URL, mapApiCase } from "../utils/api";
 
 export type ReviewDecision = "accepted" | "corrected" | "rejected";
@@ -17,7 +17,7 @@ export function useQueueQuery() {
       const queue = (await response.json()) as ApiQueueItem[];
       return queue.map(mapApiCase);
     },
-    refetchInterval: 30000, // automatic polling every 30 seconds
+    refetchInterval: 30000,
   });
 }
 
@@ -40,23 +40,33 @@ export function useUpdateStatusMutation() {
       id,
       status,
       adminKey,
+      reviewerLabel,
+      reviewerReason,
+      reviewerNote,
     }: {
       id: string;
       status: Status;
       adminKey: string;
+      reviewerLabel?: string;
+      reviewerReason?: string;
+      reviewerNote?: string;
     }) => {
       const statusMap: Record<Status, string> = {
         Mới: "new",
         "Đang xử lý": "reviewing",
         "Đã xử lý": "resolved",
       };
+      const body: Record<string, string> = { status: statusMap[status] };
+      if (reviewerLabel) body.reviewer_label = reviewerLabel;
+      if (reviewerReason) body.reviewer_reason = reviewerReason;
+      if (reviewerNote) body.reviewer_note = reviewerNote;
       const response = await fetch(`${API_URL}/api/cases/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           "X-Admin-Key": adminKey,
         },
-        body: JSON.stringify({ status: statusMap[status] }),
+        body: JSON.stringify(body),
       });
       if (!response.ok) throw new Error("Failed to update status");
       return response.json();
@@ -104,6 +114,20 @@ export function useReviewCaseMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["queue"] });
     },
+  });
+}
+
+export function useAuditQuery(caseId: string, adminKey: string) {
+  return useQuery<AuditEntry[]>({
+    queryKey: ["audit", caseId, adminKey],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/api/cases/${caseId}/audit`, {
+        headers: { "X-Admin-Key": adminKey },
+      });
+      if (!response.ok) throw new Error("Audit API unavailable");
+      return response.json();
+    },
+    enabled: Boolean(caseId && adminKey),
   });
 }
 

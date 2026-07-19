@@ -177,7 +177,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
   }, [allItems, searchQuery]);
 
   const rows = useMemo(() => {
-    return filteredAllItems.map((item) => ({ item, date: parseCaseDate(item.publishedAt) }));
+    return filteredAllItems.map((item) => ({ item, date: parseCaseDate(item.publishedAt) || parseCaseDate(item.createdAt || "") }));
   }, [filteredAllItems]);
 
   const dated = useMemo(() => {
@@ -356,10 +356,6 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
           <h1 className="mt-[9px] mb-[7px] text-[34px] font-extrabold leading-[1.08] tracking-[-1.25px] text-[#101b35] max-[720px]:text-[28px]">
             Toàn cảnh thảo luận thị trường
           </h1>
-          <p className="m-0 text-[11px] text-[#758196]">
-            Giúp lãnh đạo nhận biết chủ đề đang được quan tâm, mức độ thảo luận và nền tảng phát sinh nhiều tín
-            hiệu nhất.
-          </p>
         </div>
         <div
           className="flex h-12 items-center overflow-hidden rounded-xl border border-[#e7e9f0] bg-white max-[720px]:w-full"

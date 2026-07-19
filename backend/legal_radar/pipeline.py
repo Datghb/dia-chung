@@ -14,6 +14,7 @@ from dataclasses import asdict
 from hashlib import sha1
 from pathlib import Path
 from uuid import uuid4
+from datetime import datetime, timezone
 
 from backend.legal_radar.model import QueueItem, NhanPhanLoai, NhanNguon, load_kg
 from backend.legal_radar.engine import classify_claim_full, tich_hop_nguon
@@ -117,7 +118,7 @@ def analyze_comment(comment: str) -> dict:
         "source_agency": source_agency,
         "platform": "Manual",
         "account": "",
-        "published_at": "",
+        "published_at": datetime.now(timezone.utc).isoformat(),
         "reach": 0,
         "status": "new",
         "score": _compute_score(result.nhan, 0, 0),
@@ -182,12 +183,12 @@ def _compute_accuracy(
     citations: list[str],
     study_case_matched: bool,
 ) -> int:
-    base = 10
-    bm25_sc = min(25, max(0, round((bm25_score - 0.5) * 6)))
-    amount_sc = {"exact": 25, "in_range": 15, "single": 10}.get(amount_match, 0)
-    subject_sc = 15 if subject and subject != "Chưa xác định" else 0
-    cite_sc = min(15, len(citations) * 5)
-    study_sc = 10 if study_case_matched else 0
+    base = 25
+    bm25_sc = min(30, max(0, round((bm25_score - 0.5) * 8)))
+    amount_sc = {"exact": 20, "in_range": 12, "single": 8}.get(amount_match, 0)
+    subject_sc = 10 if subject and subject != "Chưa xác định" else 0
+    cite_sc = min(10, len(citations) * 5)
+    study_sc = 5 if study_case_matched else 0
     return min(100, base + bm25_sc + amount_sc + subject_sc + cite_sc + study_sc)
 
 

@@ -90,6 +90,18 @@ def sanitize_injection(text: str) -> str:
     return result
 
 
+def validate_reviewer_label(label: str) -> str:
+    if not label:
+        return ""
+    try:
+        LABEL_ENUM(label)
+    except ValueError:
+        raise ValueError(
+            f"Nhãn reviewer '{label}' không hợp lệ. Chỉ chấp nhận: {[e.value for e in LABEL_ENUM]}"
+        )
+    return label
+
+
 def validate_source_label(nhan_nguon: str, rendered_text: str) -> None:
     try:
         NHAN_NGUON_ENUM(nhan_nguon)

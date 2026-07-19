@@ -35,7 +35,31 @@ class QueueItemResponse(BaseModel):
     spread_risk: int = 0
     ai_accuracy: int = 0
     source_reliability: int = 0
+    human_label: str = ""
+    human_source_label: str = ""
+    reviewer_notes: str = ""
     comments: list[dict] = Field(default_factory=list)
+    reviewer_label: str = ""
+    reviewer_reason: str = ""
+    reviewer_note: str = ""
+    reviewed_at: str = ""
+
+
+class AuditEntryResponse(BaseModel):
+    case_id: str
+    action: str
+    actor: str = "operator"
+    old_value: str = ""
+    new_value: str = ""
+    note: str = ""
+    timestamp: str = ""
+
+
+class ReviewRequest(BaseModel):
+    human_label: str | None = None
+    human_source_label: str | None = None
+    reviewer_notes: str | None = None
+    action: str | None = None
 
 
 class QuestionRequest(BaseModel):

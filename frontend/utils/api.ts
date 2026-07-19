@@ -64,6 +64,13 @@ export function mapApiCase(item: ApiQueueItem): Case {
     contentType: "post",
     keywords: item.keywords || [],
     comments: item.comments || item.post_comments || [],
+    humanLabel: item.human_label || undefined,
+    humanSourceLabel: item.human_source_label || undefined,
+    reviewerNotes: item.reviewer_notes || undefined,
+    reviewerLabel: item.reviewer_label || "",
+    reviewerReason: item.reviewer_reason || "",
+    reviewerNote: item.reviewer_note || "",
+    reviewedAt: item.reviewed_at || "",
   };
 }
 
@@ -75,4 +82,22 @@ export async function fetchQueue(): Promise<Case[]> {
   if (!response.ok) throw new Error("Queue API unavailable");
   const queue = (await response.json()) as ApiQueueItem[];
   return queue.map(mapApiCase);
+}
+
+export async function reviewCase(
+  caseId: string,
+  body: {
+    human_label?: string;
+    human_source_label?: string;
+    reviewer_notes?: string;
+    action?: "approve" | "reject" | "escalate";
+  },
+): Promise<ApiQueueItem> {
+  const response = await fetch(`${API_URL}/api/cases/${caseId}/review`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error("Review API failed");
+  return response.json();
 }

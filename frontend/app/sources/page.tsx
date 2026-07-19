@@ -48,10 +48,6 @@ export default function SourcesPage() {
         <div>
           <span className="text-[10px] font-extrabold tracking-[1.5px] text-[#c01cad]">NGUỒN TIN</span>
           <h1 className="my-[6px] text-[38px] font-[760] tracking-[-1.6px] text-[#202944] max-[480px]:text-[31px]">Nguồn chính thức</h1>
-          <p className="m-0 text-[12px] text-[#738195]">
-            Danh sách whitelist nguồn tin theo tầng thẩm quyền — hệ thống chỉ dùng các nguồn này để xác minh nội
-            dung.
-          </p>
         </div>
       </div>
 

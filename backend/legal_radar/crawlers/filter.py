@@ -10,6 +10,7 @@ _DVHC_KEYWORDS: list[str] = [
     "hợp nhất",
     "đơn vị hành chính",
     "dvhc",
+    "đvhc",
     "tỉnh mới",
     "thành phố mới",
     "nối tỉnh",
@@ -25,6 +26,10 @@ _DVHC_KEYWORDS: list[str] = [
     "tách tỉnh",
     "nhập tỉnh",
     "chia tỉnh",
+    "thay đổi địa giới",
+    "nghị quyết",
+    "bộ nội vụ",
+    "sắp xếp lại",
 ]
 
 _MERGER_REQUIRED: list[str] = [
@@ -34,11 +39,14 @@ _MERGER_REQUIRED: list[str] = [
     "hợp nhất",
     "đơn vị hành chính",
     "dvhc",
+    "đvhc",
     "tỉnh mới",
     "nối tỉnh",
     "nhập tỉnh",
     "chia tỉnh",
     "sắp xếp đơn vị",
+    "sắp xếp lại",
+    "thay đổi địa giới",
 ]
 
 _MIN_KEYWORD_MATCH = 2

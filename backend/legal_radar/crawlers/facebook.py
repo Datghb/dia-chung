@@ -11,6 +11,7 @@ import json
 import logging
 import re
 import time
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -29,6 +30,17 @@ FALLBACK_QUERIES = [
     "sáp nhập tỉnh",
     "đơn vị hành chính sáp nhập",
     "tin đồn sáp nhập tỉnh",
+    "sáp nhập ĐVHC",
+    "gộp tỉnh 2025",
+    "sắp xếp đơn vị hành chính",
+    "34 tỉnh sáp nhập",
+]
+
+_DISCOVER_META_KEYWORDS = [
+    "sáp nhập", "đơn vị hành chính", "dvhc", "đvhc",
+    "gộp tỉnh", "giảm tỉnh", "tỉnh mới", "sắp xếp",
+    "hợp nhất", "nhập tỉnh", "chia tỉnh", "tách tỉnh",
+    "nghị quyết", "bộ nội vụ", "16 tỉnh", "34 tỉnh",
 ]
 
 
@@ -55,7 +67,7 @@ def _discover_urls(queries: list[str], needed: int) -> list[dict]:
                 headers=_bd_headers(),
                 json={
                     "query": f"{query} site:facebook.com",
-                    "num_results": 5,
+                    "num_results": 10,
                     "format": "json",
                     "language": "vi",
                     "country": "VN",
@@ -274,6 +286,11 @@ def crawl_facebook(
             logger.debug("Skip non-facebook URL: %s", url[:80])
             continue
 
+        meta_text = f"{title} {description}".lower()
+        if not any(kw in meta_text for kw in _DISCOVER_META_KEYWORDS):
+            logger.info("Skip irrelevant Discover result: %s", title[:80])
+            continue
+
         scraped = _crawl_one_post(url)
         if scraped:
             results.append(scraped)
@@ -292,7 +309,7 @@ def crawl_facebook(
                 "page_followers": None,
                 "page_verified": False,
                 "url": url,
-                "timestamp": "",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "engagement": {"likes": 0, "shares": 0, "comments": 0},
                 "comments": [],
             }
