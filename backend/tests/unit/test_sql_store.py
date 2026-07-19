@@ -57,3 +57,25 @@ def test_sql_store_rejects_stale_case_version(tmp_path) -> None:
         )
 
     assert len(store.list_audit("case-1")) == 1
+
+
+def test_stale_status_update_does_not_append_audit(tmp_path) -> None:
+    store = SqlStore(f"sqlite:///{tmp_path / 'status.db'}")
+    store.initialize()
+    store.upsert_case({"id": "case-status", "status": "new"})
+    store.update_case_status(
+        "case-status",
+        status="reviewing",
+        expected_version=1,
+        actor="reviewer-a",
+    )
+
+    with pytest.raises(CaseVersionConflict):
+        store.update_case_status(
+            "case-status",
+            status="resolved",
+            expected_version=1,
+            actor="reviewer-b",
+        )
+
+    assert len(store.list_audit("case-status")) == 1

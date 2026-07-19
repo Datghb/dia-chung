@@ -40,6 +40,19 @@ jobs:
       - name: Run business evaluation gate (smoke test)
         run: python backend/eval/smoke.py
 
+      - name: Audit Python dependencies
+        run: |
+          pip install pip-audit
+          pip-audit backend
+
+      - name: Scan repository for known vulnerabilities
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
   frontend-test:
     name: Frontend tests
     runs-on: ubuntu-latest

@@ -3,14 +3,20 @@
 from hmac import compare_digest
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 
 from backend.legal_radar.api.dependencies import SESSION_COOKIE, get_principal
 from backend.legal_radar.auth import Principal, SessionManager
 from backend.legal_radar.settings import get_settings
+from backend.legal_radar.api.rate_limit import SlidingWindowRateLimiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+login_rate_limiter = SlidingWindowRateLimiter(
+    max_requests=5,
+    window_seconds=60,
+    max_clients=10_000,
+)
 
 
 class SessionRequest(BaseModel):
@@ -37,9 +43,18 @@ def _response(principal: Principal) -> SessionResponse:
 @router.post("/session", response_model=SessionResponse)
 def create_session(
     body: SessionRequest,
+    request: Request,
     response: Response,
     x_admin_key: str | None = Header(default=None),
 ) -> SessionResponse:
+    client_key = request.client.host if request.client else "unknown"
+    retry_after = login_rate_limiter.check(client_key)
+    if retry_after is not None:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts",
+            headers={"Retry-After": str(retry_after)},
+        )
     settings = get_settings()
     configured_key = (settings.admin_api_key or "").strip()
     if not configured_key:

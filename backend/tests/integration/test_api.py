@@ -25,6 +25,8 @@ def test_api_responses_include_security_headers() -> None:
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["referrer-policy"] == "no-referrer"
+    assert response.headers["content-security-policy"].startswith("default-src")
+    assert response.headers["x-request-id"]
 
 
 def test_cors_preflight_allows_production_frontend() -> None:

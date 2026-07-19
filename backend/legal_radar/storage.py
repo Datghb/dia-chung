@@ -221,7 +221,7 @@ class SqlStore:
                 payload["reviewer_note"] = reviewer_note
             payload["status"] = status
             new_version = int(row.version) + 1
-            connection.execute(
+            updated = connection.execute(
                 update(cases)
                 .where(cases.c.id == case_id, cases.c.version == row.version)
                 .values(
@@ -231,6 +231,8 @@ class SqlStore:
                     updated_at=now,
                 )
             )
+            if updated.rowcount != 1:
+                raise CaseVersionConflict(case_id)
             connection.execute(
                 insert(audit_events).values(
                     case_id=case_id,

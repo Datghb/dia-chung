@@ -10,12 +10,14 @@ import requests as http_requests
 
 from backend.legal_radar.source_classifier import TIER_0_DOMAINS, TIER_1_DOMAINS, TIER_2_DOMAINS
 from backend.legal_radar.settings import get_settings
+from backend.legal_radar.resilience import CircuitBreaker, CircuitOpen, call_with_retry
 
 logger = logging.getLogger(__name__)
 
 TRUSTED_DOMAINS = TIER_0_DOMAINS + TIER_1_DOMAINS + TIER_2_DOMAINS
 
 BD_DISCOVER_URL = "https://api.brightdata.com/discover"
+_brightdata_breaker = CircuitBreaker(failure_threshold=3, recovery_seconds=30)
 
 _DOMAIN_TO_NGUON: dict[str, str] = {
     "chinhphu.vn": "Cổng TTĐT Chính phủ",
@@ -157,19 +159,24 @@ def search_brightdata(
     for query in sub_queries:
         logger.info("BrightData Discover: %s", query)
         try:
-            resp = http_requests.post(
-                BD_DISCOVER_URL,
-                headers=_bd_headers(),
-                json={
-                    "query": query,
-                    "num_results": 5,
-                    "format": "json",
-                    "language": "vi",
-                    "country": "VN",
-                },
-                timeout=15,
+            resp = call_with_retry(
+                lambda: http_requests.post(
+                    BD_DISCOVER_URL,
+                    headers=_bd_headers(),
+                    json={
+                        "query": query,
+                        "num_results": 5,
+                        "format": "json",
+                        "language": "vi",
+                        "country": "VN",
+                    },
+                    timeout=15,
+                ),
+                breaker=_brightdata_breaker,
+                attempts=2,
+                retry_on=(http_requests.RequestException,),
             )
-        except http_requests.RequestException as exc:
+        except (http_requests.RequestException, CircuitOpen) as exc:
             logger.warning("BrightData Discover request error: %s", exc)
             continue
 

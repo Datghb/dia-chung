@@ -12,6 +12,7 @@ from backend.legal_radar.api.data_access import (
     update_queue_item_status,
 )
 from backend.legal_radar.api.dependencies import require_admin, require_reviewer
+from backend.legal_radar.auth import Principal
 from backend.legal_radar.api.schemas import (
     AuditEntryResponse,
     QueueItemResponse,
@@ -47,9 +48,12 @@ def list_queue(response: Response) -> list[QueueItemResponse]:
 @router.patch(
     "/cases/{case_id}/status",
     response_model=QueueItemResponse,
-    dependencies=[Depends(require_reviewer)],
 )
-def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
+def update_case_status(
+    case_id: str,
+    body: StatusUpdate,
+    principal: Principal = Depends(require_reviewer),
+) -> QueueItemResponse:
     allowed = {"new", "reviewing", "resolved"}
     if body.status not in allowed:
         raise HTTPException(status_code=400, detail=f"Status phải là một trong: {allowed}")
@@ -69,6 +73,7 @@ def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
             reviewer_reason=body.reviewer_reason,
             reviewer_note=body.reviewer_note,
             expected_version=body.expected_version,
+            actor=principal.subject,
         )
     except CaseVersionConflict as error:
         raise HTTPException(
@@ -83,11 +88,11 @@ def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
 @router.post(
     "/cases/{case_id}/review",
     response_model=QueueItemResponse,
-    dependencies=[Depends(require_reviewer)],
 )
 def record_review_decision(
     case_id: str,
     body: DecisionReviewRequest,
+    principal: Principal = Depends(require_reviewer),
 ) -> QueueItemResponse:
     if body.decision == "corrected" and body.corrected_label is None:
         raise HTTPException(
@@ -106,6 +111,7 @@ def record_review_decision(
             body.note,
             body.corrected_label,
             expected_version=body.expected_version,
+            actor=principal.subject,
         )
     except CaseVersionConflict as error:
         raise HTTPException(

@@ -75,6 +75,10 @@ curl --fail https://api.theoria-lab.io.vn/ready
 docker compose -f deploy/compose.yaml ps
 ```
 
+Sau khi đăng nhập bằng phiên admin, kiểm tra `/api/metrics` và đối chiếu
+`X-Request-ID` với log JSON. Quy trình cảnh báo, xử lý sự cố và phục hồi dữ liệu
+được ghi tại `docs/OPERATIONS_RUNBOOK.md`.
+
 Backend chạy bằng user không đặc quyền, root filesystem chỉ đọc và chỉ volume
 `runs_data` được phép ghi. Khi rollback, checkout commit đã kiểm thử trước đó và
 chạy lại lệnh `docker compose ... up --build -d`; không xóa volume audit.

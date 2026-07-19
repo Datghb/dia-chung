@@ -80,6 +80,7 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
   const updateStatusMutation = useUpdateStatusMutation();
   const reviewMutation = useReviewCaseMutation();
   const [currentStatus, setCurrentStatus] = useState<Status>(item.status);
+  const [currentVersion, setCurrentVersion] = useState(item.version ?? 1);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState("");
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(true);
@@ -117,12 +118,13 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
     setVerifyError("");
     try {
       const token = await ensureSession();
-      await updateStatusMutation.mutateAsync({
+      const updated = await updateStatusMutation.mutateAsync({
         id: item.id,
         status,
         csrfToken: token,
-        expectedVersion: item.version,
+        expectedVersion: currentVersion,
       });
+      setCurrentVersion(updated.version ?? currentVersion + 1);
       setCurrentStatus(status);
     } catch {
       setVerifyError("Không thể cập nhật trạng thái. Kiểm tra khóa quản trị và kết nối API.");
@@ -150,14 +152,15 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
     }
     try {
       const token = await ensureSession();
-      await reviewMutation.mutateAsync({
+      const updated = await reviewMutation.mutateAsync({
         id: item.id,
         decision: reviewDecision,
         note: reviewNote.trim(),
         correctedLabel: reviewDecision === "corrected" ? correctedLabel : undefined,
         csrfToken: token,
-        expectedVersion: item.version ?? 1,
+        expectedVersion: currentVersion,
       });
+      setCurrentVersion(updated.version ?? currentVersion + 1);
       setCurrentStatus("Đã xử lý");
       setReviewMessage("Đã lưu quyết định và ghi nhật ký kiểm toán.");
     } catch (error) {
@@ -172,13 +175,14 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
     try {
       const token = await ensureSession();
       if (action === "approve") {
-        await reviewMutation.mutateAsync({
+        const updated = await reviewMutation.mutateAsync({
           id: item.id,
           decision: "accepted",
           note: "",
           csrfToken: token,
-          expectedVersion: item.version ?? 1,
+          expectedVersion: currentVersion,
         });
+        setCurrentVersion(updated.version ?? currentVersion + 1);
         setCurrentStatus("Đã xử lý");
       } else if (action === "escalate") {
         await handleStatusChange("Đang xử lý");
@@ -195,15 +199,16 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
     try {
       const token = await ensureSession();
       const targetStatus: Status = andResolve ? "Đã xử lý" : currentStatus;
-      await updateStatusMutation.mutateAsync({
+      const updated = await updateStatusMutation.mutateAsync({
         id: item.id,
         status: targetStatus,
         csrfToken: token,
-        expectedVersion: item.version,
+        expectedVersion: currentVersion,
         reviewerLabel,
         reviewerReason,
         reviewerNote,
       });
+      setCurrentVersion(updated.version ?? currentVersion + 1);
       if (andResolve) setCurrentStatus("Đã xử lý");
       setReviewSaved(true);
       setTimeout(() => setReviewSaved(false), 2000);

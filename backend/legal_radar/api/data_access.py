@@ -26,6 +26,13 @@ def _sql_store() -> SqlStore | None:
     return _store_for_url(database_url) if database_url else None
 
 
+def check_persistence() -> None:
+    """Raise when the configured transactional store is unavailable."""
+    store = _sql_store()
+    if store:
+        store.ping()
+
+
 def _read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
