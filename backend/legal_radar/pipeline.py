@@ -14,6 +14,7 @@ from dataclasses import asdict
 from hashlib import sha1
 from pathlib import Path
 from uuid import uuid4
+from datetime import datetime, timezone
 
 from backend.legal_radar.model import QueueItem, NhanPhanLoai, NhanNguon, load_kg
 from backend.legal_radar.engine import classify_claim_full, tich_hop_nguon
@@ -117,7 +118,7 @@ def analyze_comment(comment: str) -> dict:
         "source_agency": source_agency,
         "platform": "Manual",
         "account": "",
-        "published_at": "",
+        "published_at": datetime.now(timezone.utc).isoformat(),
         "reach": 0,
         "status": "new",
         "score": _compute_score(result.nhan, 0, 0),

@@ -11,6 +11,7 @@ import json
 import logging
 import re
 import time
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -308,7 +309,7 @@ def crawl_facebook(
                 "page_followers": None,
                 "page_verified": False,
                 "url": url,
-                "timestamp": "",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "engagement": {"likes": 0, "shares": 0, "comments": 0},
                 "comments": [],
             }

@@ -136,7 +136,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
   }, [allItems, searchQuery]);
 
   const rows = useMemo(() => {
-    return filteredAllItems.map((item) => ({ item, date: parseCaseDate(item.publishedAt) }));
+    return filteredAllItems.map((item) => ({ item, date: parseCaseDate(item.publishedAt) || parseCaseDate(item.createdAt || "") }));
   }, [filteredAllItems]);
 
   const dated = useMemo(() => {
