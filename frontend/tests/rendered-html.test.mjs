@@ -34,7 +34,6 @@ test("server-renders the Địa chứng strategic market dashboard", async () =>
   assert.match(html, /Xu hướng thảo luận theo thời gian/);
   assert.match(html, /Top chủ đề được bàn luận nhiều nhất/);
   assert.match(html, /Heatmap điểm nóng/);
-  assert.match(html, /Nhận định điều hành/);
   assert.match(html, /Hàng đợi giám sát/);
   assert.match(html, /Tầng kiểm chứng/);
   assert.match(html, /Dữ liệu mẫu dự phòng/);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUpdateStatusMutation } from "../../hooks/use-queries";
 import { API_URL } from "../../utils/api";
@@ -69,10 +69,6 @@ export function CaseDetail({ item, onClose }: { item: Case; onClose?: () => void
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState("");
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(true);
-
-  useEffect(() => {
-    setCurrentStatus(item.status);
-  }, [item.status]);
 
   const handleBack = () => {
     if (onClose) onClose();

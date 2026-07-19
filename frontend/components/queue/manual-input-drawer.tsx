@@ -27,17 +27,15 @@ export function ManualInputDrawer({
   const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  function buildCase(row: Record<string, string>, index = 0): Case {
+  function applyMetadata(item: Case, row: Record<string, string>): Case {
     const rawContent = (row.content || row.comment || row.text || content).trim().replace(/\s+/g, " ");
-    const claim = rawContent.split(/[.!?]/)[0].slice(0, 150) || rawContent.slice(0, 150);
     const rowType = row.type === "comment" || contentType === "comment" ? "comment" : "post";
     const allowedPlatforms: Case["platform"][] = ["Facebook", "TikTok", "YouTube", "Web"];
     const rowPlatform =
       allowedPlatforms.find((value) => value.toLowerCase() === (row.platform || platform).toLowerCase()) ||
       platform;
     return {
-      id: `HS-MVP-${Date.now().toString().slice(-6)}-${index + 1}`,
-      claim,
+      ...item,
       original: rawContent,
       platform: rowPlatform,
       account: (row.account || row.author || account).trim() || "Chưa xác định",
@@ -45,52 +43,42 @@ export function ManualInputDrawer({
         row.publishedAt ||
         row.published_at ||
         (publishedAt ? new Date(publishedAt).toLocaleString("vi-VN") : "Vừa nhập"),
-      priority: "Cao",
-      score: 75,
-      confidence: 50,
-      verdict: "Cần kiểm chứng",
-      status: "Mới",
-      reason:
-        "Nội dung vừa được nhập bằng file và đang chờ đối chiếu với nguồn chính thức. Kết quả hiện tại là dữ liệu mô phỏng cho luồng MVP.",
-      document: "Đang xác định",
-      provision: "Chờ ánh xạ điều / khoản / điểm",
-      subject: "Chủ thể đăng tải nội dung",
-      penalty: "Chưa đủ căn cứ xác định",
-      sourceTitle: "Chưa có nguồn đối chiếu",
-      sourceAgency: "Đang chờ kiểm chứng",
-      sourceUrl: "#",
       postUrl: row.url || row.postUrl || "#",
-      sourceResult: "Chưa đủ bằng chứng",
       reach: (row.reach || reach).trim() ? `${(row.reach || reach).trim()} lượt tương tác` : "Chưa có số liệu tương tác",
       contentType: rowType,
       parentContent: rowType === "comment" ? (row.parentContent || row.parent_content || parentContent).trim() : undefined,
     };
   }
 
+  async function analyzeRow(row: Record<string, string>): Promise<Case> {
+    const question = (row.content || row.comment || row.text || content).trim().replace(/\s+/g, " ");
+    const response = await fetch(`${API_URL}/api/qa`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(detail || `API trả về lỗi ${response.status}`);
+    }
+    return applyMetadata(mapApiCase((await response.json()) as ApiQueueItem), row);
+  }
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (inputMode === "file") {
-      const validRows = parsedRows.filter((row) => (row.content || row.comment || row.text || "").trim());
-      if (validRows.length) onSave(validRows.map((row, index) => buildCase(row, index)));
-      return;
-    }
-    const compact = content.trim().replace(/\s+/g, " ");
-    if (!compact) return;
+    setFileError("");
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/api/qa`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: compact }),
-      });
-      if (res.ok) {
-        const item = (await res.json()) as ApiQueueItem;
-        onSave([mapApiCase(item)]);
-      } else {
-        onSave([buildCase({ content: compact })]);
-      }
-    } catch {
-      onSave([buildCase({ content: compact })]);
+      const rows = inputMode === "file" ? parsedRows.slice(0, 50) : [{ content }];
+      const analyzed = [];
+      for (const row of rows) analyzed.push(await analyzeRow(row));
+      onSave(analyzed);
+    } catch (error) {
+      setFileError(
+        error instanceof Error
+          ? `Không thể phân tích: ${error.message}`
+          : "Không thể kết nối dịch vụ phân tích. Chưa có hồ sơ nào được tạo.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -101,14 +89,18 @@ export function ManualInputDrawer({
     setFileName(file.name);
     setFileError("");
     setParsedRows([]);
+    if (file.size > 1_000_000) {
+      setFileError("File vượt quá giới hạn 1 MB.");
+      return;
+    }
     try {
       const extension = file.name.split(".").pop()?.toLowerCase();
       if (extension === "csv") {
         Papa.parse(file, {
           header: true,
           skipEmptyLines: true,
-          complete: (results: Papa.ParseResult<any>) => {
-            const rows = results.data as Record<string, string>[];
+          complete: (results: Papa.ParseResult<Record<string, string>>) => {
+            const rows = results.data;
             const valid = rows.filter((row) => (row.content || row.comment || row.text || "").trim());
             if (!valid.length) {
               setFileError("Không tìm thấy nội dung hợp lệ trong file CSV.");
@@ -288,7 +280,7 @@ export function ManualInputDrawer({
                   {fileName || `Chọn file ${contentType === "post" ? "bài viết" : "bình luận"}`}
                 </strong>
                 <small className="mt-[5px] text-[11px] text-[#9299a8]">
-                  CSV, JSON hoặc TXT · tối đa theo khả năng trình duyệt
+                  CSV, JSON hoặc TXT · tối đa 1 MB / 50 bản ghi
                 </small>
               </label>
               {parsedRows.length > 0 && (
@@ -401,13 +393,18 @@ export function ManualInputDrawer({
               </div>
             </>
           )}
+          {inputMode === "manual" && fileError && (
+            <div className="rounded-[10px] bg-[#fff0f2] px-[13px] py-[11px] text-[12px] text-[#b63b52]">
+              {fileError}
+            </div>
+          )}
           <div className="flex gap-[11px] rounded-xl bg-[#f8f2fb] p-[13px] text-[#686079]">
             <span className="grid h-[21px] w-[21px] place-items-center rounded-full bg-[#bd25b1] text-white">
               <Info size={14} />
             </span>
             <p className="m-0 text-[11px] leading-normal">
-              <strong className="block text-[#4c3a57]">Luồng MVP</strong> Sau khi lưu, hệ thống tạo hồ sơ với kết quả
-              “Cần kiểm chứng”. Dữ liệu chỉ tồn tại trong phiên trình duyệt hiện tại.
+              <strong className="block text-[#4c3a57]">Kết quả có kiểm chứng</strong> Hệ thống chỉ tạo hồ sơ sau khi
+              API phân tích thành công; không tự sinh kết quả mô phỏng khi dịch vụ gặp lỗi.
             </p>
           </div>
           <div className="flex justify-end gap-[9px] pt-[5px] max-[700px]:grid max-[700px]:grid-cols-2">

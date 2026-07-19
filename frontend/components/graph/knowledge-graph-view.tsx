@@ -3,33 +3,15 @@
 import { useState, useMemo, useEffect } from "react";
 import { ReactFlow, Background, Controls, useNodesState, useEdgesState } from "@xyflow/react";
 import { useQueueQuery } from "../../hooks/use-queries";
-import { Case } from "../../types";
 import { VerdictBadge } from "../common/badge";
 import "@xyflow/react/dist/style.css";
 import { ExternalLink, ArrowRight } from "lucide-react";
 
 export function KnowledgeGraphView() {
   const { data: fetchedItems = [] } = useQueueQuery();
-  const [localCases, setLocalCases] = useState<Case[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(0);
 
-  // Load local cases from sessionStorage
-  useEffect(() => {
-    const saved = sessionStorage.getItem("local_cases");
-    if (saved) {
-      try {
-        setLocalCases(JSON.parse(saved) as Case[]);
-      } catch {
-        // ignore
-      }
-    }
-  }, []);
-
-  const items = useMemo(() => {
-    const fetchedIds = new Set(fetchedItems.map((item) => item.id));
-    const filteredLocal = localCases.filter((item) => !fetchedIds.has(item.id));
-    return [...filteredLocal, ...fetchedItems];
-  }, [localCases, fetchedItems]);
+  const items = fetchedItems;
 
   const graphItem = items[selectedIdx] || items[0];
 

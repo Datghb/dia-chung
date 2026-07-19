@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   useQueueQuery,
   useClearQueueMutation,
 } from "../../hooks/use-queries";
-import { VerdictBadge, StatusBadge, slug } from "../common/badge";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { VerdictBadge, StatusBadge } from "../common/badge";
 import { ManualInputDrawer } from "./manual-input-drawer";
 import { CaseDetail } from "../cases/case-detail";
 import { Case, Verdict, Status, Priority } from "../../types";
@@ -66,13 +65,6 @@ const tabActive =
   "font-extrabold text-[#bd0aae] after:absolute after:right-2 after:bottom-0 after:left-2 after:h-[2px] after:bg-[#d80aa1] after:content-['']";
 const tabCount = "ml-[6px] rounded-[10px] bg-[#f0f1f5] px-[6px] py-[2px] text-[9px] text-[#7c8799]";
 
-const priorityColors: Record<string, string> = {
-  "khan-cap": "bg-[#fff0f4] text-[#bd315b]",
-  cao: "bg-[#fff7e5] text-[#a16b15]",
-  "trung-binh": "bg-[#eaf2f8] text-[#3b668b]",
-  thap: "bg-[#edf1f4] text-[#687789]",
-};
-
 const platformBg: Record<Case["platform"], string> = {
   Facebook: "bg-[#e8f0f8] text-[#286298]",
   TikTok: "bg-[#202a34] text-white",
@@ -87,7 +79,6 @@ const tdCell = "border-b border-[#f0f1f5] px-3 py-[11px] align-middle text-[10px
 const tdSmall = "mt-[3px] block text-[8px] text-[#91a0af]";
 
 export function QueueView() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("q") || "";
 
@@ -96,21 +87,8 @@ export function QueueView() {
 
   const [localCases, setLocalCases] = useState<Case[]>([]);
 
-  // Load local cases from sessionStorage on mount
-  useEffect(() => {
-    const saved = sessionStorage.getItem("local_cases");
-    if (saved) {
-      try {
-        setLocalCases(JSON.parse(saved) as Case[]);
-      } catch {
-        // ignore
-      }
-    }
-  }, []);
-
   const saveLocalCases = (cases: Case[]) => {
     setLocalCases(cases);
-    sessionStorage.setItem("local_cases", JSON.stringify(cases));
   };
 
   const [verdictFilter, setVerdictFilter] = useState<(typeof verdicts)[number]>("Tất cả");

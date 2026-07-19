@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { Case } from "../../types";
 import { parseCaseDate } from "../../utils/date";
-import { legalTopicName, discussionTopicName } from "../../utils/topic";
+import { discussionTopicName } from "../../utils/topic";
 import {
   TrendingUp, TrendingDown, Circle, Square, MoreVertical,
   Info, Calendar
@@ -114,6 +114,47 @@ const heatLevels = ["bg-[#ec4a92]", "bg-[#f59b81]", "bg-[#fbd798]", "bg-[#bde5c5
 const periodButton = "h-full min-w-[82px] rounded-[10px] border-0 px-[17px] text-[11px] max-[720px]:min-w-0 max-[720px]:flex-1 max-[520px]:px-3";
 const periodActive =
   "bg-linear-90 from-[#ec1fa7] to-[#b910c2] font-extrabold text-white shadow-[0_5px_12px_#ce16ad2b]";
+
+const platforms: Case["platform"][] = ["Facebook", "TikTok", "YouTube", "Web", "Forum"];
+
+type ChartTooltipProps = {
+  active?: boolean;
+  payload?: Array<{
+    payload: {
+      fullLabel?: string;
+      label: string;
+      "Lượt đề cập": number;
+      topTopic: string;
+      topTopicCount: number;
+    };
+  }>;
+};
+
+function CustomTooltip({ active, payload }: ChartTooltipProps) {
+  if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div
+      className="custom-chart-tooltip"
+      style={{
+        background: "rgba(21, 34, 53, 0.95)",
+        border: "1px solid #334155",
+        borderRadius: "8px",
+        padding: "10px 12px",
+        color: "#fff",
+        fontSize: "12px",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+      }}
+    >
+      <strong style={{ display: "block", marginBottom: "4px" }}>{data.fullLabel || data.label}</strong>
+      <div>Lượt đề cập: <span style={{ color: "#e8198b", fontWeight: 700 }}>{data["Lượt đề cập"]}</span></div>
+      <div style={{ marginTop: "2px" }}>Chủ đề nổi bật: <span style={{ color: "#38bdf8" }}>{data.topTopic}</span></div>
+      {data.topTopicCount > 0 && (
+        <div style={{ fontSize: "11px", color: "#94a3b8" }}>(Đề cập chủ đề: {data.topTopicCount})</div>
+      )}
+    </div>
+  );
+}
 
 export function MarketOverview({ allItems }: { allItems: Case[] }) {
   const [period, setPeriod] = useState<1 | 7 | 30>(7);
@@ -223,8 +264,6 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
   const [topTopicName, topTopicCount] = topics[0] || ["Chưa có dữ liệu", 0];
   const topTopicShare = current.length ? Math.round((topTopicCount / current.length) * 100) : 0;
 
-  const platforms = ["Facebook", "TikTok", "YouTube", "Web", "Forum"] as Case["platform"][];
-
   const heatMax = useMemo(() => {
     return Math.max(
       1,
@@ -235,7 +274,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
         )
       )
     );
-  }, [topics, current, platforms]);
+  }, [topics, current]);
 
   const daysData = useMemo(() => {
     return Array.from({ length: chartBuckets }, (_, index) => {
@@ -299,41 +338,6 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
     : current.length
     ? `${current.length} lượt mới`
     : "Không thay đổi";
-
-  // Recharts Custom Tooltip to mimic original premium design
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div
-          className="custom-chart-tooltip"
-          style={{
-            background: "rgba(21, 34, 53, 0.95)",
-            border: "1px solid #334155",
-            borderRadius: "8px",
-            padding: "10px 12px",
-            color: "#fff",
-            fontSize: "12px",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
-          }}
-        >
-          <strong style={{ display: "block", marginBottom: "4px" }}>{data.fullLabel || data.label}</strong>
-          <div>
-            Lượt đề cập: <span style={{ color: "#e8198b", fontWeight: 700 }}>{data["Lượt đề cập"]}</span>
-          </div>
-          <div style={{ marginTop: "2px" }}>
-            Chủ đề nổi bật: <span style={{ color: "#38bdf8" }}>{data.topTopic}</span>
-          </div>
-          {data.topTopicCount > 0 && (
-            <div style={{ fontSize: "11px", color: "#94a3b8" }}>
-              (Đề cập chủ đề: {data.topTopicCount})
-            </div>
-          )}
-        </div>
-      );
-    }
-    return null;
-  };
 
   const trendTextClass = (value: number) =>
     value >= 0 ? "text-[11px] font-[750] text-[#08a658]" : "text-[11px] font-[750] text-[#ef3540]";
