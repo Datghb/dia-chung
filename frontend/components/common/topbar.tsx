@@ -45,7 +45,7 @@ export function Topbar() {
       const response = await fetch(`${API_URL}/api/crawl`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keywords: [], max_posts_per_platform: 1 }),
+        body: JSON.stringify({ keywords: [], max_posts_per_platform: 10 }),
       });
       if (!response.ok) throw new Error("Crawl API unavailable");
       const reader = response.body?.getReader();
