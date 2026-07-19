@@ -144,21 +144,24 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
   }, [rows]);
 
   const latestBase = useMemo(() => new Date(), []);
-  const chartDays = period === 30 ? 30 : period === 1 ? 1 : 7;
+  const chartBuckets = period === 1 ? 24 : period;
+  const offsetUnitMs = period === 1 ? 3_600_000 : 86_400_000;
   const earliestDate = useMemo(
     () => dated.reduce<Date | null>((earliest, row) => (!earliest || row.date < earliest ? row.date : earliest), null),
     [dated],
   );
   const maxRangeOffset = useMemo(() => {
     if (!earliestDate) return 0;
-    const elapsedDays = Math.ceil((latestBase.getTime() - earliestDate.getTime()) / 86_400_000);
-    return Math.max(0, elapsedDays - chartDays + 1);
-  }, [chartDays, earliestDate, latestBase]);
+    const elapsedUnits = Math.ceil((latestBase.getTime() - earliestDate.getTime()) / offsetUnitMs);
+    return Math.max(0, elapsedUnits - chartBuckets + 1);
+  }, [chartBuckets, earliestDate, latestBase, offsetUnitMs]);
   const latest = useMemo(() => {
     const date = new Date(latestBase);
-    date.setDate(date.getDate() - Math.min(rangeOffset, maxRangeOffset));
+    const safeOffset = Math.min(rangeOffset, maxRangeOffset);
+    if (period === 1) date.setTime(date.getTime() - safeOffset * 3_600_000);
+    else date.setDate(date.getDate() - safeOffset);
     return date;
-  }, [latestBase, maxRangeOffset, rangeOffset]);
+  }, [latestBase, maxRangeOffset, period, rangeOffset]);
   const selectPeriod = (nextPeriod: 1 | 7 | 30) => {
     setPeriod(nextPeriod);
     setRangeOffset(0);
@@ -235,27 +238,43 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
   }, [topics, current, platforms]);
 
   const daysData = useMemo(() => {
-    return Array.from({ length: chartDays }, (_, index) => {
+    return Array.from({ length: chartBuckets }, (_, index) => {
       const date = new Date(latest);
-      date.setDate(date.getDate() - chartDays + 1 + index);
-      const dayItems =
-        chartDays === 1
-          ? current
-          : dated
-              .filter(
-                (row) =>
-                  row.date >= start && row.date <= latest && row.date.toDateString() === date.toDateString()
-              )
-              .map((row) => row.item);
-      const dailyTopics = Array.from(topicMap(dayItems)).sort((a, b) => b[1] - a[1]);
+      let bucketItems: Case[];
+      let label: string;
+      let fullLabel: string;
+
+      if (period === 1) {
+        date.setMinutes(0, 0, 0);
+        date.setHours(date.getHours() - 23 + index);
+        const bucketEnd = new Date(date.getTime() + 3_600_000);
+        bucketItems = dated
+          .filter((row) => row.date >= date && row.date < bucketEnd && row.date <= latest)
+          .map((row) => row.item);
+        label = `${String(date.getHours()).padStart(2, "0")}:00`;
+        fullLabel = `${label} · ${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+      } else {
+        date.setDate(date.getDate() - chartBuckets + 1 + index);
+        bucketItems = dated
+          .filter(
+            (row) =>
+              row.date >= start && row.date <= latest && row.date.toDateString() === date.toDateString()
+          )
+          .map((row) => row.item);
+        label = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+        fullLabel = label;
+      }
+
+      const dailyTopics = Array.from(topicMap(bucketItems)).sort((a, b) => b[1] - a[1]);
       return {
-        label: `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`,
-        "Lượt đề cập": dayItems.length,
+        label,
+        fullLabel,
+        "Lượt đề cập": bucketItems.length,
         topTopic: dailyTopics[0]?.[0] || "Chưa có thảo luận",
         topTopicCount: dailyTopics[0]?.[1] || 0,
       };
     });
-  }, [chartDays, latest, current, dated, start]);
+  }, [chartBuckets, latest, dated, period, start]);
 
   const chartCeiling = useMemo(() => {
     const maximum = Math.max(1, ...daysData.map((day) => day["Lượt đề cập"]));
@@ -298,7 +317,7 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
             boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
           }}
         >
-          <strong style={{ display: "block", marginBottom: "4px" }}>{data.label}</strong>
+          <strong style={{ display: "block", marginBottom: "4px" }}>{data.fullLabel || data.label}</strong>
           <div>
             Lượt đề cập: <span style={{ color: "#e8198b", fontWeight: 700 }}>{data["Lượt đề cập"]}</span>
           </div>
@@ -469,10 +488,10 @@ export function MarketOverview({ allItems }: { allItems: Case[] }) {
               if (drag) {
                 const bounds = event.currentTarget.getBoundingClientRect();
                 const distance = event.clientX - drag.x;
-                const pixelsPerDay = Math.max(24, bounds.width / Math.max(1, chartDays));
-                const dayShift = Math.round(distance / pixelsPerDay);
-                if (Math.abs(distance) >= 12 && dayShift !== 0) {
-                  setRangeOffset(Math.min(maxRangeOffset, Math.max(0, drag.offset + dayShift)));
+                const pixelsPerBucket = Math.max(24, bounds.width / Math.max(1, chartBuckets));
+                const bucketShift = Math.round(distance / pixelsPerBucket);
+                if (Math.abs(distance) >= 12 && bucketShift !== 0) {
+                  setRangeOffset(Math.min(maxRangeOffset, Math.max(0, drag.offset + bucketShift)));
                 }
               }
               chartDragStart.current = null;
