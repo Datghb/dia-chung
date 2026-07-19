@@ -20,6 +20,7 @@ class Settings(BaseSettings):
         default="https://diachung.dpdns.org,http://localhost:3000,http://localhost:3001",
         alias="FRONTEND_ORIGIN",
     )
+    admin_api_key: str | None = Field(default=None, alias="ADMIN_API_KEY")
 
     gemini_api_key: str | None = Field(default=None, alias="GEMINI_API_KEY")
     google_api_key: str | None = Field(default=None, alias="GOOGLE_API_KEY")

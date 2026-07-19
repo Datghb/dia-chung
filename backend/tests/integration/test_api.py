@@ -100,6 +100,100 @@ def test_debug_route_does_not_expose_api_key_prefix(monkeypatch) -> None:
     assert "api_key_prefix" not in response.text
 
 
+def test_admin_write_route_rejects_missing_key(monkeypatch) -> None:
+    from backend.legal_radar.api import dependencies
+    import backend.legal_radar.settings as settings_mod
+
+    fake = settings_mod.Settings(
+        APP_ENV="production",
+        ADMIN_API_KEY="test-admin-key",
+    )
+    monkeypatch.setattr(dependencies, "get_settings", lambda: fake)
+
+    response = client.patch(
+        "/api/cases/not-found/status",
+        json={"status": "reviewing"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_admin_write_route_accepts_valid_key(monkeypatch) -> None:
+    from backend.legal_radar.api import dependencies
+    import backend.legal_radar.settings as settings_mod
+
+    fake = settings_mod.Settings(
+        APP_ENV="production",
+        ADMIN_API_KEY="test-admin-key",
+    )
+    monkeypatch.setattr(dependencies, "get_settings", lambda: fake)
+
+    response = client.patch(
+        "/api/cases/not-found/status",
+        json={"status": "reviewing"},
+        headers={"X-Admin-Key": "test-admin-key"},
+    )
+
+    assert response.status_code == 404
+
+
+def test_production_write_route_fails_closed_without_config(monkeypatch) -> None:
+    from backend.legal_radar.api import dependencies
+    import backend.legal_radar.settings as settings_mod
+
+    fake = settings_mod.Settings(APP_ENV="production", ADMIN_API_KEY="")
+    monkeypatch.setattr(dependencies, "get_settings", lambda: fake)
+
+    response = client.patch(
+        "/api/cases/not-found/status",
+        json={"status": "reviewing"},
+    )
+
+    assert response.status_code == 503
+
+
+def test_reviewer_can_reject_result_and_create_audit_event(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    from backend.legal_radar.api import data_access
+
+    queue_item = {
+        "id": "review-me",
+        "comment_id": "review-me",
+        "text": "Nội dung thử nghiệm",
+        "claim": "Claim thử nghiệm",
+        "keywords": [],
+        "nhan": "can_kiem_chung",
+        "ly_do": "Thiếu bằng chứng",
+        "nhan_nguon": "chua_tim_thay_nguon",
+    }
+    (tmp_path / "queue.jsonl").write_text(
+        json.dumps(queue_item, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(data_access, "runs_dir", lambda: tmp_path)
+
+    response = client.post(
+        "/api/cases/review-me/review",
+        json={
+            "decision": "rejected",
+            "note": "Citation không hỗ trợ kết luận",
+            "corrected_label": "can_kiem_chung",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "resolved"
+    audit_rows = [
+        json.loads(line)
+        for line in (tmp_path / "audit.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert audit_rows[-1]["event"] == "ai_reviewed"
+    assert audit_rows[-1]["decision"] == "rejected"
+    assert audit_rows[-1]["case_id"] == "review-me"
+
+
 def test_crawl_returns_supported_schema(monkeypatch, tmp_path) -> None:
     from backend.legal_radar.api.routes import crawl
 

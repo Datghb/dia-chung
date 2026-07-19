@@ -1,7 +1,14 @@
-from fastapi import APIRouter, HTTPException, Response
-from pydantic import BaseModel
+from typing import Literal
 
-from backend.legal_radar.api.data_access import list_queue_items, update_queue_item_status
+from fastapi import APIRouter, Depends, HTTPException, Response
+from pydantic import BaseModel, Field
+
+from backend.legal_radar.api.data_access import (
+    list_queue_items,
+    review_queue_item,
+    update_queue_item_status,
+)
+from backend.legal_radar.api.dependencies import require_admin
 from backend.legal_radar.api.schemas import QueueItemResponse
 
 router = APIRouter(tags=["queue"])
@@ -10,6 +17,11 @@ router = APIRouter(tags=["queue"])
 class StatusUpdate(BaseModel):
     status: str
 
+class ReviewRequest(BaseModel):
+    decision: Literal["accepted", "corrected", "rejected"]
+    note: str = Field(default="", max_length=1000)
+    corrected_label: Literal["dung", "hieu_lam", "can_kiem_chung"] | None = None
+
 
 @router.get("/queue", response_model=list[QueueItemResponse])
 def list_queue(response: Response) -> list[QueueItemResponse]:
@@ -17,7 +29,11 @@ def list_queue(response: Response) -> list[QueueItemResponse]:
     return [QueueItemResponse.model_validate(item) for item in list_queue_items()]
 
 
-@router.patch("/cases/{case_id}/status", response_model=QueueItemResponse)
+@router.patch(
+    "/cases/{case_id}/status",
+    response_model=QueueItemResponse,
+    dependencies=[Depends(require_admin)],
+)
 def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
     allowed = {"new", "reviewing", "resolved"}
     if body.status not in allowed:
@@ -27,8 +43,29 @@ def update_case_status(case_id: str, body: StatusUpdate) -> QueueItemResponse:
         raise HTTPException(status_code=404, detail=f"Case {case_id} không tồn tại")
     return QueueItemResponse.model_validate(item)
 
+@router.post(
+    "/cases/{case_id}/review",
+    response_model=QueueItemResponse,
+    dependencies=[Depends(require_admin)],
+)
+def review_case(case_id: str, body: ReviewRequest) -> QueueItemResponse:
+    if body.decision == "corrected" and body.corrected_label is None:
+        raise HTTPException(
+            status_code=400,
+            detail="corrected_label là bắt buộc khi decision là corrected",
+        )
+    item = review_queue_item(
+        case_id,
+        body.decision,
+        body.note,
+        body.corrected_label,
+    )
+    if item is None:
+        raise HTTPException(status_code=404, detail=f"Case {case_id} không tồn tại")
+    return QueueItemResponse.model_validate(item)
 
-@router.delete("/queue")
+
+@router.delete("/queue", dependencies=[Depends(require_admin)])
 def clear_queue() -> dict[str, object]:
     from backend.legal_radar.api.dependencies import runs_dir
     queue_path = runs_dir() / "queue.jsonl"

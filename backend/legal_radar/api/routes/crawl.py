@@ -9,19 +9,20 @@ import threading
 from dataclasses import asdict
 from hashlib import sha1
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from backend.legal_radar.pipeline import _build_crawled_ingestor, _queue_path
 from backend.legal_radar.api.dependencies import runs_dir
 from backend.legal_radar.api.schemas import CrawlRequest
+from backend.legal_radar.api.dependencies import require_admin
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["crawl"])
 
 
-@router.get("/crawl/debug")
+@router.get("/crawl/debug", dependencies=[Depends(require_admin)])
 def debug_crawl():
     """Debug endpoint — test Bright Data APIs and return raw results."""
     import time
@@ -142,7 +143,7 @@ def _try_live_crawl(keywords, max_posts, output_path):
     return result, error
 
 
-@router.post("/crawl")
+@router.post("/crawl", dependencies=[Depends(require_admin)])
 def trigger_crawl(request: CrawlRequest):
     from backend.legal_radar.settings import get_settings
     settings = get_settings()

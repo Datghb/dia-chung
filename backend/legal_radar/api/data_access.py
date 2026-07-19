@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -161,6 +162,50 @@ def update_queue_item_status(case_id: str, new_status: str) -> dict[str, Any] | 
     with queue_path.open("w", encoding="utf-8") as f:
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    return updated
+
+def review_queue_item(
+    case_id: str,
+    decision: str,
+    note: str,
+    corrected_label: str | None,
+) -> dict[str, Any] | None:
+    """Persist a human decision while keeping reviewed social content out of audit logs."""
+    queue_path = runs_dir() / "queue.jsonl"
+    if not queue_path.exists():
+        return None
+    rows = _queue_from_jsonl(queue_path)
+    updated = None
+    reviewed_at = datetime.now(UTC).isoformat()
+    for row in rows:
+        if str(row.get("id", "")) != case_id:
+            continue
+        row["status"] = "resolved"
+        row["review"] = {
+            "decision": decision,
+            "note": note,
+            "corrected_label": corrected_label,
+            "reviewed_at": reviewed_at,
+        }
+        if corrected_label:
+            row["nhan"] = corrected_label
+        updated = _normalise(row)
+        break
+    if updated is None:
+        return None
+    with queue_path.open("w", encoding="utf-8") as file:
+        for row in rows:
+            file.write(json.dumps(row, ensure_ascii=False) + "\n")
+    audit_event = {
+        "event": "ai_reviewed",
+        "case_id": case_id,
+        "decision": decision,
+        "corrected_label": corrected_label,
+        "reviewed_at": reviewed_at,
+        "analysis_version": "grounded-v1",
+    }
+    with (runs_dir() / "audit.jsonl").open("a", encoding="utf-8") as file:
+        file.write(json.dumps(audit_event, ensure_ascii=False) + "\n")
     return updated
 
 
