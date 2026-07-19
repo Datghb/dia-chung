@@ -51,6 +51,17 @@ jobs:
               export NEXT_PUBLIC_API_URL=https://api.theoria-lab.io.vn
             fi
 
+            # Auto-generate ADMIN_API_KEY if not set
+            if ! grep -q '^ADMIN_API_KEY=' backend/.env || grep -q '^ADMIN_API_KEY=$' backend/.env; then
+              NEW_KEY=$(openssl rand -hex 24)
+              # Remove empty or missing key line, then append
+              sed -i '/^ADMIN_API_KEY=$/d' backend/.env
+              echo "ADMIN_API_KEY=$NEW_KEY" >> backend/.env
+              echo "Generated new ADMIN_API_KEY"
+            else
+              echo "ADMIN_API_KEY already set"
+            fi
+
             # Zero-downtime deployment: build first, then restart
             docker compose -f deploy/compose.yaml build
             docker compose -f deploy/compose.yaml up -d
